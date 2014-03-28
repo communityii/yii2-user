@@ -1,5 +1,5 @@
-Version 1.0
-===========
+Version 1.0.0
+=============
 
 The features planned for first release:
 
