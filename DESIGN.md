@@ -81,9 +81,10 @@ ON UPDATE RESTRICT
 
 ### adm_user_profile
 
-The master table for the user's main profile. Most of these fields are available as standard data from social providers using OAuth API.
-This table can be edited/extended as needed by the developer for his/her application. The creation/updation of data in this table will need to be 
-controlled via local/remote identity refresh configuration.
+The user's main/primary profile data. Most of these fields are available as standard data from social providers using OAuth API.
+This table can be edited/extended as needed by the developer for his/her application. 
+
+The creation/updation of data in this table will need to be controlled via local/remote identity refresh configuration.
 
 ```sql
 CREATE TABLE `adm_user_profile` (
