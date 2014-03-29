@@ -83,15 +83,17 @@ ON UPDATE RESTRICT
 ### adm_user_profile
 
 The master table for the user's main profile. Most of these fields are available as standard from what most social providers provide via OAuth/OAuth2.
-This table can be edited/extended as needed by the developer.
+This table can be edited/extended as needed by the developer for his/her application. The creation/updation of data in this table will need to be 
+controlled via local/remote identity refresh configuration.
 
 ```sql
 CREATE TABLE `adm_user_profile` (
-	`id` BIGINT(20) NOT NULL COMMENT 'Unique profile/social auth identifier',
+	`id` BIGINT(20) NOT NULL COMMENT 'Unique remote user identifier',
 	`profile_name` VARCHAR(150) COMMENT 'Social profile user name',
 	`first_name` VARCHAR(50) DEFAULT '' COMMENT 'User first name',
 	`last_name` VARCHAR(50) DEFAULT '' COMMENT 'User last name',
-    `avatar_url` VARCHAR(255) DEFAULT '' COMMENT 'URL link to user photo or avatar if avatar is linkable.',
+    `avatar_url` VARCHAR(255) DEFAULT '' COMMENT 'URL link to user avatar from the social provider.',
+    `is_primary` TINYINT(1) DEFAULT FALSE COMMENT 'Whether this is the active/primary profile for display',
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation time',
 	`updated_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Record updation time',
 	PRIMARY KEY (`id`)
