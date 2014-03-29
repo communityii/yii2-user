@@ -15,22 +15,20 @@ The module needs to have the following configurable (plug and play components):
 
 1. Enable/Disable Strength validation for password (can use my [yii2-password](https://demos.krajee.com/password) extension)
 2. Enable/Disable social authentication for the module
-3. Enable/Disable user roles for the module??? (Needs discussion)
-4. Enable/Disable social profiles - Will use profile information from social provider to auto populate user data
-5. Enable/Disable avatar support - will need a method to plugin to any image upload module or third party avatar 
+3. Enable/Disable social profiles - Will use profile information from social provider to auto populate user data
+4. Enable/Disable avatar support - will need a method to plugin to any image upload module or third party avatar 
    provider. Note the avatar also is available for each social profiles as in previous point 
-6. Email templates (views) can be setup as parameters
-7. Login Form Widget/View can be setup as parameters
-8. Registration Form Widget/View can be setup as parameters
-9. Password reset/recovery Widget/View can be setup as parameters
-10. Admin CRUD Widget/Views can be setup as parameters
-11. User Profile Page Views can be setup as parameters
-12. Layout to use for Admin can be setup as parameters
-13. Menu for admin can be setup as parameters
-14. Layout to use for User Profile can be setup as parameters
-15. Menu for user profile can be setup as parameters
-16. User Status Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
-17. User Role Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
+5. Email templates (views) can be setup as parameters
+6. Login Form Widget/View can be setup as parameters
+7. Registration Form Widget/View can be setup as parameters
+8. Password reset/recovery Widget/View can be setup as parameters
+9. Admin CRUD Widget/Views can be setup as parameters
+10. User Profile Page Views can be setup as parameters
+11. Layout to use for Admin can be setup as parameters
+12. Menu for admin can be setup as parameters
+13. Layout to use for User Profile can be setup as parameters
+14. Menu for user profile can be setup as parameters
+15. User Status Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
 
 ## Database Structure
 
@@ -105,45 +103,4 @@ REFERENCES `adm_user` (`id`)
 ON DELETE CASCADE
 ON UPDATE RESTRICT
 , ADD INDEX `adm_user_profile_FK1` (`id` ASC);
-```
-
-### adm_role
-
-The master table for all roles
-```sql
-CREATE TABLE `adm_role` (
-	`id` INT(11) NOT NULL AUTO_INCREMENT COMMENT 'Unique role identifier',
-	`name` VARCHAR(30) NOT NULL COMMENT 'Unique role name',
-	`description` VARCHAR(30) NOT NULL COMMENT 'Description',
-    `access_rules` TEXT COMMENT 'Needs discussion. Do we embed any json encoded access control rules here?',
-	PRIMARY KEY (`id`),
-	UNIQUE KEY `adm_user_UK1` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Role master table';
-```
-
-### adm_user_roles
-
-Pivot table for user roles
-```sql
-CREATE TABLE `adm_user_role` (
-	`user_id` BIGINT(20) NOT NULL COMMENT 'User identifier',
-	`role_id` INT(11) NOT NULL COMMENT 'Role identifier',
-	PRIMARY KEY (`user_id`, `role_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='User master table';
-
-ALTER TABLE `adm_user_role`
-ADD CONSTRAINT `adm_user_role_FK1` 
-FOREIGN KEY (`user_id`) 
-REFERENCES `adm_user` (`id`) 
-ON DELETE CASCADE
-ON UPDATE RESTRICT
-, ADD INDEX `adm_user_role_FK1` (`user_id` ASC);
-
-ALTER TABLE `adm_user_role`
-ADD CONSTRAINT `adm_user_role_FK2` 
-FOREIGN KEY (`role_id`) 
-REFERENCES `adm_role` (`id`) 
-ON DELETE CASCADE
-ON UPDATE RESTRICT
-, ADD INDEX `adm_user_role_FK2` (`role_id` ASC);
 ```
