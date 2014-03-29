@@ -13,22 +13,23 @@ Design for yii2-user
 
 The module needs to have the following configurable (plug and play components):
 
-1. Enable/Disable social authentication for the module
-2. Enable/Disable user roles for the module??? (Needs discussion)
-3. Enable/Disable social profiles - Will use profile information from social provider to auto populate user data
-4. Enable/Disable avatar support - will need a method to plugin to any image upload module or third party avatar 
+1. Enable/Disable Strength validation for password (can use my [yii2-password](https://demos.krajee.com/password) extension)
+2. Enable/Disable social authentication for the module
+3. Enable/Disable user roles for the module??? (Needs discussion)
+4. Enable/Disable social profiles - Will use profile information from social provider to auto populate user data
+5. Enable/Disable avatar support - will need a method to plugin to any image upload module or third party avatar 
    provider. Note the avatar also is available for each social profiles as in previous point 
-5. Email templates (views) can be setup as parameters
-6. Login Form Widget/View can be setup as parameters
-7. Registration Form Widget/View can be setup as parameters
-8. Admin CRUD Widget/Views can be setup as parameters
-9. User Profile Page Views can be setup as parameters
-10. Layout to use for Admin can be setup as parameters
-11. Menu for admin can be setup as parameters
-12. Layout to use for User Profile can be setup as parameters
-13. Menu for user profile can be setup as parameters
-14. User Status Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
-15. User Role Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
+6. Email templates (views) can be setup as parameters
+7. Login Form Widget/View can be setup as parameters
+8. Registration Form Widget/View can be setup as parameters
+9. Admin CRUD Widget/Views can be setup as parameters
+10. User Profile Page Views can be setup as parameters
+11. Layout to use for Admin can be setup as parameters
+12. Menu for admin can be setup as parameters
+13. Layout to use for User Profile can be setup as parameters
+14. Menu for user profile can be setup as parameters
+15. User Status Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
+16. User Role Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
 
 ## Database Structure
 
