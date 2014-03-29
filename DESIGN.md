@@ -55,84 +55,55 @@ CREATE TABLE `adm_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='User master table';
 ```
 
-### adm_user_profile
 
-The master table for user profile. Most of these fields are available as standard from what most social providers provide via OAuth/OAuth2. 
-A default record in this table is first created when a new user registers without social auth (The `provider` field value will be set `DEFAULT` for this case).
-For social authenticated profiles, the `provider` value will be one of the provider constants i.e. FACEBOOK, GOOGLE etc. We may assume that one login per
-provider is allowed. For example, if user has authenticated via EMAIL_1 with google, in future if he selects google as login authentication, it will automatically
-use EMAIL_1.
-Note some of these special fields:
-- `is_active`: the default profile to be used for the user. If an user has multiple social providers he has authenticated with, all these
-  will appear for his account, and he can choose which social profile details he can set to default. He/she can also override/edit these
-  profile details within the module.
-- `avatar_linked`: If set to TRUE, it will by default set the user's displayed image to the social provider avatar link.
+### adm_user_identity
+
+The remote user authentication identities.
+
 ```sql
-CREATE TABLE `adm_user_profile` (
-	`id` VARCHAR(70) NOT NULL COMMENT 'Unique profile/social auth identifier',
-	`profile_id` VARCHAR(50) NOT NULL COMMENT 'Unique user ID on the connected provider (ID, Email, URL, etc.). Defaulted to user id if not related to provider.',
-	`provider` VARCHAR(20) NOT NULL DEFAULT 'Default' COMMENT 'Social provider code/name',
-	`user_id` BIGINT(20) NOT NULL COMMENT 'Related user identifier',
-	`profile_url` VARCHAR(255) DEFAULT '' COMMENT 'URL link to profile page on the IDp web site',
-	`website_url` VARCHAR(255) DEFAULT '' COMMENT 'User website, blog, web page',
-	`avatar_linked` TINYINT(1) DEFAULT FALSE COMMENT 'Is the user photo/avatar a link to external location OR an uploaded file.',
-	`avatar_file` VARCHAR(255) DEFAULT '' COMMENT 'File name of the uploaded avatar.',
-	`avatar_link` VARCHAR(255) DEFAULT '' COMMENT 'URL link to user photo or avatar if avatar is linkable.',
-	`display_name` VARCHAR(100) DEFAULT '' COMMENT 'User display name provided by the IDp or a concatenation of first and last name.',
-	`description` TINYTEXT DEFAULT '' COMMENT 'A short about me for the user',
-	`first_name` VARCHAR(50) DEFAULT '' COMMENT 'User first name',
-	`last_name` VARCHAR(50) DEFAULT '' COMMENT 'User last name',
-	`gender` VARCHAR(10) DEFAULT '' COMMENT 'User gender. Values are "female", "male" or NULL',
-	`language` VARCHAR(10) DEFAULT 'en' COMMENT 'User language',
-	`birth_date` DATE COMMENT 'Birth date of the user',
-	`email` VARCHAR(255) DEFAULT '' COMMENT 'User email. Not all of IDp grant access to the user email',
-	`email_verified` VARCHAR(255) DEFAULT '' COMMENT 'Verified user email. Not all of IDp grant access to verified user email. ',
-	`phone` VARCHAR(30) DEFAULT '' COMMENT 'User phone number',
-	`address` VARCHAR(255) DEFAULT '' COMMENT 'User address',
-	`country` VARCHAR(50) DEFAULT '' COMMENT 'User country',
-	`region` VARCHAR(50) DEFAULT '' COMMENT 'User region/state/province',
-	`city` VARCHAR(50) DEFAULT '' COMMENT 'User city',
-	`zip` VARCHAR(10) DEFAULT '' COMMENT 'User postal code/zip',
-	`is_active` TINYINT(1) DEFAULT FALSE COMMENT 'Active user profile visible to all',
+CREATE TABLE `adm_user_identity` (
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'Unique remote user identifier',
+	`key` VARCHAR(100) NOT NULL COMMENT 'Social provider identifier key',
+	`provider` VARCHAR(30) NOT NULL DEFAULT 'Default' COMMENT 'Social provider code/name',
+    `user_id` BIGINT(20) NOT NULL COMMENT 'Related user identifier',
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation time',
-	`created_by` BIGINT(20) NOT NULL COMMENT 'Record created by',
 	`updated_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Record updation time',
-	`updated_by` BIGINT(20) NOT NULL COMMENT 'Record updated by',
 	PRIMARY KEY (`id`),
-	UNIQUE KEY `adm_user_profile_UQ1`(`profile_id`, `provider`),
-	KEY `adm_user_profile_NU1` (`profile_id`),
-	KEY `adm_user_profile_NU2` (`provider`),
-	KEY `adm_user_profile_NU3` (`user_id`),
-	KEY `adm_user_profile_NU4` (`first_name`),
-	KEY `adm_user_profile_NU5` (`last_name`),
-	KEY `adm_user_profile_NU6` (`display_name`),
-	KEY `adm_user_profile_NU7` (`email`),
-	KEY `adm_user_profile_NU8` (`email_verified`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='User profile data including social provider details';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Remote identity authentication table for users';
 
-ALTER TABLE `adm_user_profile`
-ADD CONSTRAINT `adm_user_profile_FK1` 
+ALTER TABLE `adm_user_identity`
+ADD CONSTRAINT `adm_user_identity_FK1` 
 FOREIGN KEY (`user_id`) 
 REFERENCES `adm_user` (`id`) 
 ON DELETE CASCADE
 ON UPDATE RESTRICT
-, ADD INDEX `adm_user_profile_FK1` (`user_id` ASC);
+, ADD INDEX `adm_user_identity_FK1` (`user_id` ASC);
+```
+
+### adm_user_profile
+
+The master table for the user's main profile. Most of these fields are available as standard from what most social providers provide via OAuth/OAuth2.
+This table can be edited/extended as needed by the developer.
+
+```sql
+CREATE TABLE `adm_user_profile` (
+	`id` BIGINT(20) NOT NULL COMMENT 'Unique profile/social auth identifier',
+	`profile_name` VARCHAR(150) COMMENT 'Social profile user name',
+	`first_name` VARCHAR(50) DEFAULT '' COMMENT 'User first name',
+	`last_name` VARCHAR(50) DEFAULT '' COMMENT 'User last name',
+    `avatar_url` VARCHAR(255) DEFAULT '' COMMENT 'URL link to user photo or avatar if avatar is linkable.',
+	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation time',
+	`updated_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Record updation time',
+	PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='User profile data including social provider details';
 
 ALTER TABLE `adm_user_profile`
-ADD CONSTRAINT `adm_user_profile_FK2` 
-FOREIGN KEY (`created_by`) 
-REFERENCES `adm_user` (`id`) 
+ADD CONSTRAINT `adm_user_profile_FK1` 
+FOREIGN KEY (`id`) 
+REFERENCES `adm_user_identity` (`id`) 
 ON DELETE CASCADE
 ON UPDATE RESTRICT
-, ADD INDEX `adm_user_profile_FK2` (`created_by` ASC);
-
-ALTER TABLE `adm_user_profile`
-ADD CONSTRAINT `adm_user_profile_FK3` 
-FOREIGN KEY (`updated_by`) 
-REFERENCES `adm_user` (`id`) 
-ON DELETE CASCADE
-ON UPDATE RESTRICT
-, ADD INDEX `adm_user_profile_FK3` (`updated_by` ASC);
+, ADD INDEX `adm_user_profile_FK1` (`id` ASC);
 ```
 
 ### adm_role
