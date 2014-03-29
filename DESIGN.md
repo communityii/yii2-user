@@ -90,7 +90,7 @@ CREATE TABLE `adm_user_profile` (
 	`profile_name` VARCHAR(150) COMMENT 'Social profile user name',
 	`first_name` VARCHAR(50) DEFAULT '' COMMENT 'User first name',
 	`last_name` VARCHAR(50) DEFAULT '' COMMENT 'User last name',
-    `avatar_url` VARCHAR(255) DEFAULT '' COMMENT 'URL link to user avatar from the social provider.',
+    `avatar_url` TEXT DEFAULT '' COMMENT 'URL link to user avatar from the social provider.',
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation time',
 	`updated_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Record updation time',
 	PRIMARY KEY (`id`)
