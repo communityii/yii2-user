@@ -88,12 +88,11 @@ controlled via local/remote identity refresh configuration.
 
 ```sql
 CREATE TABLE `adm_user_profile` (
-	`id` BIGINT(20) NOT NULL COMMENT 'Unique remote user identifier',
+	`id` BIGINT(20) NOT NULL COMMENT 'Unique user identifier',
 	`profile_name` VARCHAR(150) COMMENT 'Social profile user name',
 	`first_name` VARCHAR(50) DEFAULT '' COMMENT 'User first name',
 	`last_name` VARCHAR(50) DEFAULT '' COMMENT 'User last name',
     `avatar_url` VARCHAR(255) DEFAULT '' COMMENT 'URL link to user avatar from the social provider.',
-    `is_primary` TINYINT(1) DEFAULT FALSE COMMENT 'Whether this is the active/primary profile for display',
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation time',
 	`updated_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Record updation time',
 	PRIMARY KEY (`id`)
@@ -102,7 +101,7 @@ CREATE TABLE `adm_user_profile` (
 ALTER TABLE `adm_user_profile`
 ADD CONSTRAINT `adm_user_profile_FK1` 
 FOREIGN KEY (`id`) 
-REFERENCES `adm_remote_identity` (`id`) 
+REFERENCES `adm_user` (`id`) 
 ON DELETE CASCADE
 ON UPDATE RESTRICT
 , ADD INDEX `adm_user_profile_FK1` (`id` ASC);
