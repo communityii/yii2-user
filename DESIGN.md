@@ -34,6 +34,7 @@ The module needs to have the following configurable (plug and play components):
       - confirmed (user received an email an clicked on a link in the mail)
       - active (user can login, may be configured to happen automatically)
       - banned (user was blocked by an admin)
+      - inactive (user has been inactivated - either due to multiple wrong password types or password expiry or other membership policy.)
 16. Events for register, confirm, active, banner, login, logout. We could trigger the e-mail delivery with these. Could be implemented in a decoupled way with Dependency Injection. Sample "Mailer" class can be added.
 
 ## Database Structure
