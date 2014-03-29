@@ -22,14 +22,15 @@ The module needs to have the following configurable (plug and play components):
 6. Email templates (views) can be setup as parameters
 7. Login Form Widget/View can be setup as parameters
 8. Registration Form Widget/View can be setup as parameters
-9. Admin CRUD Widget/Views can be setup as parameters
-10. User Profile Page Views can be setup as parameters
-11. Layout to use for Admin can be setup as parameters
-12. Menu for admin can be setup as parameters
-13. Layout to use for User Profile can be setup as parameters
-14. Menu for user profile can be setup as parameters
-15. User Status Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
-16. User Role Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
+9. Password reset/recovery Widget/View can be setup as parameters
+10. Admin CRUD Widget/Views can be setup as parameters
+11. User Profile Page Views can be setup as parameters
+12. Layout to use for Admin can be setup as parameters
+13. Menu for admin can be setup as parameters
+14. Layout to use for User Profile can be setup as parameters
+15. Menu for user profile can be setup as parameters
+16. User Status Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
+17. User Role Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
 
 ## Database Structure
 
