@@ -87,9 +87,9 @@ controlled via local/remote identity refresh configuration.
 ```sql
 CREATE TABLE `adm_user_profile` (
 	`id` BIGINT(20) NOT NULL COMMENT 'Unique user identifier',
-	`profile_name` VARCHAR(150) COMMENT 'Social profile user name',
-	`first_name` VARCHAR(50) DEFAULT '' COMMENT 'User first name',
-	`last_name` VARCHAR(50) DEFAULT '' COMMENT 'User last name',
+	`profile_name` VARCHAR(180) COMMENT 'Social profile user name',
+	`first_name` VARCHAR(60) DEFAULT '' COMMENT 'User first name',
+	`last_name` VARCHAR(60) DEFAULT '' COMMENT 'User last name',
     `avatar_url` TEXT DEFAULT '' COMMENT 'URL link to user avatar from the social provider.',
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation time',
 	`updated_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Record updation time',
