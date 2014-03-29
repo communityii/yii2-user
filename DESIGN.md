@@ -68,7 +68,7 @@ Note some of these special fields:
 - `avatar_linked`: If set to TRUE, it will by default set the user's displayed image to the social provider avatar link.
 ```sql
 CREATE TABLE `adm_user_profile` (
-	`id` VARCHAR(70) NOT NULL COMMENT 'Unique profile identifier',
+	`id` VARCHAR(70) NOT NULL COMMENT 'Unique profile/social auth identifier',
 	`profile_id` VARCHAR(50) NOT NULL COMMENT 'Unique user ID on the connected provider (ID, Email, URL, etc.). Defaulted to user id if not related to provider.',
 	`provider` VARCHAR(20) NOT NULL DEFAULT 'Default' COMMENT 'Social provider code/name',
 	`user_id` BIGINT(20) NOT NULL COMMENT 'Related user identifier',
