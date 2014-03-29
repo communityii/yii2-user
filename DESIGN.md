@@ -1,7 +1,7 @@
 Design for yii2-user
 ====================
 
-** Assumptions and Considerations **
+** Assumptions and Considerations
 
 1. The primary assumption is that the user module will have integrated social authentication inbuilt by default. 
 2. The module will NOT have RBAC inbuilt.
@@ -9,7 +9,7 @@ Design for yii2-user
 4. Social integration using Yii authclient extension.
 5. All table names start with `adm_`. (any other suggestions)
 
-** Plug & Play Features **
+** Plug & Play Features
 
 The module needs to have the following configurable (plug and play components):
 1. Enable/Disable social authentication for the module
@@ -29,9 +29,9 @@ The module needs to have the following configurable (plug and play components):
 14. User Status Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
 15. User Role Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
 
-** Database Structure **
+** Database Structure
 
-*** adm_user ***
+*** adm_user
 
 The master table for users - contains the most basic fields for any user authentication.
 ```sql
@@ -53,7 +53,7 @@ CREATE TABLE `adm_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='User master table';
 ```
 
-*** adm_user_profile ***
+*** adm_user_profile
 
 The master table for user profile. Most of these fields are available as standard from what most social providers provide via OAuth/OAuth2. 
 There should be one record in this table always when a new user registers without social auth (The provider name will be DEFAULT).
@@ -130,7 +130,7 @@ ON UPDATE RESTRICT
 , ADD INDEX `adm_user_profile_FK3` (`updated_by` ASC);
 ```
 
-*** adm_role ***
+*** adm_role
 
 The master table for all roles
 ```sql
@@ -144,7 +144,7 @@ CREATE TABLE `adm_role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Role master table';
 ```
 
-*** adm_user_roles ***
+*** adm_user_roles
 
 Pivot table for user roles
 ```sql
