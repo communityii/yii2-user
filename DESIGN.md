@@ -56,12 +56,12 @@ CREATE TABLE `adm_user` (
 ```
 
 
-### adm_user_identity
+### adm_remote_identity
 
 The remote user authentication identities.
 
 ```sql
-CREATE TABLE `adm_user_identity` (
+CREATE TABLE `adm_remote_identity` (
 	`id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'Unique remote user identifier',
 	`key` VARCHAR(100) NOT NULL COMMENT 'Social provider identifier key',
 	`provider` VARCHAR(30) NOT NULL COMMENT 'Social provider code/name',
@@ -71,13 +71,13 @@ CREATE TABLE `adm_user_identity` (
 	PRIMARY KEY (`id`),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Remote identity authentication table for users';
 
-ALTER TABLE `adm_user_identity`
-ADD CONSTRAINT `adm_user_identity_FK1` 
+ALTER TABLE `adm_remote_identity`
+ADD CONSTRAINT `adm_remote_identity_FK1` 
 FOREIGN KEY (`user_id`) 
 REFERENCES `adm_user` (`id`) 
 ON DELETE CASCADE
 ON UPDATE RESTRICT
-, ADD INDEX `adm_user_identity_FK1` (`user_id` ASC);
+, ADD INDEX `adm_remote_identity_FK1` (`user_id` ASC);
 ```
 
 ### adm_user_profile
@@ -102,7 +102,7 @@ CREATE TABLE `adm_user_profile` (
 ALTER TABLE `adm_user_profile`
 ADD CONSTRAINT `adm_user_profile_FK1` 
 FOREIGN KEY (`id`) 
-REFERENCES `adm_user_identity` (`id`) 
+REFERENCES `adm_remote_identity` (`id`) 
 ON DELETE CASCADE
 ON UPDATE RESTRICT
 , ADD INDEX `adm_user_profile_FK1` (`id` ASC);
