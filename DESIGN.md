@@ -62,10 +62,10 @@ For social authenticated profiles, the `provider` value will be one of the provi
 provider is allowed. For example, if user has authenticated via EMAIL_1 with google, in future if he selects google as login authentication, it will automatically
 use EMAIL_1.
 Note some of these special fields:
-- is_active: the default profile to be used for the user. If an user has multiple social providers he has authenticated with, all these
+- `is_active`: the default profile to be used for the user. If an user has multiple social providers he has authenticated with, all these
   will appear for his account, and he can choose which social profile details he can set to default. He/she can also override/edit these
   profile details within the module.
-- avatar_linked: If set to TRUE, it will use the social provider avatar from the user.
+- `avatar_linked`: If set to TRUE, it will by default set the user's displayed image to the social provider avatar link.
 ```sql
 CREATE TABLE `adm_user_profile` (
 	`id` VARCHAR(70) NOT NULL COMMENT 'Unique profile identifier',
