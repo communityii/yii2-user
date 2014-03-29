@@ -2,6 +2,7 @@ Design for yii2-user
 ====================
 
 ** Assumptions and Considerations **
+
 1. The primary assumption is that the user module will have integrated social authentication inbuilt by default. 
 2. The module will NOT have RBAC inbuilt.
 3. Email integration using Yii swiftmail extension.
@@ -9,6 +10,7 @@ Design for yii2-user
 5. All table names start with `adm_`. (any other suggestions)
 
 ** Plug & Play Features **
+
 The module needs to have the following configurable (plug and play components):
 1. Enable/Disable social authentication for the module
 2. Enable/Disable user roles for the module??? (Needs discussion)
@@ -28,7 +30,9 @@ The module needs to have the following configurable (plug and play components):
 15. User Role Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
 
 ** Database Structure **
+
 *** adm_user ***
+
 The master table for users - contains the most basic fields for any user authentication.
 ```sql
 CREATE TABLE `adm_user` (
@@ -50,6 +54,7 @@ CREATE TABLE `adm_user` (
 ```
 
 *** adm_user_profile ***
+
 The master table for user profile. Most of these fields are available as standard from what most social providers provide via OAuth/OAuth2. 
 There should be one record in this table always when a new user registers without social auth (The provider name will be DEFAULT).
 Note some of these special fields:
@@ -126,6 +131,7 @@ ON UPDATE RESTRICT
 ```
 
 *** adm_role ***
+
 The master table for all roles
 ```sql
 CREATE TABLE `adm_role` (
@@ -139,6 +145,7 @@ CREATE TABLE `adm_role` (
 ```
 
 *** adm_user_roles ***
+
 Pivot table for user roles
 ```sql
 CREATE TABLE `adm_user_role` (
