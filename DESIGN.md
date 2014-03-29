@@ -157,4 +157,20 @@ CREATE TABLE `adm_user_role` (
 	`role_id` INT(11) NOT NULL COMMENT 'Role identifier',
 	PRIMARY KEY (`user_id`, `role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='User master table';
+
+ALTER TABLE `adm_user_role`
+ADD CONSTRAINT `adm_user_role_FK1` 
+FOREIGN KEY (`user_id`) 
+REFERENCES `adm_user` (`id`) 
+ON DELETE CASCADE
+ON UPDATE RESTRICT
+, ADD INDEX `adm_user_role_FK1` (`user_id` ASC);
+
+ALTER TABLE `adm_user_role`
+ADD CONSTRAINT `adm_user_role_FK2` 
+FOREIGN KEY (`role_id`) 
+REFERENCES `adm_role` (`id`) 
+ON DELETE CASCADE
+ON UPDATE RESTRICT
+, ADD INDEX `adm_user_role_FK2` (`role_id` ASC);
 ```
