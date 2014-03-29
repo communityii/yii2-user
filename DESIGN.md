@@ -45,13 +45,12 @@ CREATE TABLE `adm_user` (
 	`activation_key` VARCHAR(128) NOT NULL COMMENT 'Key to activate the account, sent by email',
 	`reset_key` VARCHAR(128) COMMENT 'Key to reset user password',
 	`status` TINYINT(1) NOT NULL DEFAULT '0' COMMENT 'User status (e.g. registered, confirmed, activated, banned)',
-	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Timestamp of the registration',
+	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Timestamp of the user creation/registration',
     `last_login_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Last login time',
 	PRIMARY KEY (`id`),
 	UNIQUE KEY `adm_user_UK1` (`username`),
-	UNIQUE KEY `adm_user_UK2` (`email`),	
-	KEY `adm_user_NU1` (`role`),
-	KEY `adm_user_NU2` (`status`)
+	UNIQUE KEY `adm_user_UK2` (`email`),
+	KEY `adm_user_NU1` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='User master table';
 ```
 
