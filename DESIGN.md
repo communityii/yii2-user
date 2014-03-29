@@ -61,7 +61,7 @@ The remote user authentication identities.
 ```sql
 CREATE TABLE `adm_remote_identity` (
 	`id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'Unique remote user identifier',
-	`key` VARCHAR(100) NOT NULL COMMENT 'Social provider identifier key',
+	`profile_id` VARCHAR(100) NOT NULL COMMENT 'Social provider authorization identifier',
 	`provider` VARCHAR(30) NOT NULL COMMENT 'Social provider code/name',
     `user_id` BIGINT(20) NOT NULL COMMENT 'Related user identifier',
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation time',
