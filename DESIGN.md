@@ -67,6 +67,7 @@ CREATE TABLE `adm_remote_identity` (
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation time',
 	`updated_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Record updation time',
 	PRIMARY KEY (`id`),
+    UNIQUE KEY `adm_user_UK1` (`provider`, `profile_id`),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Remote identity authentication table for users';
 
 ALTER TABLE `adm_remote_identity`
