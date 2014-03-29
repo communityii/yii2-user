@@ -12,6 +12,7 @@ Design for yii2-user
 ** Plug & Play Features
 
 The module needs to have the following configurable (plug and play components):
+
 1. Enable/Disable social authentication for the module
 2. Enable/Disable user roles for the module??? (Needs discussion)
 3. Enable/Disable social profiles - Will use profile information from social provider to auto populate user data
