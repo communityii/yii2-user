@@ -57,7 +57,10 @@ CREATE TABLE `adm_user` (
 ### adm_user_profile
 
 The master table for user profile. Most of these fields are available as standard from what most social providers provide via OAuth/OAuth2. 
-There should be one record in this table always when a new user registers without social auth (The provider name will be DEFAULT).
+There should be one record in this table always when a new user registers without social auth (The `provider` field value will be `DEFAULT` for this case).
+For social authenticated profiles, the `provider` value will be one of the provider constants i.e. FACEBOOK, GOOGLE etc. We may assume that one login per
+provider is allowed. For example, if user has authenticated via EMAIL_1 with google, in future if he selects google as login authentication, it will automatically
+use EMAIL_1.
 Note some of these special fields:
 - is_active: the default profile to be used for the user. If an user has multiple social providers he has authenticated with, all these
   will appear for his account, and he can choose which social profile details he can set to default. He/she can also override/edit these
