@@ -30,12 +30,11 @@ The module needs to have the following configurable (plug and play components):
 14. Menu for user profile can be setup as parameters
 15. User Status Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
     - Possible statuses
-      - registered (user filled the form)
-      - confirmed (user received an email an clicked on a link in the mail)
-      - active (user can login, may be configured to happen automatically)
-      - banned (user was blocked by an admin)
+      - new (a newly registered user)
+      - active (user has been activated based on activation link confirmation - or via social authentication)
+      - banned (user was blocked by an admin / moderator)
       - inactive (user has been inactivated - either due to multiple wrong password types or password expiry or other membership policy.)
-16. Events for register, confirm, active, banner, login, logout. We could trigger the e-mail delivery with these. Could be implemented in a decoupled way with Dependency Injection. Sample "Mailer" class can be added.
+16. Events for register, confirm, active, banned, login, logout. We could trigger the e-mail delivery with these. Could be implemented in a decoupled way with Dependency Injection. Sample "Mailer" class can be added.
 
 ## Database Structure
 
@@ -48,9 +47,11 @@ CREATE TABLE `adm_user` (
 	`username` VARCHAR(255) NOT NULL COMMENT 'Unique user login name',
 	`email` VARCHAR(255) NOT NULL COMMENT 'User email address',
 	`password` VARCHAR(255) NOT NULL COMMENT 'Hashed password',
-	`activation_key` VARCHAR(128) NOT NULL COMMENT 'Key to activate the account, sent by email',
+	`role` VARCHAR(30) NOT NULL DEFAULT 'user' COMMENT 'User role',
+	`auth_key` VARCHAR(128) NOT NULL COMMENT 'Key for "remember me" authorization',
+	`activation_key` VARCHAR(128) NOT NULL COMMENT 'Key to activate the account sent by email',
 	`reset_key` VARCHAR(128) COMMENT 'Key to reset user password',
-	`status` TINYINT(1) NOT NULL DEFAULT '0' COMMENT 'User status (e.g. registered, confirmed, activated, banned)',
+	`status` TINYINT(1) NOT NULL DEFAULT '0' COMMENT 'User status (e.g. registered, confirmed, active, banned, inactive)',
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Timestamp of the user creation/registration',
     `last_login_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Last login time',
 	PRIMARY KEY (`id`),
@@ -74,7 +75,7 @@ CREATE TABLE `adm_remote_identity` (
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation time',
 	`updated_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Record updation time',
 	PRIMARY KEY (`id`),
-    UNIQUE KEY `adm_user_UK1` (`provider`, `profile_id`),
+    UNIQUE KEY `adm_user_UK1` (`provider`, `profile_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Remote identity authentication table for users';
 
 ALTER TABLE `adm_remote_identity`

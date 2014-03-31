@@ -10,6 +10,7 @@
 namespace communityii\user\Module;
 
 use Yii;
+use communityii\user\models\User;
 
 /**
  * User module with inbuilt social authentication for Yii framework 2.0.
@@ -212,15 +213,15 @@ class Module extends \yii\base\Module
 	public function init()
 	{
 		parent::init();
-		Yii::setAlias('@usermodule', dirname(__FILE__));
+		Yii::setAlias('@user', dirname(__FILE__));
 		if (empty($this->i18n)) {
 			$this->i18n = [
 				'class' => 'yii\i18n\PhpMessageSource',
-				'basePath' => '@usermodule/messages',
+				'basePath' => '@user/messages',
 				'forceTranslation' => true
 			];
 		}
-		Yii::$app->i18n->translations['usermodule'] = $this->i18n;
+		Yii::$app->i18n->translations['user'] = $this->i18n;
 	}
 
 }
