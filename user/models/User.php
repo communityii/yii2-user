@@ -50,7 +50,8 @@ class User extends ActiveRecord implements IdentityInterface
 	 */
 	public $password_raw;
 
-	public function init() {
+	public function init()
+	{
 		$this->_statuses = [
 			self::STATUS_INACTIVE => Yii::t('user', 'Inactive'),
 			self::STATUS_ACTIVE => Yii::t('user', 'Active'),
@@ -64,13 +65,13 @@ class User extends ActiveRecord implements IdentityInterface
 		parent::init();
 	}
 
-    /**
-     * @inheritdoc
-     */
-    public static function tableName()
-    {
-        return 'adm_user';
-    }
+	/**
+	 * @inheritdoc
+	 */
+	public static function tableName()
+	{
+		return 'adm_user';
+	}
 
 	/**
 	 * User model behaviors
@@ -87,14 +88,14 @@ class User extends ActiveRecord implements IdentityInterface
 		];
 	}
 
-    /**
-     * User model validation rules
-     */
-    public function rules()
-    {
+	/**
+	 * User model validation rules
+	 */
+	public function rules()
+	{
 		$module = Yii::$app->getModule('user');
-        $rules = [
-            [['username', 'email', 'password', 'auth_key', 'activation_key', 'created_on'], 'required'],
+		$rules = [
+			[['username', 'email', 'password', 'auth_key', 'activation_key', 'created_on'], 'required'],
 			[['username', 'email', 'password'], 'string', 'max' => 255],
 
 			['username', 'filter', 'filter' => 'trim'],
@@ -107,56 +108,59 @@ class User extends ActiveRecord implements IdentityInterface
 			['email', 'email'],
 			['email', 'unique'],
 
-            [['status'], 'integer'],
+			[['status'], 'integer'],
 			[['status'], 'default', 'value' => self::STATUS_NEW],
 			['status', 'in', 'range' => array_keys($this->_statuses)],
 
 			[['password_raw', 'created_on', 'last_login_on'], 'safe'],
-            [['role'], 'string', 'max' => 30],
-            [['auth_key', 'activation_key', 'reset_key'], 'string', 'max' => 128],
-        ];
+			[['role'], 'string', 'max' => 30],
+			[['auth_key', 'activation_key', 'reset_key'], 'string', 'max' => 128],
+		];
 
-    }
+	}
 
-    /**
+	/**
 	 * Attribute labels for the User model
-     * @inheritdoc
-     */
-    public function attributeLabels()
-    {
-        return [
-            'id' => Yii::t('user', 'ID'),
-            'username' => Yii::t('user', 'Username'),
-            'email' => Yii::t('user', 'Email'),
-            'password' => Yii::t('user', 'Password'),
-            'role' => Yii::t('user', 'Role'),
-            'auth_key' => Yii::t('user', 'Auth Key'),
-            'activation_key' => Yii::t('user', 'Activation Key'),
-            'reset_key' => Yii::t('user', 'Reset Key'),
-            'status' => Yii::t('user', 'Status'),
-            'created_on' => Yii::t('user', 'Created On'),
-            'last_login_on' => Yii::t('user', 'Last Login On'),
+	 *
+	 * @inheritdoc
+	 */
+	public function attributeLabels()
+	{
+		return [
+			'id' => Yii::t('user', 'ID'),
+			'username' => Yii::t('user', 'Username'),
+			'email' => Yii::t('user', 'Email'),
+			'password' => Yii::t('user', 'Password'),
+			'role' => Yii::t('user', 'Role'),
+			'auth_key' => Yii::t('user', 'Auth Key'),
+			'activation_key' => Yii::t('user', 'Activation Key'),
+			'reset_key' => Yii::t('user', 'Reset Key'),
+			'status' => Yii::t('user', 'Status'),
+			'created_on' => Yii::t('user', 'Created On'),
+			'last_login_on' => Yii::t('user', 'Last Login On'),
 			'password_raw' => Yii::t('user', 'Password'),
-        ];
-    }
+		];
+	}
 
-    /**
+	/**
 	 * Remote identities relation
-     * @return \yii\db\ActiveQuery
-     */
-    public function getRemoteIdentities()
-    {
-        return $this->hasMany(RemoteIdentity::className(), ['user_id' => 'id']);
-    }
+	 *
+	 * @return \yii\db\ActiveQuery
+	 */
+	public function getRemoteIdentities()
+	{
+		return $this->hasMany(RemoteIdentity::className(), ['user_id' => 'id']);
+	}
 
-    /**
+	/**
 	 * User profile relation
-     * @return \yii\db\ActiveQuery
-     */
-    public function getUserProfile()
-    {
-        return $this->hasOne(UserProfile::className(), ['id' => 'id']);
-    }
+	 *
+	 * @return \yii\db\ActiveQuery
+	 */
+	public function getUserProfile()
+	{
+		return $this->hasOne(UserProfile::className(), ['id' => 'id']);
+	}
 
 
 	/**
@@ -216,7 +220,7 @@ class User extends ActiveRecord implements IdentityInterface
 	{
 		$expire = ArrayHelper::getValue($this->_module->passwordSettings, 'resetKeyExpiry', 172800);
 		$parts = explode('_', $key);
-		$timestamp = (int) end($parts);
+		$timestamp = (int)end($parts);
 		if ($timestamp + $expire < time()) {
 			// key expired
 			return null;
@@ -230,6 +234,7 @@ class User extends ActiveRecord implements IdentityInterface
 
 	/**
 	 * Get user identifier
+	 *
 	 * @return string
 	 */
 	public function getId()
@@ -239,6 +244,7 @@ class User extends ActiveRecord implements IdentityInterface
 
 	/**
 	 * Get authorization key
+	 *
 	 * @return string
 	 */
 	public function getAuthKey()
@@ -248,6 +254,7 @@ class User extends ActiveRecord implements IdentityInterface
 
 	/**
 	 * Validate authorization key
+	 *
 	 * @param string $authKey the authorization key
 	 * @return bool
 	 */
@@ -303,9 +310,11 @@ class User extends ActiveRecord implements IdentityInterface
 
 	/**
 	 * User friendly status name
+	 *
 	 * @return string
 	 */
-	public function getStatusName() {
+	public function getStatusName()
+	{
 		return $this->_statuses[$this->status];
 	}
 }
