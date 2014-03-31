@@ -21,7 +21,6 @@ class UserProfile extends \yii\db\ActiveRecord
 {
 	/**
 	 * Table name for the UserProfile model
-	 *
 	 * @return string
 	 */
 	public static function tableName()

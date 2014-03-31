@@ -26,7 +26,6 @@ class RemoteIdentity extends \yii\db\ActiveRecord
 {
 	/**
 	 * Table name for the RemoteIdentity model
-	 *
 	 * @return string
 	 */
 	public static function tableName()

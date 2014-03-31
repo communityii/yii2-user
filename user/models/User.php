@@ -50,6 +50,9 @@ class User extends ActiveRecord implements IdentityInterface
 	 */
 	public $password_raw;
 
+	/**
+	 * Initialize User model
+	 */
 	public function init()
 	{
 		$this->_statuses = [
@@ -66,7 +69,8 @@ class User extends ActiveRecord implements IdentityInterface
 	}
 
 	/**
-	 * @inheritdoc
+	 * Table name for the User model
+	 * @return string
 	 */
 	public static function tableName()
 	{
