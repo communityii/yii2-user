@@ -100,6 +100,7 @@ class User extends BaseModel implements IdentityInterface
 
 	/**
 	 * User model validation rules
+	 *
 	 * @return array
 	 */
 	public function rules()
@@ -127,17 +128,18 @@ class User extends BaseModel implements IdentityInterface
 			[['status'], 'default', 'value' => self::STATUS_NEW],
 			['status', 'in', 'range' => array_keys($this->_statuses)],
 
-			[['password_raw', 'password_new', 'password_confirm'], 'required', 'on'=>[Module::FORM_CHANGE_PASSWORD]],
-
 			[['last_login_ip'], 'string', 'max' => 50],
 			[['auth_key', 'activation_key', 'reset_key'], 'string', 'max' => 128],
+
+			[['password_raw', 'password_new', 'password_confirm'], 'required', 'on' => [Module::FORM_CHANGE_PASSWORD]],
+			['password_new', 'compare', 'compareAttribute' => 'password_confirm', 'on' => [Module::FORM_CHANGE_PASSWORD]],
 		];
 		$strengthRules = empty($pwdSettings['strengthRules']) ? [] : $pwdSettings['strengthRules'];
 		if (in_array(Module::FORM_REGISTRATION, $pwdSettings['validateStrength'])) {
-			$rules[] = [['password_raw'], StrengthValidator::className()] + $strengthRules + ['on'=>[Module::FORM_REGISTRATION]];
+			$rules[] = [['password_raw'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::FORM_REGISTRATION]];
 		}
 		if (in_array(Module::FORM_CHANGE_PASSWORD, $pwdSettings['validateStrength'])) {
-			$rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + ['on'=>[Module::FORM_CHANGE_PASSWORD]];
+			$rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::FORM_CHANGE_PASSWORD]];
 		}
 		return $rules;
 
