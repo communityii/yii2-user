@@ -24,13 +24,13 @@ class Module extends \yii\base\Module
 	const LOGIN_EMAIL = 2;
 	const LOGIN_BOTH = 3;
 
-	// the major user interface forms
-	const FORM_LOGIN = 1;
-	const FORM_REGISTRATION = 2;
-	const FORM_ACTIVATION = 3;
-	const FORM_RECOVERY = 4;
-	const FORM_PASSWORD_CHANGE = 5;
-	const FORM_USER_PROFILE = 6;
+	// the major user interface forms (the view names)
+	const FORM_LOGIN = 'login';
+	const FORM_REGISTRATION = 'register';
+	const FORM_ACTIVATION = 'activation';
+	const FORM_RECOVERY = 'recovery';
+	const FORM_CHANGE_PASSWORD = 'change-password';
+	const FORM_EDIT_PROFILE = 'edit-profile';
 
 	// the rbac integration settings
 	const RBAC_SIMPLE = 1;
@@ -58,11 +58,11 @@ class Module extends \yii\base\Module
 	 * @var array the settings for the password in the module. The following options can be set"
 	 * - validateStrength: array|boolean, the list of forms where password strength will be validated. If
 	 *   set to `false` or an empty array, no strength will be validated. The strength will be validated
-	 *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::FORM_REGISTRATION, Module::FORM_PASSWORD_CHANGE]`.
+	 *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::FORM_REGISTRATION, Module::FORM_CHANGE_PASSWORD]`.
 	 * - strengthRules: array, the strength validation rules as required by `\kartik\password\StrengthValidator`
 	 * - strengthMeter: array|boolean, the list of forms where password strength meter will be displayed.
 	 *   If set to `false` or an empty array, no strength meter will be displayed.  Defaults to
-	 *   `[Module::FORM_REGISTRATION, Module::FORM_PASSWORD_CHANGE]`.
+	 *   `[Module::FORM_REGISTRATION, Module::FORM_CHANGE_PASSWORD]`.
 	 * - passwordExpiry: integer|bool, the timeout in days after which user is required to reset his password
 	 *   after logging in. If set to `false`, the password never expires. Defaults to `false`.
 	 * - wrongAttempts: integer|bool, the number of consecutive wrong password type attempts, at login, after which
@@ -72,9 +72,9 @@ class Module extends \yii\base\Module
 	 *   to reset/recover a lost password. Defaults to `true`.
 	 */
 	public $passwordSettings = [
-		'validateStrength' => [self::FORM_REGISTRATION, self::FORM_PASSWORD_CHANGE],
+		'validateStrength' => [self::FORM_REGISTRATION, self::FORM_CHANGE_PASSWORD],
 		'strengthRules' => [],
-		'strengthMeter' => [self::FORM_REGISTRATION, self::FORM_PASSWORD_CHANGE],
+		'strengthMeter' => [self::FORM_REGISTRATION, self::FORM_CHANGE_PASSWORD],
 		'passwordExpiry' => false,
 		'wrongAttempts' => false,
 		'enableRecovery' => true
@@ -164,7 +164,6 @@ class Module extends \yii\base\Module
 		'linkSocial' => true
 	];
 
-
 	/**
 	 * @var array the settings for rbac. Contains
 	 * - enabled: bool, whether the rbac integration is enabled for the module. Defaults to `true`.
@@ -176,7 +175,22 @@ class Module extends \yii\base\Module
 		'config' => [
 			'class' => '\communityii\rbac\SimpleRBAC',
 		]
-	]
+	];
+
+
+	/**
+	 * @var array the global widget settings for each form (also available as a widget).
+	 * Check each widget documentation for details. Few default settings:
+	 * - `type`: the Bootstrap form orientation - one of `vertical`, `horizontal`, or `inline`.
+	 */
+	public $widgetSettings = [
+		self::FORM_LOGIN => ['type' => 'vertical'],
+		self::FORM_REGISTRATION => ['type' => 'horizontal'],
+		self::FORM_ACTIVATION => ['type' => 'inline'],
+		self::FORM_RECOVERY => ['type' => 'inline'],
+		self::FORM_CHANGE_PASSWORD => ['type' => 'vertical'],
+		self::FORM_EDIT_PROFILE => ['type' => 'vertical'],
+	];
 
 	/**
 	 * @var array the list of admins/superusers.
@@ -196,7 +210,7 @@ class Module extends \yii\base\Module
 		if (empty($this->i18n)) {
 			$this->i18n = [
 				'class' => 'yii\i18n\PhpMessageSource',
-				'basePath' => '@markdown/messages',
+				'basePath' => '@usermodule/messages',
 				'forceTranslation' => true
 			];
 		}
