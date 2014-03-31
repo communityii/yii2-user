@@ -37,10 +37,10 @@ use communityii\user\components\IdentityInterface;
  */
 class User extends ActiveRecord implements IdentityInterface
 {
-	const STATUS_INACTIVE = 0;
-	const STATUS_ACTIVE = 1;
 	const STATUS_NEW = 0;
-	const STATUS_BANNED = 3;
+	const STATUS_ACTIVE = 1;
+	const STATUS_BANNED = 2;
+	const STATUS_INACTIVE = 3;
 
 	private $_statuses = [];
 	private $_module;
