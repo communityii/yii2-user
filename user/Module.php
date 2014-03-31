@@ -7,7 +7,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\Module;
+namespace communityii\user\Module;
 
 use Yii;
 
