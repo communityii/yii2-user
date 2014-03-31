@@ -63,6 +63,8 @@ class Module extends \yii\base\Module
 	 * - strengthMeter: array|boolean, the list of forms where password strength meter will be displayed.
 	 *   If set to `false` or an empty array, no strength meter will be displayed.  Defaults to
 	 *   `[Module::FORM_REGISTRATION, Module::FORM_CHANGE_PASSWORD]`.
+	 * - resetKeyExpiry: integer, the time in seconds after which the password reset key/token will expire. Defaults to
+	 *   3600*24*2 seconds (2 days).
 	 * - passwordExpiry: integer|bool, the timeout in days after which user is required to reset his password
 	 *   after logging in. If set to `false`, the password never expires. Defaults to `false`.
 	 * - wrongAttempts: integer|bool, the number of consecutive wrong password type attempts, at login, after which
@@ -75,6 +77,7 @@ class Module extends \yii\base\Module
 		'validateStrength' => [self::FORM_REGISTRATION, self::FORM_CHANGE_PASSWORD],
 		'strengthRules' => [],
 		'strengthMeter' => [self::FORM_REGISTRATION, self::FORM_CHANGE_PASSWORD],
+		'resetKeyExpiry' => 172800,
 		'passwordExpiry' => false,
 		'wrongAttempts' => false,
 		'enableRecovery' => true
