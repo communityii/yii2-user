@@ -18,7 +18,7 @@ use communityii\user\models\User;
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class IdentityInterface extends \yii\web\IdentityInterface
+interface IdentityInterface
 {
 
 }
