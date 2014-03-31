@@ -32,8 +32,8 @@ use communityii\user\components\IdentityInterface;
  * @property string $last_login_on
  * @property string $password_raw write-only password
  *
- * @property AdmRemoteIdentity[] $admRemoteIdentities
- * @property AdmUserProfile $admUserProfile
+ * @property RemoteIdentity[] $remoteIdentities
+ * @property UserProfile $userProfile
  */
 class User extends ActiveRecord implements IdentityInterface
 {
