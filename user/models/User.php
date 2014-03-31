@@ -59,7 +59,7 @@ class User extends ActiveRecord implements IdentityInterface
 		$this->_statuses = [
 			self::STATUS_NEW => Yii::t('user', 'New'),
 			self::STATUS_ACTIVE => Yii::t('user', 'Active'),
-			self::STATUS_BANNED => Yii::t('user', 'Banned')
+			self::STATUS_BANNED => Yii::t('user', 'Banned'),
 			self::STATUS_INACTIVE => Yii::t('user', 'Inactive'),
 		];
 		$this->_module = Yii::$app->getModule('user');
