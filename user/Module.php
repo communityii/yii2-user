@@ -41,8 +41,8 @@ class Module extends \yii\base\Module
 	 * @var array the login settings for the module. The following options can be set:
 	 * - loginType: integer, whether users can login with their username, email address, or both.
 	 *   Defaults to `Module::LOGIN_BOTH`.
-	 * - rememberMeDuration: integer, the duration for which user will be be logged in without any
-	 *   activity, in seconds. Defaults to 3600*24*30 seconds (30 days).
+	 * - rememberMeDuration: integer, the duration in seconds for which user will remain logged in on his/her client
+	 *   using cookies. Defaults to 3600*24*30 seconds (30 days).
 	 * - loginRedirectUrl: string|array, the default url to redirect after login. Normally the last return
 	 *   url will be used. This setting will only be used for a new login instance.
 	 * - logoutRedirectUrl: string|array, the default url to redirect after logout.
@@ -64,14 +64,14 @@ class Module extends \yii\base\Module
 	 *   If set to `false` or an empty array, no strength meter will be displayed.  Defaults to
 	 *   `[Module::FORM_REGISTRATION, Module::FORM_CHANGE_PASSWORD]`.
 	 * - activationKeyExpiry: integer|bool, the time in seconds after which the account activation key/token will expire.
-	 *   Defaults to 3600*24*2 seconds (2 days). If set to `zero` or `false`, the key never expires.
+	 *   Defaults to 3600*24*2 seconds (2 days). If set to `0` or `false`, the key never expires.
 	 * - resetKeyExpiry: integer|bool, the time in seconds after which the password reset key/token will expire.
-	 *   Defaults to 3600*24*2 seconds (2 days). If set to `zero` or `false`, the key never expires.
+	 *   Defaults to 3600*24*2 seconds (2 days). If set to `0` or `false`, the key never expires.
 	 * - passwordExpiry: integer|bool, the timeout in seconds after which user is required to reset his password
-	 *   after logging in. If set to `false`, the password never expires. Defaults to `false`.
+	 *   after logging in. Defaults to `false`. If set to `0` or `false`, the password never expires.
 	 * - wrongAttempts: integer|bool, the number of consecutive wrong password type attempts, at login, after which
-	 *   the account is inactivated and needs to be reset. This will be only validated if its an integer greater than
-	 *   zero. Defaults to `false`.
+	 *   the account is inactivated and needs to be reset. Defaults to `false`. If set to `0` or `false`, the account
+	 *   is never inactivated after any wrong password attempts.
 	 * - enableRecovery: bool, whether password recovery is permitted. If set to `true`, users will be given an option
 	 *   to reset/recover a lost password. Defaults to `true`.
 	 */
