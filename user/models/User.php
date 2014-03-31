@@ -14,6 +14,7 @@ use yii\base\NotSupportedException;
 use yii\base\InvalidConfigException;
 use yii\db\ActiveRecord;
 use yii\helpers\Security;
+use yii\helpers\ArrayHelper;
 use communityii\user\components\IdentityInterface;
 
 /**
@@ -97,8 +98,7 @@ class User extends ActiveRecord implements IdentityInterface
 	 */
 	public function rules()
 	{
-		$module = Yii::$app->getModule('user');
-		$rules = [
+		return [
 			[['username', 'email', 'password', 'auth_key', 'activation_key', 'created_on'], 'required'],
 			[['username', 'email', 'password'], 'string', 'max' => 255],
 
@@ -124,9 +124,20 @@ class User extends ActiveRecord implements IdentityInterface
 	}
 
 	/**
+	 * User model scenarios
+	 * @return array
+	 */
+	public function scenarios()
+	{
+		return [
+			'register' => ['username', 'email', 'password_raw'],
+			'changepwd' => ['password'],
+		];
+	}
+
+	/**
 	 * Attribute labels for the User model
-	 *
-	 * @inheritdoc
+	 * @return array
 	 */
 	public function attributeLabels()
 	{
@@ -212,6 +223,32 @@ class User extends ActiveRecord implements IdentityInterface
 	public static function findByUsername($username)
 	{
 		return static::find(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+	}
+
+	/**
+	 * Finds user by email
+	 *
+	 * @param string $email
+	 * @return static|null
+	 */
+	public static function findByEmail($email)
+	{
+		return static::find(['email' => $email, 'status' => self::STATUS_ACTIVE]);
+	}
+
+	/**
+	 * Finds user by username or email
+	 *
+	 * @param string $userStr
+	 * @return static|null
+	 */
+	public static function findByUserOrEmail($userStr)
+	{
+		return static::find()->where('(username = :username OR email = :email) AND status = :status', [
+			':username' => $userStr,
+			':email' => $userStr,
+			':status' => self::STATUS_ACTIVE
+		]);
 	}
 
 	/**

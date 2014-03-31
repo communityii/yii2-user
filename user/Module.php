@@ -50,9 +50,7 @@ class Module extends \yii\base\Module
 	 */
 	public $loginSettings = [
 		'loginType' => self::LOGIN_BOTH,
-		'rememberMeDuration' => 2592000,
-		'loginRedirectUrl' => '',
-		'logoutRedirectUrl' => '',
+		'rememberMeDuration' => 2592000
 	];
 
 	/**
