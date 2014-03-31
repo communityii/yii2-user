@@ -44,6 +44,7 @@ class User extends ActiveRecord implements IdentityInterface
 	const STATUS_INACTIVE = 3;
 
 	private $_statuses = [];
+	private $_statusClasses = [];
 	private $_module;
 
 	/**
@@ -61,6 +62,12 @@ class User extends ActiveRecord implements IdentityInterface
 			self::STATUS_ACTIVE => Yii::t('user', 'Active'),
 			self::STATUS_BANNED => Yii::t('user', 'Banned'),
 			self::STATUS_INACTIVE => Yii::t('user', 'Inactive'),
+		];
+		$this->_statusClasses = [
+			self::STATUS_NEW => 'label label-info',
+			self::STATUS_ACTIVE => 'label label-success',
+			self::STATUS_BANNED => 'label label-danger',
+			self::STATUS_INACTIVE => 'label label-default',
 		];
 		$this->_module = Yii::$app->getModule('user');
 		if ($this->_module === null) {
@@ -357,8 +364,18 @@ class User extends ActiveRecord implements IdentityInterface
 	 *
 	 * @return string
 	 */
-	public function getStatusName()
+	public function getStatusText()
 	{
 		return $this->_statuses[$this->status];
+	}
+
+	/**
+	 * Formatted status name
+	 *
+	 * @return string
+	 */
+	public function getStatusFormatted()
+	{
+		return '<span class="' . $this->_statusClasses[$this->status] . '">' . $this->statusName . '</span>';
 	}
 }
