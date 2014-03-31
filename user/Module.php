@@ -4,7 +4,7 @@
  * @copyright Copyright &copy; communityii, 2014
  * @package yii2-user
  * @version 1.0.0
- * https://github.com/communityii/yii2-user
+ * @see https://github.com/communityii/yii2-user
  */
 
 namespace communityii\Module;
