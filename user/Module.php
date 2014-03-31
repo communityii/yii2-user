@@ -93,11 +93,18 @@ class Module extends \yii\base\Module
 	 * - showCaptcha: bool, whether to display captcha for registration. Defaults to `true`.
 	 * - autoActivate: bool, whether account is automatically activated after registration. If set to
 	 *   `false`, the user will need to complete activation before login. Defaults to `false`.
+	 * - userNameLength: integer, the minimum length for the username field. Defaults to 4.
+	 * - userNamePattern: string, the regular expression to match for characters allowed in the username.
+	 *   Defaults to `/^[A-Za-z0-9_\-]+$/u`.
+	 * - userNameValidMsg: string, the error message to display if the username pattern validation fails.
+	 *   Defaults to `"{attribute} can contain only letters, numbers, hyphen, and underscore."`.
 	 */
 	public $registrationSettings = [
 		'enabled' => true,
 		'showCaptcha' => true,
-		'autoActivate' => true
+		'autoActivate' => true,
+		'userNameLength' => 4,
+		'userNamePattern' => '/^[A-Za-z0-9_\-]+$/u',
 	];
 
 	/**

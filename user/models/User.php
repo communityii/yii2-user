@@ -15,6 +15,7 @@ use yii\base\InvalidConfigException;
 use yii\db\ActiveRecord;
 use yii\helpers\Security;
 use yii\helpers\ArrayHelper;
+use kartik\password\StrengthValidator;
 use communityii\user\components\IdentityInterface;
 
 /**
@@ -24,19 +25,25 @@ use communityii\user\components\IdentityInterface;
  * @property string $username
  * @property string $email
  * @property string $password
- * @property string $role
  * @property string $auth_key
  * @property string $activation_key
  * @property string $reset_key
  * @property integer $status
  * @property string $created_on
+ * @property string $updated_on
+ * @property string $last_login_ip
  * @property string $last_login_on
  * @property string $password_raw write-only password
+ * @property string $password_new write-only password
+ * @property string $password_confirm write-only password
  *
  * @property RemoteIdentity[] $remoteIdentities
  * @property UserProfile $userProfile
+ *
+ * @author Kartik Visweswaran <kartikv2@gmail.com>
+ * @since 1.0
  */
-class User extends ActiveRecord implements IdentityInterface
+class User extends BaseModel implements IdentityInterface
 {
 	const STATUS_NEW = 0;
 	const STATUS_ACTIVE = 1;
@@ -45,7 +52,6 @@ class User extends ActiveRecord implements IdentityInterface
 
 	private $_statuses = [];
 	private $_statusClasses = [];
-	private $_module;
 
 	/**
 	 * @var the write only password
@@ -53,10 +59,21 @@ class User extends ActiveRecord implements IdentityInterface
 	public $password_raw;
 
 	/**
+	 * @var the write only new password (required for password change)
+	 */
+	public $password_new;
+
+	/**
+	 * @var the write only new password confirmation (required for password change)
+	 */
+	public $password_confirm;
+
+	/**
 	 * Initialize User model
 	 */
 	public function init()
 	{
+		parent::init();
 		$this->_statuses = [
 			self::STATUS_NEW => Yii::t('user', 'New'),
 			self::STATUS_ACTIVE => Yii::t('user', 'Active'),
@@ -69,11 +86,6 @@ class User extends ActiveRecord implements IdentityInterface
 			self::STATUS_BANNED => 'label label-danger',
 			self::STATUS_INACTIVE => 'label label-default',
 		];
-		$this->_module = Yii::$app->getModule('user');
-		if ($this->_module === null) {
-			throw new InvalidConfigException("The module 'user' was not found. Ensure you have setup the 'user' module in your Yii configuration file.");
-		}
-		parent::init();
 	}
 
 	/**
@@ -87,33 +99,24 @@ class User extends ActiveRecord implements IdentityInterface
 	}
 
 	/**
-	 * User model behaviors
-	 */
-	public function behaviors()
-	{
-		return [
-			'timestamp' => [
-				'class' => 'yii\behaviors\TimestampBehavior',
-				'attributes' => [
-					ActiveRecord::EVENT_BEFORE_INSERT => ['created_on'],
-				],
-			],
-		];
-	}
-
-	/**
 	 * User model validation rules
+	 * @return array
 	 */
 	public function rules()
 	{
-		return [
-			[['username', 'email', 'password', 'auth_key', 'activation_key', 'created_on'], 'required'],
+		$pwdSettings = $this->_module->passwordSettings;
+		$regSettings = $this->_module->registrationSettings;
+		$length = ArrayHelper::getValue($regSettings, 'userNameLength', 4);
+		$pattern = ArrayHelper::getValue($regSettings, 'userNamePattern', '/^[A-Za-z0-9_\-]+$/u');
+		$message = ArrayHelper::getValue($regSettings, 'userNameValidMsg', Yii::t('user', '{attribute} can contain only letters, numbers, hyphen, and underscore.'));
+		$rules = [
 			[['username', 'email', 'password'], 'string', 'max' => 255],
 
+			[['username'], 'match', 'pattern' => $pattern, 'message' => $message],
 			['username', 'filter', 'filter' => 'trim'],
 			['username', 'required'],
 			['username', 'unique'],
-			['username', 'string', 'min' => 2, 'max' => 255],
+			['username', 'string', 'min' => $length, 'max' => 255],
 
 			['email', 'filter', 'filter' => 'trim'],
 			['email', 'required'],
@@ -124,10 +127,19 @@ class User extends ActiveRecord implements IdentityInterface
 			[['status'], 'default', 'value' => self::STATUS_NEW],
 			['status', 'in', 'range' => array_keys($this->_statuses)],
 
-			[['password_raw', 'created_on', 'last_login_on'], 'safe'],
-			[['role'], 'string', 'max' => 30],
+			[['password_raw', 'password_new', 'password_confirm'], 'required', 'on'=>[Module::FORM_CHANGE_PASSWORD]],
+
+			[['last_login_ip'], 'string', 'max' => 50],
 			[['auth_key', 'activation_key', 'reset_key'], 'string', 'max' => 128],
 		];
+		$strengthRules = empty($pwdSettings['strengthRules']) ? [] : $pwdSettings['strengthRules'];
+		if (in_array(Module::FORM_REGISTRATION, $pwdSettings['validateStrength'])) {
+			$rules[] = [['password_raw'], StrengthValidator::className()] + $strengthRules + ['on'=>[Module::FORM_REGISTRATION]];
+		}
+		if (in_array(Module::FORM_CHANGE_PASSWORD, $pwdSettings['validateStrength'])) {
+			$rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + ['on'=>[Module::FORM_CHANGE_PASSWORD]];
+		}
+		return $rules;
 
 	}
 
@@ -139,8 +151,8 @@ class User extends ActiveRecord implements IdentityInterface
 	public function scenarios()
 	{
 		return [
-			'register' => ['username', 'email', 'password_raw'],
-			'changepwd' => ['password'],
+			Module::FORM_REGISTRATION => ['username', 'password_raw', 'email'],
+			Module::FORM_CHANGE_PASSWORD => ['password_raw', 'password_new', 'password_confirm'],
 		];
 	}
 
@@ -156,14 +168,16 @@ class User extends ActiveRecord implements IdentityInterface
 			'username' => Yii::t('user', 'Username'),
 			'email' => Yii::t('user', 'Email'),
 			'password' => Yii::t('user', 'Password'),
-			'role' => Yii::t('user', 'Role'),
 			'auth_key' => Yii::t('user', 'Auth Key'),
 			'activation_key' => Yii::t('user', 'Activation Key'),
 			'reset_key' => Yii::t('user', 'Reset Key'),
 			'status' => Yii::t('user', 'Status'),
 			'created_on' => Yii::t('user', 'Created On'),
+			'last_login_ip' => Yii::t('user', 'Last Login IP'),
 			'last_login_on' => Yii::t('user', 'Last Login On'),
 			'password_raw' => Yii::t('user', 'Password'),
+			'password_new' => Yii::t('user', 'New Password'),
+			'password_confirm' => Yii::t('user', 'Confirm Password'),
 		];
 	}
 

@@ -12,12 +12,13 @@ use Yii;
  * @property string $first_name
  * @property string $last_name
  * @property string $avatar_url
+ * @property string $ban_log
  * @property string $created_on
  * @property string $updated_on
  *
  * @property User $user
  */
-class UserProfile extends \yii\db\ActiveRecord
+class UserProfile extends BaseModel
 {
 	/**
 	 * Table name for the UserProfile model
@@ -26,22 +27,6 @@ class UserProfile extends \yii\db\ActiveRecord
 	public static function tableName()
 	{
 		return 'adm_user_profile';
-	}
-
-	/**
-	 * UserProfile model behaviors
-	 */
-	public function behaviors()
-	{
-		return [
-			'timestamp' => [
-				'class' => 'yii\behaviors\TimestampBehavior',
-				'attributes' => [
-					ActiveRecord::EVENT_BEFORE_INSERT => ['created_on', 'updated_on'],
-					ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_on'],
-				],
-			],
-		];
 	}
 
 	/**

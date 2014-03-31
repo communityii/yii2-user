@@ -14,7 +14,14 @@ use yii\helpers\ArrayHelper;
 use communityii\user\Module;
 
 /**
- * Login form
+ * Model for the login form
+ *
+ * @property string $loginId
+ * @property string $password
+ * @property string $rememberMe
+ *
+ * @author Kartik Visweswaran <kartikv2@gmail.com>
+ * @since 1.0
  */
 class LoginForm extends Model
 {
@@ -42,7 +49,6 @@ class LoginForm extends Model
 		$this->_rememberMeDuration = ArrayHelper::getValue($settings, 'rememberMeDuration', 2592000);
 		$this->_loginRedirectUrl = ArrayHelper::getValue($settings, 'loginRedirectUrl', Yii::$app->homeUrl);
 		$this->_logoutRedirectUrl = ArrayHelper::getValue($settings, 'logoutRedirectUrl', Yii::$app->homeUrl);
-		parent::init();
 	}
 
 	/**

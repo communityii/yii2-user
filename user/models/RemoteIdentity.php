@@ -22,7 +22,7 @@ use Yii;
  *
  * @property User $user
  */
-class RemoteIdentity extends \yii\db\ActiveRecord
+class RemoteIdentity extends BaseModel
 {
 	/**
 	 * Table name for the RemoteIdentity model
@@ -31,22 +31,6 @@ class RemoteIdentity extends \yii\db\ActiveRecord
 	public static function tableName()
 	{
 		return 'adm_remote_identity';
-	}
-
-	/**
-	 * RemoteIdentity model behaviors
-	 */
-	public function behaviors()
-	{
-		return [
-			'timestamp' => [
-				'class' => 'yii\behaviors\TimestampBehavior',
-				'attributes' => [
-					ActiveRecord::EVENT_BEFORE_INSERT => ['created_on', 'updated_on'],
-					ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_on'],
-				],
-			],
-		];
 	}
 
 	/**
