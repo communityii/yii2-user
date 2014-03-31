@@ -71,6 +71,7 @@ class User extends ActiveRecord implements IdentityInterface
 
 	/**
 	 * Table name for the User model
+	 *
 	 * @return string
 	 */
 	public static function tableName()
@@ -125,6 +126,7 @@ class User extends ActiveRecord implements IdentityInterface
 
 	/**
 	 * User model scenarios
+	 *
 	 * @return array
 	 */
 	public function scenarios()
@@ -137,6 +139,7 @@ class User extends ActiveRecord implements IdentityInterface
 
 	/**
 	 * Attribute labels for the User model
+	 *
 	 * @return array
 	 */
 	public function attributeLabels()
@@ -244,7 +247,7 @@ class User extends ActiveRecord implements IdentityInterface
 	 */
 	public static function findByUserOrEmail($userStr)
 	{
-		return static::find()->where('(username = :username OR email = :email) AND status = :status', [
+		return static::find()->andWhere('(username = :username OR email = :email) AND status = :status', [
 			':username' => $userStr,
 			':email' => $userStr,
 			':status' => self::STATUS_ACTIVE

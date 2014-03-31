@@ -126,7 +126,7 @@ class LoginForm extends Model
 			} elseif ($this->_loginType === Module::LOGIN_EMAIL) {
 				$this->_user = User::findByEmail($this->loginId);
 			} else {
-				$this->_user = User::findByUserOrEmail($this->loginId);
+				$this->_user = User::findByUserOrEmail($this->loginId)->limit(1);
 			}
 		}
 
