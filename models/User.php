@@ -11,7 +11,6 @@ namespace communityii\user\models;
 
 use Yii;
 use yii\base\NotSupportedException;
-use yii\base\InvalidConfigException;
 use yii\db\ActiveRecord;
 use yii\helpers\Security;
 use yii\helpers\ArrayHelper;
@@ -128,13 +127,10 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function rules()
 	{
-		$pwdSettings = $this->_module->passwordSettings;
-		$regSettings = $this->_module->registrationSettings;
-		$length = ArrayHelper::getValue($regSettings, 'userNameLength', 4);
-		$pattern = ArrayHelper::getValue($regSettings, 'userNamePattern', '/^[A-Za-z0-9_\-]+$/u');
-		$message = ArrayHelper::getValue($regSettings, 'userNameValidMsg', Yii::t('user', '{attribute} can contain only letters, numbers, hyphen, and underscore.'));
+		$config = $this->_module->registrationSettings;
 		$rules = [
-			[['username'], 'match', 'pattern' => $pattern, 'message' => $message],
+			[['username'], 'match', 'pattern' => $config['userNameLength'], 'message' => $config['userNameValidMsg']],
+			[['username'], 'length', $config['length']],
 			['username', 'filter', 'filter' => 'trim'],
 			['username', 'required'],
 			['username', 'unique'],
@@ -147,16 +143,16 @@ class User extends BaseModel implements IdentityInterface
 			[['status'], 'default', 'value' => self::STATUS_PENDING],
 			['status', 'in', 'range' => array_keys($this->_statuses)],
 
-			[['password_raw'], 'required', 'on' => [Module::FORM_REGISTRATION, Module::FORM_CHANGE_PASSWORD]],
-			[['password_new', 'password_confirm'], 'required', 'on' => [Module::FORM_CHANGE_PASSWORD]],
-			['password_new', 'compare', 'compareAttribute' => 'password_confirm', 'on' => [Module::FORM_CHANGE_PASSWORD]],
+			[['password_raw'], 'required', 'on' => [Module::FORM_REGISTER, Module::FORM_RESET]],
+			[['password_new', 'password_confirm'], 'required', 'on' => [Module::FORM_RESET]],
+			['password_new', 'compare', 'compareAttribute' => 'password_confirm', 'on' => [Module::FORM_RESET]],
 		];
-		$strengthRules = empty($pwdSettings['strengthRules']) ? [] : $pwdSettings['strengthRules'];
-		if (in_array(Module::FORM_REGISTRATION, $pwdSettings['validateStrength'])) {
-			$rules[] = [['password_raw'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::FORM_REGISTRATION]];
+		$strengthRules = $this->_module->passwordSettings['strengthRules'];
+		if (in_array(Module::FORM_REGISTER, $pwdSettings['validateStrength'])) {
+			$rules[] = [['password_raw'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::FORM_REGISTER]];
 		}
-		if (in_array(Module::FORM_CHANGE_PASSWORD, $pwdSettings['validateStrength'])) {
-			$rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::FORM_CHANGE_PASSWORD]];
+		if (in_array(Module::FORM_RESET, $pwdSettings['validateStrength'])) {
+			$rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::FORM_RESET]];
 		}
 		return $rules;
 
@@ -170,10 +166,10 @@ class User extends BaseModel implements IdentityInterface
 	public function scenarios()
 	{
 		return [
-			Module::FORM_REGISTRATION => ['username', 'password_raw', 'email'],
-			Module::FORM_CHANGE_PASSWORD => ['password_raw', 'password_new', 'password_confirm'],
-			Module::FORM_USER_PROFILE => ['username', 'email'],
-			Module::FORM_ADMIN_PROFILE => ['username', 'email'],
+			Module::FORM_REGISTER => ['username', 'password_raw', 'email'],
+			Module::FORM_RESET => ['password_raw', 'password_new', 'password_confirm'],
+			Module::FORM_PROFILE => ['username', 'email'],
+			Module::FORM_ADMIN => ['username', 'email'],
 		];
 	}
 
@@ -240,6 +236,39 @@ class User extends BaseModel implements IdentityInterface
 		} else {
 			return null;
 		}
+	}
+
+	/**
+	 * Sets the access for user and configures user keys and statuses based on scenario
+	 */
+	public function setAccess() {
+		if ($this->scenario == Module::FORM_REGISTER) {
+			$this->status = self::STATUS_PENDING;
+			$this->removeResetKey();
+			$this->generateActivationKey();
+		}
+		elseif ($this->scenario == Module::FORM_ACTIVATE || $this->scenario == Module::FORM_RECOVERY) {
+			$this->status = self::STATUS_ACTIVE;
+			$this->removeResetKey();
+			$this->removeActivationKey();
+		}
+		elseif ($this->scenario == Module::FORM_RESET) {
+			$this->status = self::STATUS_PENDING;
+			$this->removeActivationKey();
+			$this->generateResetKey();
+		}
+		elseif ($this->scenario == Module::FORM_INACTIVATE) {
+			$this->status = self::STATUS_INACTIVE;
+			$this->removeActivationKey();
+			$this->generateResetKey();
+		}
+	}
+
+	/**
+	 * Sets the model status
+	 */
+	public function setStatus($status) {
+		$this->status = $status;
 	}
 
 	/**
@@ -511,4 +540,22 @@ class User extends BaseModel implements IdentityInterface
 		return '<span class="' . $this->_statusClasses[$this->status] . '">' . $this->statusName . '</span>';
 	}
 
+	/**
+	 * Sends an email with a link, for resetting the password.
+	 * @param string $type the type/template of mail to be sent
+	 * @return bool whether the email was send
+	 */
+	public function sendEmail($type)
+	{
+		if (!empty($this->_module->notificationSettings[$type])) {
+			$settings = $this->_module->notificationSettings;
+			$content = Yii::$app->controller->renderPartial($settings['viewPath'] . '/' . $settings[$type], ['user' => $this]);
+			return \Yii::$app->mail->compose($content)
+			   ->setFrom([$settings[$type]['fromEmail'] => $settings[$type]['fromName'])
+			   ->setTo($this->email)
+			   ->setSubject($settings[$type]['subject'])
+			   ->send();
+		}
+		return null;
+	}
 }

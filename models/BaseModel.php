@@ -8,7 +8,7 @@
  */
 
 namespace communityii\user\models;
-
+use communityii\user\Module;
 use Yii;
 
 /**
@@ -19,12 +19,12 @@ class BaseModel extends \yii\db\ActiveRecord
 	/* Current module */
 	protected $_module;
 
+	/**
+	 * Initialize the model for the user module
+	 */
 	public function init()
 	{
-		$this->_module = Yii::$app->getModule('user');
-		if ($this->_module === null) {
-			throw new InvalidConfigException("The module 'user' was not found. Ensure you have setup the 'user' module in your Yii configuration file.");
-		}
+		Module::validateConfig($this->_module);
 		parent::init();
 	}
 
@@ -43,4 +43,5 @@ class BaseModel extends \yii\db\ActiveRecord
 			],
 		];
 	}
+    
 }
