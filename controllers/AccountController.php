@@ -82,6 +82,7 @@ class AccountController extends BaseController
 		if (!\Yii::$app->user->isGuest) {
 			return $this->goBack();
 		}
+		
 		$url = $this->getConfig('loginSettings', 'loginRedirectUrl');
 
 		$model = new LoginForm();
@@ -122,14 +123,12 @@ class AccountController extends BaseController
 				$model->save();
 				Yii::$app->session->setFlash("success", Yii::t('user', Module::MSG_REGISTRATION_ACTIVE, ['username' => $model->username]));
 				return $this->goHome();
-			}
-			else {
+			} else {
 				$model->setAccess();
 				$model->save();
 				if ($model->sendEmail('activation')) {
 					Yii::$app->session->setFlash("success", Yii::t('user', Module::MSG_PENDING_ACTIVATION, ['email' => $model->email]));
-				}
-				else {
+				} else {
 					Yii::$app->session->setFlash("warning", Yii::t('user', Module::MSG_PENDING_ACTIVATION_ERR, ['email' => $model->email]));
 				}
 			}
