@@ -42,7 +42,7 @@ class Module extends \yii\base\Module
 	const RBAC_DB = 3;
 
 	// the list of account actions
-	const ACTION_LOGIN = 1; // login as new
+	const ACTION_LOGIN = 1; // login as new user
 	const ACTION_LOGOUT = 2; // logout of account
 	const ACTION_REGISTER = 3; // new account registration
 	const ACTION_ACTIVATE = 4; // account activation
