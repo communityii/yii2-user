@@ -170,10 +170,10 @@ class User extends BaseModel implements IdentityInterface
 	public function scenarios()
 	{
 		return [
-			Module::FORM_REGISTRATION => ['username', 'password_raw', 'email', 'status'],
-			Module::FORM_CHANGE_PASSWORD => ['password_raw', 'password_new', 'password_confirm', 'status'],
-			Module::FORM_USER_PROFILE => ['email', 'status'],
-			Module::FORM_ADMIN_PROFILE => ['username', 'email', 'status'],
+			Module::FORM_REGISTRATION => ['username', 'password_raw', 'email'],
+			Module::FORM_CHANGE_PASSWORD => ['password_raw', 'password_new', 'password_confirm'],
+			Module::FORM_USER_PROFILE => ['username', 'email'],
+			Module::FORM_ADMIN_PROFILE => ['username', 'email'],
 		];
 	}
 
