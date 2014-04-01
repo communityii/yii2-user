@@ -15,6 +15,8 @@ CREATE TABLE `adm_user` (
 	`updated_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Timestamp when user was updated',
     `last_login_ip` VARCHAR(50) COMMENT 'Last login IP Address',
     `last_login_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Last login time',
+    `password_reset_on` TIMESTAMP DEFAULT '0000-00-00 00:00:00' COMMENT 'Password reset time',
+    `password_fail_attempts` INT(11) DEFAULT '0' COMMENT 'Password fail attempts',
 	PRIMARY KEY (`id`),
 	UNIQUE KEY `adm_user_UK1` (`username`),
 	UNIQUE KEY `adm_user_UK2` (`email`),

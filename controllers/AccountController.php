@@ -12,6 +12,7 @@ namespace communityii\user\controllers;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 use yii\web\VerbFilter;
 use communityii\user\Module;
 use communityii\user\models\LoginForm;
@@ -86,11 +87,27 @@ class AccountController extends BaseController
 		$url = $this->getConfig('loginSettings', 'loginRedirectUrl');
 
 		$model = new LoginForm();
-		if ($model->load(Yii::$app->request->post()) && $model->login()) {
-			return $this->goBack($url);
-		} else {
-			return $this->render(Module::FORM_LOGIN, ['model' => $model]);
+
+		if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+			$user = $model->getUser();
+			$link = Html::a(Yii::t('user', 'here'), Module::ACTION_RESET);
+			if ($user->status == User::STATUS_INACTIVE) {
+				$msg = ($user->isPasswordExpired()) ? Module::MSG_PASSWORD_EXPIRED : Module::MSG_ACCOUNT_LOCKED;
+				Yii::$app->session->setFlash('error', Yii::t('user', $msg, ['resetLink' => $link]));
+			}
+			elseif ($user ->isAccountLocked()) {
+				$user->saveStatus(User::STATUS_INACTIVE);
+				Yii::$app->session->setFlash('error', Yii::t('user', Module::MSG_ACCOUNT_LOCKED, ['resetLink' => $link]));
+			}
+			elseif ($user->isPasswordExpired()) {
+				$user->saveStatus(User::STATUS_INACTIVE);
+				Yii::$app->session->setFlash('error', Yii::t('user', Module::MSG_PASSWORD_EXPIRED, ['resetLink' => $link]));
+			}
+			elseif ($model->login()) {
+				return $this->goBack($url);
+			}
 		}
+		return $this->render(Module::FORM_LOGIN, ['model' => $model]);
 	}
 
 	/**
@@ -124,7 +141,6 @@ class AccountController extends BaseController
 				Yii::$app->session->setFlash("success", Yii::t('user', Module::MSG_REGISTRATION_ACTIVE, ['username' => $model->username]));
 				return $this->goHome();
 			} else {
-				$model->setAccess();
 				$model->save();
 				if ($model->sendEmail('activation')) {
 					Yii::$app->session->setFlash("success", Yii::t('user', Module::MSG_PENDING_ACTIVATION, ['email' => $model->email]));

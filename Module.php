@@ -32,7 +32,6 @@ class Module extends \yii\base\Module
 	const FORM_ACTIVATE = 'activate';
 	const FORM_RESET = 'reset';
 	const FORM_RECOVERY = 'recovery';
-	const FORM_INACTIVATE = 'inactivate';
 	const FORM_PROFILE = 'profile';
 	const FORM_ADMIN = 'admin';
 
@@ -340,8 +339,8 @@ class Module extends \yii\base\Module
 			self::MSG_REGISTRATION_ACTIVE => "You have been successfully registered and logged in as '{username}'",
 			self::MSG_PENDING_ACTIVATION => "Your registration form has been received. Instructions for activating your account has been sent to your email '{email}'.",
 			self::MSG_PENDING_ACTIVATION_ERR => "Your registration form has been received. Activation instructions could not be sent to your email '{email}'. Contact the system administrator.",
-			self::MSG_PASSWORD_EXPIRED => "Your password has expired. You may reset your password by clicking {here}.",
-			self::MSG_ACCOUNT_LOCKED => "Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {here}."
+			self::MSG_PASSWORD_EXPIRED => "Your password has expired. You may reset your password by clicking {resetLink}.",
+			self::MSG_ACCOUNT_LOCKED => "Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {resetLink}."
 		];
 	}
 

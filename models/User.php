@@ -33,6 +33,8 @@ use communityii\user\components\IdentityInterface;
  * @property string $updated_on
  * @property string $last_login_ip
  * @property string $last_login_on
+ * @property string $password_reset_on
+ * @property string $password_fail_attempts
  * @property string $password_raw write-only password
  * @property string $password_new write-only password
  * @property string $password_confirm write-only password
@@ -192,6 +194,8 @@ class User extends BaseModel implements IdentityInterface
 			'created_on' => Yii::t('user', 'Created On'),
 			'last_login_ip' => Yii::t('user', 'Last Login IP'),
 			'last_login_on' => Yii::t('user', 'Last Login On'),
+			'password_reset_on' => Yii::t('user', 'Password Reset On'),
+			'password_fail_attempts' => Yii::t('user', 'Password Fail Attempts'),
 			'password_raw' => Yii::t('user', 'Password'),
 			'password_new' => Yii::t('user', 'New Password'),
 			'password_confirm' => Yii::t('user', 'Confirm Password'),
@@ -219,6 +223,22 @@ class User extends BaseModel implements IdentityInterface
 	}
 
 	/**
+	 * Before save event
+	 *
+	 * @param $insert
+	 * @return bool
+	 */
+	public function beforeSave($insert)
+	{
+		if (parent::beforeSave($insert)) {
+			$this->setAccess();
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
 	 * Creates a new user
 	 *
 	 * @param array $attributes the attributes given by field => value
@@ -241,23 +261,23 @@ class User extends BaseModel implements IdentityInterface
 	/**
 	 * Sets the access for user and configures user keys and statuses based on scenario
 	 */
-	public function setAccess() {
+	public function setAccess()
+	{
 		if ($this->scenario == Module::FORM_REGISTER) {
 			$this->status = self::STATUS_PENDING;
 			$this->removeResetKey();
 			$this->generateActivationKey();
-		}
-		elseif ($this->scenario == Module::FORM_ACTIVATE || $this->scenario == Module::FORM_RECOVERY) {
+		} elseif ($this->scenario == Module::FORM_ACTIVATE || $this->scenario == Module::FORM_RECOVERY) {
 			$this->status = self::STATUS_ACTIVE;
+			$this->password_reset_on = date("Y-m-d H:i:s");
+			$this->password_fail_attempts = 0;
 			$this->removeResetKey();
 			$this->removeActivationKey();
-		}
-		elseif ($this->scenario == Module::FORM_RESET) {
+		} elseif ($this->scenario == Module::FORM_RESET) {
 			$this->status = self::STATUS_PENDING;
 			$this->removeActivationKey();
 			$this->generateResetKey();
-		}
-		elseif ($this->scenario == Module::FORM_INACTIVATE) {
+		} elseif ($this->scenario == Module::FORM_LOCKED) {
 			$this->status = self::STATUS_INACTIVE;
 			$this->removeActivationKey();
 			$this->generateResetKey();
@@ -265,10 +285,55 @@ class User extends BaseModel implements IdentityInterface
 	}
 
 	/**
+	 * Is password expired
+	 *
+	 * @return bool
+	 */
+	public function isPasswordExpired()
+	{
+		if ($this->_module->passwordSettings['passwordExpiry'] > 0) {
+			$expiry = time() - strtotime($this->password_reset_on);
+			return ($expiry >= $this->_module->passwordSettings['passwordExpiry']);
+		}
+		return false;
+	}
+
+	/**
+	 * Is account locked due to failed attempts
+	 *
+	 * @return bool
+	 */
+	public function isAccountLocked()
+	{
+		$attempts = $this->_module->passwordSettings['wrongAttempts'];
+		return ($attempts > 0 && $this->password_fail_attempts > $attempts);
+	}
+
+	/**
+	 * Validate failed login attempt
+	 * @param bool $outcome the password validation outcome
+	 */
+	public function checkFailedLogin($outcome)
+	{
+		if ($this->_module->passwordSettings['wrongAttempts'] > 0) {
+			if ($outcome) {
+				$this->password_fail_attempts = 0;
+			} else {
+				$this->password_fail_attempts += 1;
+			}
+			$this->save();
+		}
+	}
+
+	/**
 	 * Sets the model status
 	 */
-	public function setStatus($status) {
-		$this->status = $status;
+	public function saveStatus($status)
+	{
+		if ($this->status != $status) {
+			$this->status = $status;
+			$this->save();
+		}
 	}
 
 	/**
@@ -345,11 +410,13 @@ class User extends BaseModel implements IdentityInterface
 
 	/**
 	 * Check if a key is expired
+	 *
 	 * @param $key string the key
 	 * @param $expire integer the expiry time in seconds
 	 * @return bool
 	 */
-	public static function isKeyExpired($key, $expire) {
+	public static function isKeyExpired($key, $expire)
+	{
 		$parts = explode('_', $key);
 		if (count($parts) <= 1 || empty($expire) || $expire <= 0) {
 			return false;
@@ -360,18 +427,21 @@ class User extends BaseModel implements IdentityInterface
 
 	/**
 	 * Generates a hash key
+	 *
 	 * @param $expire integer the expiry time in seconds
 	 * @return bool
 	 */
-	public static function generateKey($expire = 0) {
+	public static function generateKey($expire = 0)
+	{
 		$key = Security::generateRandomKey();
-		return (!empty($expire) && $expire > 0) ?  $key . '_' . time() : $key;
+		return (!empty($expire) && $expire > 0) ? $key . '_' . time() : $key;
 	}
 
 	/**
 	 * Sets the last login ip and time
 	 */
-	public function setLastLogin() {
+	public function setLastLogin()
+	{
 		$this->last_login_ip = Yii::$app->getRequest()->getUserIP();
 		$this->last_login_on = date("Y-m-d H:i:s");
 	}
@@ -479,7 +549,8 @@ class User extends BaseModel implements IdentityInterface
 	/**
 	 * Get auth key expiry
 	 */
-	public function getAuthKeyExpiry() {
+	public function getAuthKeyExpiry()
+	{
 		if (isset($this->_authKeyExpiry)) {
 			return $this->_authKeyExpiry;
 		}
@@ -490,7 +561,8 @@ class User extends BaseModel implements IdentityInterface
 	/**
 	 * Get reset key expiry
 	 */
-	public function getResetKeyExpiry() {
+	public function getResetKeyExpiry()
+	{
 		return ArrayHelper::getValue($this->_module->passwordSettings, 'resetKeyExpiry', 172800);
 		if (isset($this->_resetKeyExpiry)) {
 			return $this->_resetKeyExpiry;
@@ -502,7 +574,8 @@ class User extends BaseModel implements IdentityInterface
 	/**
 	 * Get activation key expiry
 	 */
-	public function getActivationKeyExpiry() {
+	public function getActivationKeyExpiry()
+	{
 		if (isset($this->_activationKeyExpiry)) {
 			return $this->_activationKeyExpiry;
 		}
@@ -541,7 +614,8 @@ class User extends BaseModel implements IdentityInterface
 	}
 
 	/**
-	 * Sends an email with a link, for resetting the password.
+	 * Sends an email with a link, for activation or resetting the password.
+	 *
 	 * @param string $type the type/template of mail to be sent
 	 * @return bool whether the email was sent
 	 */
@@ -551,10 +625,10 @@ class User extends BaseModel implements IdentityInterface
 			$settings = $this->_module->notificationSettings;
 			$content = Yii::$app->controller->renderPartial($settings['viewPath'] . '/' . $settings[$type], ['user' => $this]);
 			return \Yii::$app->mail->compose($content)
-			   ->setFrom([$settings[$type]['fromEmail'] => $settings[$type]['fromName'])
-			   ->setTo($this->email)
-			   ->setSubject($settings[$type]['subject'])
-			   ->send();
+								   ->setFrom([$settings[$type]['fromEmail'] => $settings[$type]['fromName'])
+								   ->setTo($this->email)
+								   ->setSubject($settings[$type]['subject'])
+								   ->send();
 		}
 		return null;
 	}

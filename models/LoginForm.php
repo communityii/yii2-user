@@ -99,8 +99,12 @@ class LoginForm extends Model
 	{
 		if (!$this->hasErrors()) {
 			$user = $this->getUser();
-			if (!$user || !$user->validatePassword($this->password)) {
-				$this->addError('password', Yii::t('user', 'Incorrect username or password.'));
+			$outcome = ($user) ? $user->validatePassword($this->password) : null;
+			if (!$user || !$outcome) {
+				$this->addError('password', Yii::t('user', 'Invalid username or password.'));
+			}
+			if ($outcome !== null) {
+				$user->checkFailedLogin($outcome);
 			}
 		}
 	}
@@ -112,11 +116,7 @@ class LoginForm extends Model
 	 */
 	public function login()
 	{
-		if ($this->validate()) {
-			return Yii::$app->user->login($this->getUser(), $this->rememberMe ? $this->_rememberMeDuration : 0);
-		} else {
-			return false;
-		}
+		return Yii::$app->user->login($this->getUser(), $this->rememberMe ? $this->_rememberMeDuration : 0);
 	}
 
 	/**
