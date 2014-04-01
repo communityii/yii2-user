@@ -75,6 +75,7 @@ class Module extends \yii\base\Module
 	/**
 	 * @var array the action settings for the module. The keys will be one of the `Module::ACTION_` constants
 	 * and the value will be the url/route for the specified action.
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $actionSettings = [];
 
@@ -88,6 +89,7 @@ class Module extends \yii\base\Module
 	 *   url will be used. This setting will only be used if no return url is found.
 	 * - logoutRedirectUrl: string|array, the default url to redirect after logout. If not set, it will redirect
 	 *   to home page.
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $loginSettings = [];
 
@@ -111,6 +113,7 @@ class Module extends \yii\base\Module
 	 *   is never inactivated after any wrong password attempts.
 	 * - enableRecovery: bool, whether password recovery is permitted. If set to `true`, users will be given an option
 	 *   to reset/recover a lost password. Defaults to `true`.
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $passwordSettings = [];
 
@@ -128,6 +131,7 @@ class Module extends \yii\base\Module
 	 *   Defaults to `/^[A-Za-z0-9_\-]+$/u`.
 	 * - userNameValidMsg: string, the error message to display if the username pattern validation fails.
 	 *   Defaults to `"{attribute} can contain only letters, numbers, hyphen, and underscore."`.
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $registrationSettings = [];
 
@@ -139,6 +143,7 @@ class Module extends \yii\base\Module
 	 * - viewPath: string, the path for notification email templates.
 	 * - activation: array, the settings for the activation notification.
 	 * - recovery: array, the settings for the recovery notification.
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $notificationSettings = [];
 
@@ -150,6 +155,7 @@ class Module extends \yii\base\Module
 	 * - refreshAttributes: array, the attributes that will be automatically refreshed in the UserProfile,
 	 *   based on the user consent, after social authentication. The 'email' field will be updated in the
 	 *   base user table.
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $socialAuthSettings = [];
 
@@ -163,6 +169,7 @@ class Module extends \yii\base\Module
 	 *   - maxSize: integer, the maximum size (bytes) allowed for the uploaded file.
 	 * - linkSocial: bool, whether the avatar image can be linked with a social profile's avatar
 	 *   based on user consent. Defaults to `true`.
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $avatarSettings = [];
 
@@ -170,6 +177,7 @@ class Module extends \yii\base\Module
 	 * @var array the settings for rbac. Contains
 	 * - enabled: bool, whether the rbac integration is enabled for the module. Defaults to `true`.
 	 * - `type`: string, the type of rbac. Defaults to RBAC_SIMPLE.
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $rbacSettings = [];
 
@@ -178,11 +186,13 @@ class Module extends \yii\base\Module
 	 * @var array the global widget settings for each form (also available as a widget).
 	 * Check each widget documentation for details. Few default settings:
 	 * - `type`: the Bootstrap form orientation - one of `vertical`, `horizontal`, or `inline`.
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $widgetSettings = [];
 
 	/**
 	 * @var the messages displayed to the user for various actions
+	 * @see `setConfig()` method for the default settings
 	 */
 	public $messages = [];
 
