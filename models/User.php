@@ -506,7 +506,7 @@ class User extends BaseModel implements IdentityInterface
 	 *
 	 * @return string
 	 */
-	public function getStatusFormatted()
+	public function getStatusHtml()
 	{
 		return '<span class="' . $this->_statusClasses[$this->status] . '">' . $this->statusName . '</span>';
 	}
