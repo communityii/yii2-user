@@ -326,11 +326,11 @@ class Module extends \yii\base\Module
 			self::FORM_ADMIN => ['type' => 'vertical'],
 		];
 		$this->messages += [
-			self::MSG_REGISTRATION_ACTIVE => Yii::t('user', "You have been successfully registered and logged in as '{username}'."),
-			self::MSG_PENDING_ACTIVATION => Yii::t('user', "Your registration form has been received. Instructions for activating your account has been sent to your email '{email}'."),
-			self::MSG_PENDING_ACTIVATION_ERR => Yii::t('user', "Your registration form has been received. Activation instructions could not be sent to your email '{email}'. Contact the system administrator."),
-			self::MSG_PASSWORD_EXPIRED => Yii::t('user', "Your password has expired. You may reset your password by clicking {here}."),
-			self::MSG_ACCOUNT_LOCKED => Yii::t('user', "Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {here}."), "),
+			self::MSG_REGISTRATION_ACTIVE => "You have been successfully registered and logged in as '{username}'",
+			self::MSG_PENDING_ACTIVATION => "Your registration form has been received. Instructions for activating your account has been sent to your email '{email}'.",
+			self::MSG_PENDING_ACTIVATION_ERR => "Your registration form has been received. Activation instructions could not be sent to your email '{email}'. Contact the system administrator.",
+			self::MSG_PASSWORD_EXPIRED => "Your password has expired. You may reset your password by clicking {here}.",
+			self::MSG_ACCOUNT_LOCKED => "Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {here}."
 		];
 	}
 
