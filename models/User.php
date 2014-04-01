@@ -204,7 +204,6 @@ class User extends BaseModel implements IdentityInterface
 		return $this->hasOne(UserProfile::className(), ['id' => 'id']);
 	}
 
-
 	/**
 	 * Creates a new user
 	 *
@@ -465,6 +464,16 @@ class User extends BaseModel implements IdentityInterface
 	}
 
 	/**
+	 * Get status list
+	 *
+	 * @return string
+	 */
+	public function getStatusList()
+	{
+		return $this->_statuses;
+	}
+
+	/**
 	 * User friendly status name
 	 *
 	 * @return string
@@ -483,4 +492,5 @@ class User extends BaseModel implements IdentityInterface
 	{
 		return '<span class="' . $this->_statusClasses[$this->status] . '">' . $this->statusName . '</span>';
 	}
+
 }
