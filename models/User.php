@@ -51,9 +51,6 @@ class User extends BaseModel implements IdentityInterface
 	const STATUS_BANNED = 2;
 	const STATUS_INACTIVE = 3;
 
-	private $_statuses = [];
-	private $_statusClasses = [];
-
 	/**
 	 * @var the write only password
 	 */
@@ -89,8 +86,29 @@ class User extends BaseModel implements IdentityInterface
 		];
 	}
 
+	/**
+	 * @var array the list of statuses
+	 */
+	private $_statuses = [];
+
+	/**
+	 * @var array the list of status CSS classes
+	 */
+	private $_statusClasses = [];
+
+	/**
+	 * @var integer, the auth key ("remember me") expiry time in seconds
+	 */
 	private $_authKeyExpiry;
+
+	/**
+	 * @var integer, the reset key expiry time in seconds
+	 */
 	private $_resetKeyExpiry;
+
+	/**
+	 * @var integer, the activation key expiry time in seconds
+	 */
 	private $_activationKeyExpiry;
 
 	/**
