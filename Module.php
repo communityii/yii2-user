@@ -123,7 +123,7 @@ class Module extends \yii\base\Module
 	 *   to `false`, admins will need to create users. All the other registration settings will
 	 *   be skipped if this is set to `false`.
 	 * - captcha: array|bool, the settings for the captcha. If set to `false`, no captcha will be displayed.
-	 *   Defaults to `['backColor' => 0xFFFFFF, 'testLimit' => 0]`.
+	 *   Defaults to `[]`.
 	 * - autoActivate: bool, whether account is automatically activated after registration. If set to
 	 *   `false`, the user will need to complete activation before login. Defaults to `false`.
 	 * - userNameLength: integer, the minimum length for the username field. Defaults to 4.
@@ -277,7 +277,7 @@ class Module extends \yii\base\Module
 		];
 		$this->registrationSettings += [
 			'enabled' => true,
-			'captcha' => ['backColor' => 0xFFFFFF, 'testLimit' => 0],
+			'captcha' => [],
 			'autoActivate' => false,
 			'userNameLength' => 4,
 			'userNamePattern' => '/^[A-Za-z0-9_\-]+$/u',

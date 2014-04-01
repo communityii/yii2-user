@@ -82,7 +82,7 @@ class AccountController extends BaseController
 		if (!\Yii::$app->user->isGuest) {
 			return $this->goBack();
 		}
-		
+
 		$url = $this->getConfig('loginSettings', 'loginRedirectUrl');
 
 		$model = new LoginForm();
