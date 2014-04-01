@@ -24,6 +24,6 @@
         "kartik-v/yii2-password": "dev-master"
     },
     "autoload": {
-        "psr-4": {"communityii\\": ""}
+        "psr-4": {"communityii\\user\\": ""}
     }
 }

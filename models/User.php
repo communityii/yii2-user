@@ -278,9 +278,9 @@ class User extends BaseModel implements IdentityInterface
 	}
 
 	/**
-	 * Finds user by password reset token
+	 * Finds user by password reset key
 	 *
-	 * @param string $key password reset token
+	 * @param string $key password reset key
 	 * @return static|null
 	 */
 	public static function findByPasswordResetKey($key)
