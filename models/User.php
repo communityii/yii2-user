@@ -543,7 +543,7 @@ class User extends BaseModel implements IdentityInterface
 	/**
 	 * Sends an email with a link, for resetting the password.
 	 * @param string $type the type/template of mail to be sent
-	 * @return bool whether the email was send
+	 * @return bool whether the email was sent
 	 */
 	public function sendEmail($type)
 	{
