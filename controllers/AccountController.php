@@ -100,7 +100,8 @@ class AccountController extends BaseController
 			} elseif ($user->isPasswordExpired()) {
 				$user->saveStatus(User::STATUS_INACTIVE);
 				Yii::$app->session->setFlash('error', Yii::t('user', Module::MSG_PASSWORD_EXPIRED, ['resetLink' => $link]));
-			} elseif ($model->login()) {
+			} elseif ($model->login($user)) {
+				$user->setLastLogin();
 				return $this->goBack($url);
 			}
 		}

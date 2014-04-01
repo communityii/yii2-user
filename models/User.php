@@ -442,8 +442,10 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function setLastLogin()
 	{
+		$this->password_fail_attempts = 0;
 		$this->last_login_ip = Yii::$app->getRequest()->getUserIP();
 		$this->last_login_on = date("Y-m-d H:i:s");
+		$this->save();
 	}
 
 	/**
