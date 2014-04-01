@@ -48,7 +48,6 @@ class Module extends \yii\base\Module
 	const ACTION_ACTIVATE = 4; // account activation
 	const ACTION_RESET = 5; // account password reset
 	const ACTION_RECOVERY = 6; // account recovery
-	const ACTION_EMAIL = 7; // send email
 
 	// the list of social actions
 	const ACTION_SOCIAL_LOGIN = 20; // social auth & login
@@ -86,7 +85,6 @@ class Module extends \yii\base\Module
 		self::ACTION_INACTIVATE => 'account/inactivate',
 		self::ACTION_RESET => 'account/reset',
 		self::ACTION_RECOVERY => 'account/recovery',
-		self::ACTION_EMAIL => 'account/email',
 		// the list of social actions
 		self::ACTION_SOCIAL_LOGIN => 'social/login',
 		// the list of profile actions
