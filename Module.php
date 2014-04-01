@@ -76,29 +76,7 @@ class Module extends \yii\base\Module
 	 * @var array the action settings for the module. The keys will be one of the `Module::ACTION_` constants
 	 * and the value will be the url/route for the specified action.
 	 */
-	public $actionSettings = [
-		// the list of account actions
-		self::ACTION_LOGIN => 'account/login',
-		self::ACTION_LOGOUT => 'account/logout',
-		self::ACTION_REGISTER => 'account/register',
-		self::ACTION_ACTIVATE => 'account/activate',
-		self::ACTION_INACTIVATE => 'account/inactivate',
-		self::ACTION_RESET => 'account/reset',
-		self::ACTION_RECOVERY => 'account/recovery',
-		// the list of social actions
-		self::ACTION_SOCIAL_LOGIN => 'social/login',
-		// the list of profile actions
-		self::ACTION_PROFILE_VIEW => 'profile/view',
-		self::ACTION_PROFILE_LIST => 'profile/index',
-		self::ACTION_PROFILE_EDIT => 'profile/update',
-		self::ACTION_PROFILE_UPLOAD => 'profile/upload',
-		// the list of admin actions
-		self::ACTION_ADMIN_LIST => 'admin/index',
-		self::ACTION_ADMIN_VIEW => 'admin/view',
-		self::ACTION_ADMIN_EDIT => 'admin/update',
-		self::ACTION_ADMIN_BAN => 'admin/ban',
-		self::ACTION_ADMIN_UNBAN => 'admin/unban',
-	];
+	public $actionSettings = [];
 
 	/**
 	 * @var array the login settings for the module. The following options can be set:
@@ -242,6 +220,29 @@ class Module extends \yii\base\Module
 	 */
 	public function setConfig()
 	{
+		$this->actionSettings += [
+			// the list of account actions
+			self::ACTION_LOGIN => 'account/login',
+			self::ACTION_LOGOUT => 'account/logout',
+			self::ACTION_REGISTER => 'account/register',
+			self::ACTION_ACTIVATE => 'account/activate',
+			self::ACTION_INACTIVATE => 'account/inactivate',
+			self::ACTION_RESET => 'account/reset',
+			self::ACTION_RECOVERY => 'account/recovery',
+			// the list of social actions
+			self::ACTION_SOCIAL_LOGIN => 'social/login',
+			// the list of profile actions
+			self::ACTION_PROFILE_VIEW => 'profile/view',
+			self::ACTION_PROFILE_LIST => 'profile/index',
+			self::ACTION_PROFILE_EDIT => 'profile/update',
+			self::ACTION_PROFILE_UPLOAD => 'profile/upload',
+			// the list of admin actions
+			self::ACTION_ADMIN_LIST => 'admin/index',
+			self::ACTION_ADMIN_VIEW => 'admin/view',
+			self::ACTION_ADMIN_EDIT => 'admin/update',
+			self::ACTION_ADMIN_BAN => 'admin/ban',
+			self::ACTION_ADMIN_UNBAN => 'admin/unban',
+		];
 		$this->loginSettings += [
 			'loginType' => self::LOGIN_BOTH,
 			'rememberMeDuration' => 2592000
@@ -336,10 +337,12 @@ class Module extends \yii\base\Module
 
 	/**
 	 * Validate the module configuration
+	 *
 	 * @param Module $module the user module object
 	 * @throws InvalidConfigException
 	 */
-	public static function validateConfig(&$module) {
+	public static function validateConfig(&$module)
+	{
 		$module = Yii::$app->getModule('user');
 		if ($module === null) {
 			throw new InvalidConfigException("The module 'user' was not found . Ensure you have setup the 'user' module in your Yii configuration file . ");
