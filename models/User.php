@@ -387,8 +387,7 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function generateAuthKey()
 	{
-		$expire = ArrayHelper::getValue($this->_module['loginSettings'], 'rememberMeDuration', 0);
-		$this->auth_key = self::generateKey($expire);
+		$this->auth_key = self::generateKey($this->getAuthKeyExpiry());
 	}
 
 	/**
@@ -396,8 +395,7 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function generateResetKey()
 	{
-		$expire = ArrayHelper::getValue($this->_module['passwordSettings'], 'resetKeyExpiry', 0);
-		$this->reset_key = self::generateKey($expire);
+		$this->reset_key = self::generateKey($this->getResetKeyExpiry());
 	}
 
 	/**
@@ -405,8 +403,7 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function generateActivationKey()
 	{
-		$expire = ArrayHelper::getValue($this->_module['passwordSettings'], 'activationKeyExpiry', 0);
-		$this->activation_key = self::generateKey($expire);
+		$this->activation_key = self::generateKey($this->getActivationKeyExpiry());
 	}
 
 	/**
