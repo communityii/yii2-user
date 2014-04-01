@@ -79,10 +79,10 @@ class AccountController extends BaseController
 	 */
 	public function actionLogin()
 	{
-		$url = $this->getConfig('loginSettings', 'loginRedirectUrl');
 		if (!\Yii::$app->user->isGuest) {
-			return $this->goBack($url);
+			return $this->goBack();
 		}
+		$url = $this->getConfig('loginSettings', 'loginRedirectUrl');
 
 		$model = new LoginForm();
 		if ($model->load(Yii::$app->request->post()) && $model->login()) {
