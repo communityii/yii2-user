@@ -322,7 +322,7 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public static function isKeyExpired($key, $expire) {
 		$parts = explode('_', $key);
-		if (count($parts) <= 1) {
+		if (count($parts) <= 1 || empty($expire) || $expire <= 0) {
 			return false;
 		}
 		$timestamp = (int)end($parts);
