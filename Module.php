@@ -31,7 +31,8 @@ class Module extends \yii\base\Module
 	const FORM_ACTIVATION = 'activation';
 	const FORM_RECOVERY = 'recovery';
 	const FORM_CHANGE_PASSWORD = 'change-password';
-	const FORM_EDIT_PROFILE = 'edit-profile';
+	const FORM_USER_PROFILE = 'user-profile';
+	const FORM_ADMIN_PROFILE = 'admin-profile';
 
 	// the rbac integration settings
 	const RBAC_SIMPLE = 1;
@@ -201,7 +202,8 @@ class Module extends \yii\base\Module
 		self::FORM_ACTIVATION => ['type' => 'inline'],
 		self::FORM_RECOVERY => ['type' => 'inline'],
 		self::FORM_CHANGE_PASSWORD => ['type' => 'vertical'],
-		self::FORM_EDIT_PROFILE => ['type' => 'vertical'],
+		self::FORM_USER_PROFILE => ['type' => 'vertical'],
+		self::FORM_ADMIN_PROFILE => ['type' => 'vertical'],
 	];
 
 	/**

@@ -16,6 +16,7 @@ use yii\db\ActiveRecord;
 use yii\helpers\Security;
 use yii\helpers\ArrayHelper;
 use kartik\password\StrengthValidator;
+use communityii\user\Module;
 use communityii\user\components\IdentityInterface;
 
 /**
@@ -45,7 +46,7 @@ use communityii\user\components\IdentityInterface;
  */
 class User extends BaseModel implements IdentityInterface
 {
-	const STATUS_NEW = 0;
+	const STATUS_PENDING = 0;
 	const STATUS_ACTIVE = 1;
 	const STATUS_BANNED = 2;
 	const STATUS_INACTIVE = 3;
@@ -75,18 +76,22 @@ class User extends BaseModel implements IdentityInterface
 	{
 		parent::init();
 		$this->_statuses = [
-			self::STATUS_NEW => Yii::t('user', 'New'),
+			self::STATUS_PENDING => Yii::t('user', 'Pending'),
 			self::STATUS_ACTIVE => Yii::t('user', 'Active'),
 			self::STATUS_BANNED => Yii::t('user', 'Banned'),
 			self::STATUS_INACTIVE => Yii::t('user', 'Inactive'),
 		];
 		$this->_statusClasses = [
-			self::STATUS_NEW => 'label label-info',
+			self::STATUS_PENDING => 'label label-info',
 			self::STATUS_ACTIVE => 'label label-success',
 			self::STATUS_BANNED => 'label label-danger',
 			self::STATUS_INACTIVE => 'label label-default',
 		];
 	}
+
+	private $_authKeyExpiry;
+	private $_resetKeyExpiry;
+	private $_activationKeyExpiry;
 
 	/**
 	 * Table name for the User model
@@ -111,27 +116,21 @@ class User extends BaseModel implements IdentityInterface
 		$pattern = ArrayHelper::getValue($regSettings, 'userNamePattern', '/^[A-Za-z0-9_\-]+$/u');
 		$message = ArrayHelper::getValue($regSettings, 'userNameValidMsg', Yii::t('user', '{attribute} can contain only letters, numbers, hyphen, and underscore.'));
 		$rules = [
-			[['username', 'email', 'password'], 'string', 'max' => 255],
-
 			[['username'], 'match', 'pattern' => $pattern, 'message' => $message],
 			['username', 'filter', 'filter' => 'trim'],
 			['username', 'required'],
 			['username', 'unique'],
-			['username', 'string', 'min' => $length, 'max' => 255],
 
 			['email', 'filter', 'filter' => 'trim'],
 			['email', 'required'],
 			['email', 'email'],
 			['email', 'unique'],
 
-			[['status'], 'integer'],
-			[['status'], 'default', 'value' => self::STATUS_NEW],
+			[['status'], 'default', 'value' => self::STATUS_PENDING],
 			['status', 'in', 'range' => array_keys($this->_statuses)],
 
-			[['last_login_ip'], 'string', 'max' => 50],
-			[['auth_key', 'activation_key', 'reset_key'], 'string', 'max' => 128],
-
-			[['password_raw', 'password_new', 'password_confirm'], 'required', 'on' => [Module::FORM_CHANGE_PASSWORD]],
+			[['password_raw'], 'required', 'on' => [Module::FORM_REGISTRATION, Module::FORM_CHANGE_PASSWORD]],
+			[['password_new', 'password_confirm'], 'required', 'on' => [Module::FORM_CHANGE_PASSWORD]],
 			['password_new', 'compare', 'compareAttribute' => 'password_confirm', 'on' => [Module::FORM_CHANGE_PASSWORD]],
 		];
 		$strengthRules = empty($pwdSettings['strengthRules']) ? [] : $pwdSettings['strengthRules'];
@@ -153,8 +152,10 @@ class User extends BaseModel implements IdentityInterface
 	public function scenarios()
 	{
 		return [
-			Module::FORM_REGISTRATION => ['username', 'password_raw', 'email'],
-			Module::FORM_CHANGE_PASSWORD => ['password_raw', 'password_new', 'password_confirm'],
+			Module::FORM_REGISTRATION => ['username', 'password_raw', 'email', 'status'],
+			Module::FORM_CHANGE_PASSWORD => ['password_raw', 'password_new', 'password_confirm', 'status'],
+			Module::FORM_USER_PROFILE => ['email', 'status'],
+			Module::FORM_ADMIN_PROFILE => ['username', 'email', 'status'],
 		];
 	}
 
@@ -281,15 +282,12 @@ class User extends BaseModel implements IdentityInterface
 	 * Finds user by password reset key
 	 *
 	 * @param string $key password reset key
+	 * @param integer $expire password reset key expiry
 	 * @return static|null
 	 */
-	public static function findByPasswordResetKey($key)
+	public static function findByPasswordResetKey($key, $expire)
 	{
-		$expire = ArrayHelper::getValue($this->_module->passwordSettings, 'resetKeyExpiry', 172800);
-		$parts = explode('_', $key);
-		$timestamp = (int)end($parts);
-		if ($timestamp + $expire < time()) {
-			// key expired
+		if (static::isKeyExpired($key, $expire)) {
 			return null;
 		}
 
@@ -297,6 +295,39 @@ class User extends BaseModel implements IdentityInterface
 			'reset_key' => $key,
 			'status' => self::STATUS_ACTIVE,
 		]);
+	}
+
+	/**
+	 * Check if a key is expired
+	 * @param $key string the key
+	 * @param $expire integer the expiry time in seconds
+	 * @return bool
+	 */
+	public static function isKeyExpired($key, $expire) {
+		$parts = explode('_', $key);
+		if (count($parts) <= 1) {
+			return false;
+		}
+		$timestamp = (int)end($parts);
+		return (($timestamp + $expire) < time());
+	}
+
+	/**
+	 * Generates a hash key
+	 * @param $expire integer the expiry time in seconds
+	 * @return bool
+	 */
+	public static function generateKey($expire = 0) {
+		$key = Security::generateRandomKey();
+		return (!empty($expire) && $expire > 0) ?  $key . '_' . time() : $key;
+	}
+
+	/**
+	 * Sets the last login ip and time
+	 */
+	public function setLastLogin() {
+		$this->last_login_ip = Yii::$app->getRequest()->getUserIP();
+		$this->last_login_on = date("Y-m-d H:i:s");
 	}
 
 	/**
@@ -338,7 +369,7 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function validatePassword($password)
 	{
-		return Security::validatePassword($password, $this->password_hash);
+		return Security::validatePassword($password, $this->password);
 	}
 
 	/**
@@ -348,7 +379,7 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function setPassword($password)
 	{
-		$this->password_hash = Security::generatePasswordHash($password);
+		$this->password = Security::generatePasswordHash($password);
 	}
 
 	/**
@@ -356,23 +387,84 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function generateAuthKey()
 	{
-		$this->auth_key = Security::generateRandomKey();
+		$expire = ArrayHelper::getValue($this->_module['loginSettings'], 'rememberMeDuration', 0);
+		$this->auth_key = self::generateKey($expire);
 	}
 
 	/**
-	 * Generates new password reset token
+	 * Generates new password reset key
 	 */
-	public function generatePasswordResetKey()
+	public function generateResetKey()
 	{
-		$this->reset_key = Security::generateRandomKey() . '_' . time();
+		$expire = ArrayHelper::getValue($this->_module['passwordSettings'], 'resetKeyExpiry', 0);
+		$this->reset_key = self::generateKey($expire);
+	}
+
+	/**
+	 * Generates new activation key
+	 */
+	public function generateActivationKey()
+	{
+		$expire = ArrayHelper::getValue($this->_module['passwordSettings'], 'activationKeyExpiry', 0);
+		$this->activation_key = self::generateKey($expire);
+	}
+
+	/**
+	 * Removes "remember me" authorization key
+	 */
+	public function removeAuthKey()
+	{
+		$this->auth_key = null;
 	}
 
 	/**
 	 * Removes password reset key
 	 */
-	public function removePasswordResetKey()
+	public function removeResetKey()
 	{
 		$this->reset_key = null;
+	}
+
+	/**
+	 * Removes activation key
+	 */
+	public function removeActivationKey()
+	{
+		$this->activation_key = null;
+	}
+
+	/**
+	 * Get auth key expiry
+	 */
+	public function getAuthKeyExpiry() {
+		if (isset($this->_authKeyExpiry)) {
+			return $this->_authKeyExpiry;
+		}
+		$this->_authKeyExpiry = ArrayHelper::getValue($this->_module->loginSettings, 'rememberMeDuration', 2592000);
+		return $this->_authKeyExpiry;
+	}
+
+	/**
+	 * Get reset key expiry
+	 */
+	public function getResetKeyExpiry() {
+		return ArrayHelper::getValue($this->_module->passwordSettings, 'resetKeyExpiry', 172800);
+		if (isset($this->_resetKeyExpiry)) {
+			return $this->_resetKeyExpiry;
+		}
+		$this->_resetKeyExpiry = ArrayHelper::getValue($this->_module->passwordSettings, 'resetKeyExpiry', 172800);
+		return $this->_resetKeyExpiry;
+	}
+
+	/**
+	 * Get activation key expiry
+	 */
+	public function getActivationKeyExpiry() {
+		if (isset($this->_activationKeyExpiry)) {
+			return $this->_activationKeyExpiry;
+		}
+		$this->_activationKeyExpiry = ArrayHelper::getValue($this->_module->passwordSettings, 'activationKeyExpiry', 172800);
+		return $this->_activationKeyExpiry;
 	}
 
 	/**

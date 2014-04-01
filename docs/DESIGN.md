@@ -30,7 +30,7 @@ The module needs to have the following configurable (plug and play components):
 14. Menu for user profile can be setup as parameters
 15. User Status Configuration - DISCUSSION NEEDED - what all values are possible, and how access control needs to be set
     - Possible statuses
-      - new (a newly registered user)
+      - pending (user created but pending confirmation)
       - active (user has been activated based on activation link confirmation - or via social authentication)
       - banned (user was blocked by an admin / moderator)
       - inactive (user has been inactivated - either due to multiple wrong password types or password expiry or other membership policy.)
@@ -51,7 +51,7 @@ CREATE TABLE `adm_user` (
 	`auth_key` VARCHAR(128) NOT NULL COMMENT 'Key for "remember me" authorization',
 	`activation_key` VARCHAR(128) NOT NULL COMMENT 'Key to activate the account sent by email',
 	`reset_key` VARCHAR(128) COMMENT 'Key to reset user password',
-	`status` TINYINT(1) NOT NULL DEFAULT '0' COMMENT 'User status (e.g. new, active, banned, inactive)',
+	`status` TINYINT(1) NOT NULL DEFAULT '0' COMMENT 'User status (e.g. pending, active, banned, inactive)',
 	`created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Timestamp of the user creation/registration',
     `last_login_on` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Last login time',
 	PRIMARY KEY (`id`),
