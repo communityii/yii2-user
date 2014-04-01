@@ -2,7 +2,6 @@
 
 /**
  * @copyright Copyright &copy; communityii, 2014
- * communityii@googlegroups.com
  * @package yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
