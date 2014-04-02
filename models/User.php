@@ -39,9 +39,9 @@ use communityii\user\components\IdentityInterface;
  * @property string $password_new write-only password
  * @property string $password_confirm write-only password
  *
- * @property MailQueue $mailQueue
+ * @property MailQueues $mailQueues
  * @property RemoteIdentity[] $remoteIdentities
- * @property UserBanLog $userBanLog
+ * @property UserBanLogs $userBanLogs
  * @property UserProfile $userProfile
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
