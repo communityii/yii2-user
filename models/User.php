@@ -311,6 +311,7 @@ class User extends BaseModel implements IdentityInterface
 
 	/**
 	 * Validate failed login attempt
+	 *
 	 * @param bool $outcome the password validation outcome
 	 */
 	public function checkFailedLogin($outcome)
@@ -616,7 +617,7 @@ class User extends BaseModel implements IdentityInterface
 	}
 
 	/**
-	 * Sends an email with a link, for activation or resetting the password.
+	 * Sends an email with a link, for account activation or account recovery/reset
 	 *
 	 * @param string $type the type/template of mail to be sent
 	 * @return bool whether the email was sent
@@ -624,13 +625,14 @@ class User extends BaseModel implements IdentityInterface
 	public function sendEmail($type)
 	{
 		if (!empty($this->_module->notificationSettings[$type])) {
-			$settings = $this->_module->notificationSettings;
-			$content = Yii::$app->controller->renderPartial($settings['viewPath'] . '/' . $settings[$type], ['user' => $this]);
-			return \Yii::$app->mail->compose($content)
-								   ->setFrom([$settings[$type]['fromEmail'] => $settings[$type]['fromName'])
-								   ->setTo($this->email)
-								   ->setSubject($settings[$type]['subject'])
-								   ->send();
+			$content = Yii::$app->controller->renderPartial($this->_module->notificationSettings['viewPath'] . '/' . $type, ['user' => $this]);
+			$settings = $this->_module->notificationSettings[$type];
+			return \Yii::$app->mail
+				->compose($content)
+				->setFrom([$settings['fromEmail'] => $settings['fromName'])
+				->setTo($this->email)
+				->setSubject($settings['subject'])
+				->send();
 		}
 		return null;
 	}
