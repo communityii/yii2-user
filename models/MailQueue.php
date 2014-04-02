@@ -6,7 +6,7 @@
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
-namespace app\models;
+namespace communityii\user\models;
 
 use Yii;
 
