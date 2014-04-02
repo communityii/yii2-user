@@ -68,26 +68,6 @@ class User extends BaseModel implements IdentityInterface
 	public $password_confirm;
 
 	/**
-	 * Initialize User model
-	 */
-	public function init()
-	{
-		parent::init();
-		$this->_statuses = [
-			self::STATUS_PENDING => Yii::t('user', 'Pending'),
-			self::STATUS_ACTIVE => Yii::t('user', 'Active'),
-			self::STATUS_BANNED => Yii::t('user', 'Banned'),
-			self::STATUS_INACTIVE => Yii::t('user', 'Inactive'),
-		];
-		$this->_statusClasses = [
-			self::STATUS_PENDING => 'label label-info',
-			self::STATUS_ACTIVE => 'label label-success',
-			self::STATUS_BANNED => 'label label-danger',
-			self::STATUS_INACTIVE => 'label label-default',
-		];
-	}
-
-	/**
 	 * @var array the list of statuses
 	 */
 	private $_statuses = [];
@@ -120,6 +100,26 @@ class User extends BaseModel implements IdentityInterface
 	public static function tableName()
 	{
 		return 'adm_user';
+	}
+
+	/**
+	 * Initialize User model
+	 */
+	public function init()
+	{
+		parent::init();
+		$this->_statuses = [
+			self::STATUS_PENDING => Yii::t('user', 'Pending'),
+			self::STATUS_ACTIVE => Yii::t('user', 'Active'),
+			self::STATUS_BANNED => Yii::t('user', 'Banned'),
+			self::STATUS_INACTIVE => Yii::t('user', 'Inactive'),
+		];
+		$this->_statusClasses = [
+			self::STATUS_PENDING => 'label label-info',
+			self::STATUS_ACTIVE => 'label label-success',
+			self::STATUS_BANNED => 'label label-danger',
+			self::STATUS_INACTIVE => 'label label-default',
+		];
 	}
 
 	/**

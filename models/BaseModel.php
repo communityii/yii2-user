@@ -13,6 +13,9 @@ use Yii;
 
 /**
  * This is the base model class for all active record models
+ *
+ * @author Kartik Visweswaran <kartikv2@gmail.com>
+ * @since 1.0
  */
 class BaseModel extends \yii\db\ActiveRecord
 {
