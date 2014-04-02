@@ -11,7 +11,7 @@ namespace communityii\user\models;
 use Yii;
 
 /**
- * This is the model class for table "adm_mail_queue".
+ * This is the model class for table `Module::T5`.
  *
  * @property string $id
  * @property string $from_email
@@ -51,7 +51,7 @@ class MailQueue extends BaseModel
 	 */
 	public static function tableName()
 	{
-		return 'adm_mail_queue';
+		return Module::T5;
 	}
 
 	/**

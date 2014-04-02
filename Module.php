@@ -21,6 +21,13 @@ use yii\base\InvalidConfigException;
  */
 class Module extends \yii\base\Module
 {
+	// the table names used in this module
+	const T1 = '{{%user}}'; // table # 1 - user
+	const T2 = '{{%remote_identity}}'; // table # 2 - remote_identity
+	const T3 = '{{%user_profile}}'; // table # 3 - user_profile
+	const T4 = '{{%user_ban_log}}'; // table # 4 - user_ban_log
+	const T5 = '{{%mail_queue}}'; // table # 5 - mail_queue
+
 	// the valid types of login methods
 	const LOGIN_USERNAME = 1;
 	const LOGIN_EMAIL = 2;

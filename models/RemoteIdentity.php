@@ -11,7 +11,7 @@ namespace communityii\user\models;
 use Yii;
 
 /**
- * This is the model class for table "adm_remote_identity".
+ * This is the model class for table `Module::T2`.
  *
  * @property string $id
  * @property string $profile_id
@@ -30,7 +30,7 @@ class RemoteIdentity extends BaseModel
 	 */
 	public static function tableName()
 	{
-		return 'adm_remote_identity';
+		return Module::T2;
 	}
 
 	/**
