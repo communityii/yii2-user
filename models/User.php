@@ -269,7 +269,7 @@ class User extends BaseModel implements IdentityInterface
 			$this->generateActivationKey();
 		} elseif ($this->scenario == Module::FORM_ACTIVATE || $this->scenario == Module::FORM_RECOVERY) {
 			$this->status = self::STATUS_ACTIVE;
-			$this->password_reset_on = $this->_module->now();
+			$this->password_reset_on = call_user_func($this->_module->now);
 			$this->password_fail_attempts = 0;
 			$this->removeResetKey();
 			$this->removeActivationKey();
@@ -445,7 +445,7 @@ class User extends BaseModel implements IdentityInterface
 	{
 		$this->password_fail_attempts = 0;
 		$this->last_login_ip = Yii::$app->getRequest()->getUserIP();
-		$this->last_login_on = $this->_module->now();
+		$this->last_login_on = call_user_func($this->_module->now);
 		$this->save();
 	}
 
