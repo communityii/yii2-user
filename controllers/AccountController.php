@@ -114,7 +114,7 @@ class AccountController extends BaseController
 	 */
 	protected function lockAccount($user, $msg, $link) {
 		if (!Yii::$app->user->isGuest) {
-			Yii::$app->user->logout();
+			Yii::$app->user->logout(true);
 		}
 		if ($user !== null) {
 			$user->scenario = Module::UI_LOCKED;

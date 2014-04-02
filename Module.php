@@ -91,7 +91,7 @@ class Module extends \yii\base\Module
 	 * - loginType: integer, whether users can login with their username, email address, or both.
 	 *   Defaults to `Module::LOGIN_BOTH`.
 	 * - rememberMeDuration: integer, the duration in seconds for which user will remain logged in on his/her client
-	 *   using cookies. Defaults to 3600*24*1 seconds (1 day).
+	 *   using cookies. Defaults to 3600*24*1 seconds (30 days).
 	 * - loginRedirectUrl: string|array, the default url to redirect after login. Normally the last return
 	 *   url will be used. This setting will only be used if no return url is found.
 	 * - logoutRedirectUrl: string|array, the default url to redirect after logout. If not set, it will redirect
@@ -267,7 +267,7 @@ class Module extends \yii\base\Module
 		];
 		$this->loginSettings += [
 			'loginType' => self::LOGIN_BOTH,
-			'rememberMeDuration' => 864000
+			'rememberMeDuration' => 2592000
 		];
 		$this->passwordSettings += [
 			'validateStrength' => [self::UI_REGISTER, Module::UI_RESET],
