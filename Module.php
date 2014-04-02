@@ -26,14 +26,15 @@ class Module extends \yii\base\Module
 	const LOGIN_EMAIL = 2;
 	const LOGIN_BOTH = 3;
 
-	// the major user interface forms (some of these also mirror as scenario names in the User model)
-	const FORM_LOGIN = 'login';
-	const FORM_REGISTER = 'register';
-	const FORM_ACTIVATE = 'activate';
-	const FORM_RESET = 'reset';
-	const FORM_RECOVERY = 'recovery';
-	const FORM_PROFILE = 'profile';
-	const FORM_ADMIN = 'admin';
+	// the major user interfaces (forms/widgets) (some of these also mirror as scenario names in the User model)
+	const UI_LOGIN = 'login';
+	const UI_REGISTER = 'register';
+	const UI_ACTIVATE = 'activate';
+	const UI_RESET = 'reset';
+	const UI_RECOVERY = 'recovery';
+	const UI_LOCKED = 'locked';
+	const UI_PROFILE = 'profile';
+	const UI_ADMIN = 'admin';
 
 	// the rbac integration settings
 	const RBAC_SIMPLE = 1;
@@ -103,11 +104,11 @@ class Module extends \yii\base\Module
 	 * @var array the settings for the password in the module. The following options can be set"
 	 * - validateStrength: array|boolean, the list of forms where password strength will be validated. If
 	 *   set to `false` or an empty array, no strength will be validated. The strength will be validated
-	 *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::FORM_REGISTER, Module::FORM_RESET]`.
+	 *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::UI_REGISTER, Module::UI_RESET]`.
 	 * - strengthRules: array, the strength validation rules as required by `\kartik\password\StrengthValidator`
 	 * - strengthMeter: array|boolean, the list of forms where password strength meter will be displayed.
 	 *   If set to `false` or an empty array, no strength meter will be displayed.  Defaults to
-	 *   `[Module::FORM_REGISTER, Module::FORM_RESET]`.
+	 *   `[Module::UI_REGISTER, Module::UI_RESET]`.
 	 * - activationKeyExpiry: integer|bool, the time in seconds after which the account activation key/token will expire.
 	 *   Defaults to 3600*24*2 seconds (2 days). If set to `0` or `false`, the key never expires.
 	 * - resetKeyExpiry: integer|bool, the time in seconds after which the password reset key/token will expire.
@@ -269,7 +270,7 @@ class Module extends \yii\base\Module
 			'rememberMeDuration' => 2592000
 		];
 		$this->passwordSettings += [
-			'validateStrength' => [self::FORM_REGISTER, Module::FORM_RESET],
+			'validateStrength' => [self::UI_REGISTER, Module::UI_RESET],
 			'strengthRules' => [
 				'min' => 8,
 				'upper' => 1,
@@ -279,7 +280,7 @@ class Module extends \yii\base\Module
 				'hasUser' => true,
 				'hasEmail' => true
 			],
-			'strengthMeter' => [self::FORM_REGISTER, Module::FORM_RESET],
+			'strengthMeter' => [self::UI_REGISTER, Module::UI_RESET],
 			'activationKeyExpiry' => 172800,
 			'resetKeyExpiry' => 172800,
 			'passwordExpiry' => false,
@@ -339,13 +340,13 @@ class Module extends \yii\base\Module
 			]
 		];
 		$this->widgetSettings += [
-			self::FORM_LOGIN => ['type' => 'vertical'],
-			self::FORM_REGISTER => ['type' => 'horizontal'],
-			self::FORM_ACTIVATION => ['type' => 'inline'],
-			self::FORM_RECOVERY => ['type' => 'inline'],
-			self::FORM_RESET => ['type' => 'vertical'],
-			self::FORM_PROFILE => ['type' => 'vertical'],
-			self::FORM_ADMIN => ['type' => 'vertical'],
+			self::UI_LOGIN => ['type' => 'vertical'],
+			self::UI_REGISTER => ['type' => 'horizontal'],
+			self::UI_ACTIVATION => ['type' => 'inline'],
+			self::UI_RECOVERY => ['type' => 'inline'],
+			self::UI_RESET => ['type' => 'vertical'],
+			self::UI_PROFILE => ['type' => 'vertical'],
+			self::UI_ADMIN => ['type' => 'vertical'],
 		];
 		$this->messages += [
 			self::MSG_REGISTRATION_ACTIVE => "You have been successfully registered and logged in as '{username}'",

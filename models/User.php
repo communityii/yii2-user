@@ -145,16 +145,16 @@ class User extends BaseModel implements IdentityInterface
 			[['status'], 'default', 'value' => self::STATUS_PENDING],
 			['status', 'in', 'range' => array_keys($this->_statuses)],
 
-			[['password_raw'], 'required', 'on' => [Module::FORM_REGISTER, Module::FORM_RESET]],
-			[['password_new', 'password_confirm'], 'required', 'on' => [Module::FORM_RESET]],
-			['password_new', 'compare', 'compareAttribute' => 'password_confirm', 'on' => [Module::FORM_RESET]],
+			[['password_raw'], 'required', 'on' => [Module::UI_REGISTER, Module::UI_RESET]],
+			[['password_new', 'password_confirm'], 'required', 'on' => [Module::UI_RESET]],
+			['password_new', 'compare', 'compareAttribute' => 'password_confirm', 'on' => [Module::UI_RESET]],
 		];
 		$strengthRules = $this->_module->passwordSettings['strengthRules'];
-		if (in_array(Module::FORM_REGISTER, $pwdSettings['validateStrength'])) {
-			$rules[] = [['password_raw'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::FORM_REGISTER]];
+		if (in_array(Module::UI_REGISTER, $pwdSettings['validateStrength'])) {
+			$rules[] = [['password_raw'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::UI_REGISTER]];
 		}
-		if (in_array(Module::FORM_RESET, $pwdSettings['validateStrength'])) {
-			$rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::FORM_RESET]];
+		if (in_array(Module::UI_RESET, $pwdSettings['validateStrength'])) {
+			$rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::UI_RESET]];
 		}
 		return $rules;
 
@@ -168,10 +168,10 @@ class User extends BaseModel implements IdentityInterface
 	public function scenarios()
 	{
 		return [
-			Module::FORM_REGISTER => ['username', 'password_raw', 'email'],
-			Module::FORM_RESET => ['password_raw', 'password_new', 'password_confirm'],
-			Module::FORM_PROFILE => ['username', 'email'],
-			Module::FORM_ADMIN => ['username', 'email'],
+			Module::UI_REGISTER => ['username', 'password_raw', 'email'],
+			Module::UI_RESET => ['password_raw', 'password_new', 'password_confirm'],
+			Module::UI_PROFILE => ['username', 'email'],
+			Module::UI_ADMIN => ['username', 'email'],
 		];
 	}
 
@@ -263,18 +263,22 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function setAccess()
 	{
-		if ($this->scenario == Module::FORM_REGISTER) {
+		if ($this->scenario == Module::UI_REGISTER) {
 			$this->status = self::STATUS_PENDING;
 			$this->removeResetKey();
 			$this->generateActivationKey();
-		} elseif ($this->scenario == Module::FORM_ACTIVATE || $this->scenario == Module::FORM_RECOVERY) {
+		} elseif ($this->scenario == Module::UI_ACTIVATE || $this->scenario == Module::UI_RECOVERY) {
 			$this->status = self::STATUS_ACTIVE;
 			$this->password_reset_on = call_user_func($this->_module->now);
 			$this->password_fail_attempts = 0;
 			$this->removeResetKey();
 			$this->removeActivationKey();
-		} elseif ($this->scenario == Module::FORM_RESET) {
+		} elseif ($this->scenario == Module::UI_RESET) {
 			$this->status = self::STATUS_PENDING;
+			$this->removeActivationKey();
+			$this->generateResetKey();
+		} elseif ($this->scenario == Module::UI_LOCKED) {
+			$this->status = self::STATUS_INACTIVE;
 			$this->removeActivationKey();
 			$this->generateResetKey();
 		}

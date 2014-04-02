@@ -92,20 +92,36 @@ class AccountController extends BaseController
 			$user = $model->getUser();
 			$link = Html::a(Yii::t('user', 'here'), Module::ACTION_RESET);
 			if ($user->status == User::STATUS_INACTIVE) {
-				$msg = ($user->isAccountLocked()) ? Module::MSG_ACCOUNT_LOCKED : Module::MSG_PASSWORD_EXPIRED;
-				Yii::$app->session->setFlash('error', Yii::t('user', $msg, ['resetLink' => $link]));
+				$msg = ($user->isPasswordExpired()) ? Module::MSG_PASSWORD_EXPIRED : Module::MSG_ACCOUNT_LOCKED;
+				return $this->lockAccount(null, $msg, $link);
 			} elseif ($user->isPasswordExpired()) {
-				$user->saveStatus(User::STATUS_INACTIVE);
-				Yii::$app->session->setFlash('error', Yii::t('user', Module::MSG_PASSWORD_EXPIRED, ['resetLink' => $link]));
+				return $this->lockAccount($user, Module::MSG_PASSWORD_EXPIRED, $link);
 			} elseif ($user->isAccountLocked()) {
-				$user->saveStatus(User::STATUS_INACTIVE);
-				Yii::$app->session->setFlash('error', Yii::t('user', Module::MSG_ACCOUNT_LOCKED, ['resetLink' => $link]));
+				return $this->lockAccount($user, Module::MSG_ACCOUNT_LOCKED, $link);
 			} elseif ($model->login($user)) {
 				$user->setLastLogin();
 				return $this->goBack($url);
 			}
 		}
-		return $this->render(Module::FORM_LOGIN, ['model' => $model]);
+		return $this->render(Module::UI_LOGIN, ['model' => $model]);
+	}
+
+	/**
+	 * Locks the user account
+	 * @param Model $user the user model
+	 * @param string $msg the flash message to be displayed
+	 * @param string $link the reset link
+	 */
+	protected function lockAccount($user, $msg, $link) {
+		if (!Yii::$app->user->isGuest) {
+			Yii::$app->user->logout();
+		}
+		if ($user !== null) {
+			$user->scenario = Module::UI_LOCKED;
+			$user->save();
+		}
+		Yii::$app->session->setFlash('error', Yii::t('user', $msg, ['resetLink' => $link]));
+		return $this->render(Module::UI_LOCKED, ['user' => $user]);
 	}
 
 	/**
@@ -131,7 +147,7 @@ class AccountController extends BaseController
 		if (!$config['enabled']) {
 			return $this->goBack();
 		}
-		$model = new User(['scenario' => Module::FORM_REGISTER]);
+		$model = new User(['scenario' => Module::UI_REGISTER]);
 		if ($model->load(Yii::$app->request->post()) && $model->validate()) {
 			if ($config['autoActivate']) {
 				$model->setStatus(User::STATUS_ACTIVE);
@@ -147,7 +163,7 @@ class AccountController extends BaseController
 				}
 			}
 		}
-		return $this->render(Module::FORM_REGISTER, ['model' => $model, 'config' => $config]);
+		return $this->render(Module::UI_REGISTER, ['model' => $model, 'config' => $config]);
 	}
 
 }
