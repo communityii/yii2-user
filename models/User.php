@@ -152,10 +152,11 @@ class User extends BaseModel implements IdentityInterface
 			['password_new', 'compare', 'compareAttribute' => 'password_confirm', 'on' => [Module::UI_RESET]],
 		];
 		$strengthRules = $this->_module->passwordSettings['strengthRules'];
-		if (in_array(Module::UI_REGISTER, $pwdSettings['validateStrength'])) {
+		$validateStrength = $this->_module->passwordSettings['validateStrength'];
+		if (in_array(Module::UI_REGISTER, $validateStrength)) {
 			$rules[] = [['password_raw'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::UI_REGISTER]];
 		}
-		if (in_array(Module::UI_RESET, $pwdSettings['validateStrength'])) {
+		if (in_array(Module::UI_RESET, $validateStrength)) {
 			$rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::UI_RESET]];
 		}
 		return $rules;
@@ -588,7 +589,6 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public function getResetKeyExpiry()
 	{
-		return ArrayHelper::getValue($this->_module->passwordSettings, 'resetKeyExpiry', 172800);
 		if (isset($this->_resetKeyExpiry)) {
 			return $this->_resetKeyExpiry;
 		}

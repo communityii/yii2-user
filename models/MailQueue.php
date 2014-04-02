@@ -25,7 +25,6 @@ use Yii;
  * @property string $updated_on
  *
  * @property User $user
-
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
@@ -50,10 +49,10 @@ class MailQueue extends BaseModel
 	 *
 	 * @return string
 	 */
-    public static function tableName()
-    {
-        return 'adm_mail_queue';
-    }
+	public static function tableName()
+	{
+		return 'adm_mail_queue';
+	}
 
 	/**
 	 * Initialize Mail Queue model
@@ -78,48 +77,48 @@ class MailQueue extends BaseModel
 	 *
 	 * @return array
 	 */
-    public function rules()
-    {
-        return [
-            [['id', 'from_email', 'subject', 'template', 'user_id', 'created_on'], 'required'],
-            [['id', 'user_id', 'status'], 'integer'],
-            [['log'], 'string'],
-            [['created_on', 'updated_on'], 'safe'],
-            [['from_email', 'from_name', 'subject'], 'string', 'max' => 255],
-            [['template'], 'string', 'max' => 60]
-        ];
-    }
+	public function rules()
+	{
+		return [
+			[['id', 'from_email', 'subject', 'template', 'user_id', 'created_on'], 'required'],
+			[['id', 'user_id', 'status'], 'integer'],
+			[['log'], 'string'],
+			[['created_on', 'updated_on'], 'safe'],
+			[['from_email', 'from_name', 'subject'], 'string', 'max' => 255],
+			[['template'], 'string', 'max' => 60]
+		];
+	}
 
 	/**
 	 * Attribute labels for the Mail Queue model
 	 *
 	 * @return array
 	 */
-    public function attributeLabels()
-    {
-        return [
-            'id' => Yii::t('user', 'ID'),
-            'from_email' => Yii::t('user', 'From Email'),
-            'from_name' => Yii::t('user', 'From Name'),
-            'subject' => Yii::t('user', 'Subject'),
-            'template' => Yii::t('user', 'Template'),
-            'user_id' => Yii::t('user', 'User ID'),
-            'log' => Yii::t('user', 'Log'),
-            'status' => Yii::t('user', 'Status'),
-            'created_on' => Yii::t('user', 'Created On'),
-            'updated_on' => Yii::t('user', 'Updated On'),
-        ];
-    }
+	public function attributeLabels()
+	{
+		return [
+			'id' => Yii::t('user', 'ID'),
+			'from_email' => Yii::t('user', 'From Email'),
+			'from_name' => Yii::t('user', 'From Name'),
+			'subject' => Yii::t('user', 'Subject'),
+			'template' => Yii::t('user', 'Template'),
+			'user_id' => Yii::t('user', 'User ID'),
+			'log' => Yii::t('user', 'Log'),
+			'status' => Yii::t('user', 'Status'),
+			'created_on' => Yii::t('user', 'Created On'),
+			'updated_on' => Yii::t('user', 'Updated On'),
+		];
+	}
 
 	/**
 	 * User relation
 	 *
 	 * @return \yii\db\ActiveQuery
 	 */
-    public function getUser()
-    {
-        return $this->hasOne(User::className(), ['id' => 'id']);
-    }
+	public function getUser()
+	{
+		return $this->hasOne(User::className(), ['id' => 'id']);
+	}
 
 	/**
 	 * Get status list
