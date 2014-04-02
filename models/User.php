@@ -277,10 +277,6 @@ class User extends BaseModel implements IdentityInterface
 			$this->status = self::STATUS_PENDING;
 			$this->removeActivationKey();
 			$this->generateResetKey();
-		} elseif ($this->scenario == Module::FORM_LOCKED) {
-			$this->status = self::STATUS_INACTIVE;
-			$this->removeActivationKey();
-			$this->generateResetKey();
 		}
 	}
 

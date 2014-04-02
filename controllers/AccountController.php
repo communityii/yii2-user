@@ -94,12 +94,12 @@ class AccountController extends BaseController
 			if ($user->status == User::STATUS_INACTIVE) {
 				$msg = ($user->isAccountLocked()) ? Module::MSG_ACCOUNT_LOCKED : Module::MSG_PASSWORD_EXPIRED;
 				Yii::$app->session->setFlash('error', Yii::t('user', $msg, ['resetLink' => $link]));
-			} elseif ($user->isAccountLocked()) {
-				$user->saveStatus(User::STATUS_INACTIVE);
-				Yii::$app->session->setFlash('error', Yii::t('user', Module::MSG_ACCOUNT_LOCKED, ['resetLink' => $link]));
 			} elseif ($user->isPasswordExpired()) {
 				$user->saveStatus(User::STATUS_INACTIVE);
 				Yii::$app->session->setFlash('error', Yii::t('user', Module::MSG_PASSWORD_EXPIRED, ['resetLink' => $link]));
+			} elseif ($user->isAccountLocked()) {
+				$user->saveStatus(User::STATUS_INACTIVE);
+				Yii::$app->session->setFlash('error', Yii::t('user', Module::MSG_ACCOUNT_LOCKED, ['resetLink' => $link]));
 			} elseif ($model->login($user)) {
 				$user->setLastLogin();
 				return $this->goBack($url);
