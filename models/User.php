@@ -39,7 +39,9 @@ use communityii\user\components\IdentityInterface;
  * @property string $password_new write-only password
  * @property string $password_confirm write-only password
  *
+ * @property MailQueue $mailQueue
  * @property RemoteIdentity[] $remoteIdentities
+ * @property UserBanLog $userBanLog
  * @property UserProfile $userProfile
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
@@ -203,6 +205,16 @@ class User extends BaseModel implements IdentityInterface
 	}
 
 	/**
+	 * Mail Queue relation
+	 *
+	 * @return \yii\db\ActiveQuery
+	 */
+	public function getMailQueues()
+	{
+		return $this->hasMany(MailQueue::className(), ['id' => 'id']);
+	}
+
+	/**
 	 * Remote identities relation
 	 *
 	 * @return \yii\db\ActiveQuery
@@ -210,6 +222,16 @@ class User extends BaseModel implements IdentityInterface
 	public function getRemoteIdentities()
 	{
 		return $this->hasMany(RemoteIdentity::className(), ['user_id' => 'id']);
+	}
+
+	/**
+	 * User ban logs relation
+	 *
+	 * @return \yii\db\ActiveQuery
+	 */
+	public function getUserBanLogs()
+	{
+		return $this->hasMany(UserBanLog::className(), ['id' => 'id']);
 	}
 
 	/**
