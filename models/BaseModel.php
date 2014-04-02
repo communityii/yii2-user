@@ -40,6 +40,7 @@ class BaseModel extends \yii\db\ActiveRecord
 					ActiveRecord::EVENT_BEFORE_INSERT => ['created_on', 'updated_on'],
 					ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_on'],
 				],
+				'value' => $this->_module->now(),
 			],
 		];
 	}

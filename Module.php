@@ -72,6 +72,13 @@ class Module extends \yii\base\Module
 	const MSG_ACCOUNT_LOCKED = 204;
 
 	/**
+	 * @var Closure an anonymous function that will return current timestamp
+	 * for populating the timestamp fields. Defaults to
+	 * `function() { return date("Y-m-d H:i:s"); }`
+	 */
+	public $now;
+
+	/**
 	 * @var array the action settings for the module. The keys will be one of the `Module::ACTION_` constants
 	 * and the value will be the url/route for the specified action.
 	 * @see `setConfig()` method for the default settings
@@ -229,6 +236,11 @@ class Module extends \yii\base\Module
 	 */
 	public function setConfig()
 	{
+		if (empty($this->now) || !$this->now instanceof \Closure) {
+			$this->now = function() {
+				return date('Y-m-d H:i:s');
+			};
+		}
 		$this->actionSettings += [
 			// the list of account actions
 			self::ACTION_LOGIN => 'account/login',
