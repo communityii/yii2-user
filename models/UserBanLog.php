@@ -21,7 +21,6 @@ use Yii;
  * @property string $updated_on
  *
  * @property User $user
-
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
@@ -32,44 +31,44 @@ class UserBanLog extends BaseModel
 	 *
 	 * @return string
 	 */
-    public static function tableName()
-    {
-        return 'adm_user_ban_log';
-    }
+	public static function tableName()
+	{
+		return 'adm_user_ban_log';
+	}
 
 	/**
 	 * User Ban Log model validation rules
 	 *
 	 * @return array
 	 */
-    public function rules()
-    {
-        return [
-            [['id', 'user_id', 'created_on'], 'required'],
-            [['id', 'user_id'], 'integer'],
-            [['created_on', 'updated_on'], 'safe'],
-            [['user_ip'], 'string', 'max' => 50],
-            [['ban_reason', 'revoke_reason'], 'string', 'max' => 255]
-        ];
-    }
+	public function rules()
+	{
+		return [
+			[['id', 'user_id', 'created_on'], 'required'],
+			[['id', 'user_id'], 'integer'],
+			[['created_on', 'updated_on'], 'safe'],
+			[['user_ip'], 'string', 'max' => 50],
+			[['ban_reason', 'revoke_reason'], 'string', 'max' => 255]
+		];
+	}
 
 	/**
 	 * Attribute labels for the User Ban Log model
 	 *
 	 * @return array
 	 */
-    public function attributeLabels()
-    {
-        return [
-            'id' => Yii::t('user', 'ID'),
-            'user_ip' => Yii::t('user', 'User Ip'),
-            'ban_reason' => Yii::t('user', 'Ban Reason'),
-            'revoke_reason' => Yii::t('user', 'Revoke Reason'),
-            'user_id' => Yii::t('user', 'User ID'),
-            'created_on' => Yii::t('user', 'Created On'),
-            'updated_on' => Yii::t('user', 'Updated On'),
-        ];
-    }
+	public function attributeLabels()
+	{
+		return [
+			'id' => Yii::t('user', 'ID'),
+			'user_ip' => Yii::t('user', 'User Ip'),
+			'ban_reason' => Yii::t('user', 'Ban Reason'),
+			'revoke_reason' => Yii::t('user', 'Revoke Reason'),
+			'user_id' => Yii::t('user', 'User ID'),
+			'created_on' => Yii::t('user', 'Created On'),
+			'updated_on' => Yii::t('user', 'Updated On'),
+		];
+	}
 
 	/**
 	 * User relation
