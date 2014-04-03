@@ -18,25 +18,21 @@ use communityii\user\Module;
  */
 class m140402_143411_create_user_module extends \yii\db\Migration
 {
+	// not null specification
+	const NN = ' NOT NULL';
 
-	const NN = ' NOT NULL'; // not null specification
-	const DT = " DEFAULT '0000-00-00 00:00:00'"; // default timestamp
+	// default timestamp
+	const DT = " DEFAULT '0000-00-00 00:00:00'";
 
 	public function up()
 	{
-		if (($module = Yii::$app->getModule('user')) === null) {
-			echo "\nThe module 'user' was not found . Ensure you have setup the 'user' module in your Yii configuration file.";
-			return false;
-		}
-		extract($module->tableSettings);
-
 		$tableOptions = null;
 		if ($this->db->driverName === 'mysql') {
 			$tableOptions = 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB';
 		}
 
 		// Table # 1: User
-		$this->createTable($t1, [
+		$this->createTable('{{%user}}', [
 			'id' => Schema::TYPE_BIGPK,
 			'username' => Schema::TYPE_STRING . self::NN,
 			'email' => Schema::TYPE_STRING . self::NN,
@@ -52,12 +48,13 @@ class m140402_143411_create_user_module extends \yii\db\Migration
 			'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 			'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 		], $tableOptions);
-		$this->createIndex("{$t1}_UK1", $t1, 'username', true);
-		$this->createIndex("{$t1}_UK2", $t1, 'email', true);
-		$this->createIndex("{$t1}_NU1", $t1, 'status');
+		$this->createIndex("{{%user}}_UK1", '{{%user}}', 'username', true);
+		$this->createIndex("{{%user}}_UK2", '{{%user}}', 'email', true);
+		$this->createIndex("{{%user}}_NU1", '{{%user}}', 'status');
 
 		// Table # 2: Remote identity
-		$this->createTable($t2, [
+		'{{%remote_identity}}' = '{{%remote_identity}}';
+		$this->createTable('{{%remote_identity}}', [
 			'id' => Schema::TYPE_BIGPK,
 			'profile_id' => Schema::TYPE_STRING . '(128)' . self::NN,
 			'provider' => Schema::TYPE_STRING . '(30)' . self::NN,
@@ -65,11 +62,11 @@ class m140402_143411_create_user_module extends \yii\db\Migration
 			'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 			'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 		], $tableOptions);
-		$this->addForeignKey("{$t2}_FK1", $t2, 'user_id', $t1, 'id', 'CASCADE');
-		$this->createIndex("{$t2}_FK1", $t2, 'user_id');
+		$this->addForeignKey("{{%remote_identity}}_FK1", '{{%remote_identity}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
+		$this->createIndex("{{%remote_identity}}_FK1", '{{%remote_identity}}', 'user_id');
 
 		// Table # 3: User profile
-		$this->createTable($t3, [
+		$this->createTable('{{%user_profile}}', [
 			'id' => Schema::TYPE_BIGINT . self::NN,
 			'profile_name' => Schema::TYPE_STRING . '(180)',
 			'first_name' => Schema::TYPE_STRING . "(60) DEFAULT ''",
@@ -78,12 +75,12 @@ class m140402_143411_create_user_module extends \yii\db\Migration
 			'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 			'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 		], $tableOptions);
-		$this->addPrimaryKey("{$t3}_PK1", $t3, 'id');
-		$this->addForeignKey("{$t3}_FK1", $t3, 'id', $t1, 'id', 'CASCADE');
-		$this->createIndex("{$t3}_FK1", $t3, 'id');
+		$this->addPrimaryKey("{{%user_profile}}_PK1", '{{%user_profile}}', 'id');
+		$this->addForeignKey("{{%user_profile}}_FK1", '{{%user_profile}}', 'id', '{{%user}}', 'id', 'CASCADE');
+		$this->createIndex("{{%user_profile}}_FK1", '{{%user_profile}}', 'id');
 
 		// Table # 4: User ban log
-		$this->createTable($t4, [
+		$this->createTable('{{%user_ban_log}}', [
 			'id' => Schema::TYPE_BIGPK,
 			'user_ip' => Schema::TYPE_STRING . '(60)',
 			'ban_reason' => Schema::TYPE_STRING,
@@ -92,11 +89,11 @@ class m140402_143411_create_user_module extends \yii\db\Migration
 			'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 			'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 		], $tableOptions);
-		$this->addForeignKey("{$t4}_FK1", $t4, 'user_id', $t1, 'id', 'CASCADE');
-		$this->createIndex("{$t4}_FK1", $t4, 'user_id');
+		$this->addForeignKey("{{%user_ban_log}}_FK1", '{{%user_ban_log}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
+		$this->createIndex("{{%user_ban_log}}_FK1", '{{%user_ban_log}}', 'user_id');
 
 		// Table # 5: Mail queue
-		$this->createTable($t5, [
+		$this->createTable('{{%mail_queue}}', [
 			'id' => Schema::TYPE_BIGPK,
 			'from_email' => Schema::TYPE_STRING . self::NN,
 			'from_name' => Schema::TYPE_STRING,
@@ -108,22 +105,17 @@ class m140402_143411_create_user_module extends \yii\db\Migration
 			'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 			'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
 		], $tableOptions);
-		$this->addForeignKey("{$t5}_FK1", $t5, 'user_id', $t1, 'id', 'CASCADE');
-		$this->createIndex("{$t5}_FK1", $t5, 'user_id');
+		$this->addForeignKey("{{%mail_queue}}_FK1", '{{%mail_queue}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
+		$this->createIndex("{{%mail_queue}}_FK1", '{{%mail_queue}}', 'user_id');
 	}
 
 	public function down()
 	{
 		// echo "m140402_143411_create_user_module cannot be reverted.\n";
-		if (($module = Yii::$app->getModule('user')) === null) {
-			echo "\nThe module 'user' was not found . Ensure you have setup the 'user' module in your Yii configuration file.";
-			return false;
-		}
-		extract($module->tableSettings);
-		$this->dropTable($t5);
-		$this->dropTable($t4);
-		$this->dropTable($t3);
-		$this->dropTable($t2);
-		$this->dropTable($t1);
+		$this->dropTable('{{%mail_queue}}');
+		$this->dropTable('{{%user_ban_log}}');
+		$this->dropTable('{{%user_profile}}');
+		$this->dropTable('{{%remote_identity}}');
+		$this->dropTable('{{%user}}');
 	}
 }

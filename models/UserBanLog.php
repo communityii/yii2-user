@@ -10,7 +10,7 @@ namespace communityii\user\models;
 use Yii;
 
 /**
- * This is the model class for table `Module::T4`.
+ * This is the model class for table {{%user_ban_log}}.
  *
  * @property string $id
  * @property string $user_ip
@@ -33,7 +33,7 @@ class UserBanLog extends BaseModel
 	 */
 	public static function tableName()
 	{
-		return Module::T4;
+		return '{{%user_ban_log}}';
 	}
 
 	/**

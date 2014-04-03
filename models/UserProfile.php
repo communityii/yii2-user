@@ -5,7 +5,7 @@ namespace communityii\user\models;
 use Yii;
 
 /**
- * This is the model class for table `Module::T3`.
+ * This is the model class for table {{%user_profile}}.
  *
  * @property string $id
  * @property string $profile_name
@@ -26,7 +26,7 @@ class UserProfile extends BaseModel
 	 */
 	public static function tableName()
 	{
-		return Module::T3;
+		return '{{%user_profile}}';
 	}
 
 	/**

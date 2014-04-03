@@ -21,13 +21,6 @@ use yii\base\InvalidConfigException;
  */
 class Module extends \yii\base\Module
 {
-	// the tables used in this module
-	const TBL_USER = 't1';
-	const TBL_REMOTE_IDENTITY = 't2';
-	const TBL_USER_PROFILE = 't3';
-	const TBL_USER_BAN_LOG = 't4';
-	const TBL_MAIL_QUEUE = 't5';
-
 	// the valid types of login methods
 	const LOGIN_USERNAME = 1;
 	const LOGIN_EMAIL = 2;
@@ -79,17 +72,17 @@ class Module extends \yii\base\Module
 	const MSG_PASSWORD_EXPIRED = 203;
 	const MSG_ACCOUNT_LOCKED = 204;
 
+	// the mail delivery settings
+	const ENQUEUE_ONLY = 1;
+	const MAIL_ONLY = 2;
+	const ENQUEUE_AND_MAIL = 3;
+
 	/**
 	 * @var Closure an anonymous function that will return current timestamp
 	 * for populating the timestamp fields. Defaults to
 	 * `function() { return date("Y-m-d H:i:s"); }`
 	 */
 	public $now;
-
-	/**
-	 * @var table settings for the module
-	 */
-	public $tableSettings = [];
 
 	/**
 	 * @var array the action settings for the module. The keys will be one of the `Module::ACTION_` constants
@@ -162,6 +155,8 @@ class Module extends \yii\base\Module
 	 * - viewPath: string, the path for notification email templates.
 	 * - activation: array, the settings for the activation notification.
 	 * - recovery: array, the settings for the recovery notification.
+	 * - mailDelivery: integer, one of the mailDelivery options `Module::ENQUEUE_ONLY`, `Module::MAIL_ONLY`,
+	 *   or `Module::ENQUEUE_AND_MAIL`. Defaults to `Module::ENQUEUE_AND_MAIL`,
 	 * @see `setConfig()` method for the default settings
 	 */
 	public $notificationSettings = [];
@@ -254,13 +249,6 @@ class Module extends \yii\base\Module
 				return date('Y-m-d H:i:s');
 			};
 		}
-		$this->tableSettings += [
-			self::TBL_USER => '{{%user}}',
-			self::TBL_REMOTE_IDENTITY => '{{%remote_identity}}',
-			self::TBL_USER_PROFILE => '{{%user_profile}}',
-			self::TBL_USER_BAN_LOG => '{{%user_ban_log}}',
-			self::TBL_MAIL_QUEUE = '{{%mail_queue}}'
-		];
 		$this->actionSettings += [
 			// the list of account actions
 			self::ACTION_LOGIN => 'account/login',
@@ -333,6 +321,7 @@ class Module extends \yii\base\Module
 				'subject' => Yii::t('user', Yii::t('user', 'Account recovery for {appname}', ['appname' => $appName])),
 				'template' => 'recovery'
 			],
+			'mailDelivery' => self::ENQUEUE_AND_MAIL
 		];
 		$this->socialAuthSettings += [
 			'enabled' => true,

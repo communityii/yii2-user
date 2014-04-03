@@ -19,7 +19,7 @@ use communityii\user\Module;
 use communityii\user\components\IdentityInterface;
 
 /**
- * This is the model class for table `Module::T1`.
+ * This is the model class for table {{%user}}.
  *
  * @property string $id
  * @property string $username
@@ -101,7 +101,7 @@ class User extends BaseModel implements IdentityInterface
 	 */
 	public static function tableName()
 	{
-		return Module::T1;
+		return '{{%user}}';
 	}
 
 	/**
