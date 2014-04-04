@@ -20,13 +20,12 @@ use communityii\user\Module;
  */
 class DefaultController extends BaseController
 {
-	public function actionIndex()
-	{
-		if (Yii::$app->user->isGuest) {
-			return $this->forward(Module::ACTION_LOGIN);
-		}
-		else {
-			return $this->forward(Module::ACTION_PROFILE_VIEW);
-		}
-	}
+    public function actionIndex()
+    {
+        if (Yii::$app->user->isGuest) {
+            return $this->forward(Module::ACTION_LOGIN);
+        } else {
+            return $this->forward(Module::ACTION_PROFILE_VIEW);
+        }
+    }
 }

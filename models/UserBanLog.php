@@ -26,58 +26,58 @@ use Yii;
  */
 class UserBanLog extends BaseModel
 {
-	/**
-	 * Table name for the User Ban Log model
-	 *
-	 * @return string
-	 */
-	public static function tableName()
-	{
-		return '{{%user_ban_log}}';
-	}
+    /**
+     * Table name for the User Ban Log model
+     *
+     * @return string
+     */
+    public static function tableName()
+    {
+        return '{{%user_ban_log}}';
+    }
 
-	/**
-	 * User Ban Log model validation rules
-	 *
-	 * @return array
-	 */
-	public function rules()
-	{
-		return [
-			[['id', 'user_id', 'created_on'], 'required'],
-			[['id', 'user_id'], 'integer'],
-			[['created_on', 'updated_on'], 'safe'],
-			[['user_ip'], 'string', 'max' => 50],
-			[['ban_reason', 'revoke_reason'], 'string', 'max' => 255]
-		];
-	}
+    /**
+     * User Ban Log model validation rules
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            [['id', 'user_id', 'created_on'], 'required'],
+            [['id', 'user_id'], 'integer'],
+            [['created_on', 'updated_on'], 'safe'],
+            [['user_ip'], 'string', 'max' => 50],
+            [['ban_reason', 'revoke_reason'], 'string', 'max' => 255]
+        ];
+    }
 
-	/**
-	 * Attribute labels for the User Ban Log model
-	 *
-	 * @return array
-	 */
-	public function attributeLabels()
-	{
-		return [
-			'id' => Yii::t('user', 'ID'),
-			'user_ip' => Yii::t('user', 'User Ip'),
-			'ban_reason' => Yii::t('user', 'Ban Reason'),
-			'revoke_reason' => Yii::t('user', 'Revoke Reason'),
-			'user_id' => Yii::t('user', 'User ID'),
-			'created_on' => Yii::t('user', 'Created On'),
-			'updated_on' => Yii::t('user', 'Updated On'),
-		];
-	}
+    /**
+     * Attribute labels for the User Ban Log model
+     *
+     * @return array
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => Yii::t('user', 'ID'),
+            'user_ip' => Yii::t('user', 'User Ip'),
+            'ban_reason' => Yii::t('user', 'Ban Reason'),
+            'revoke_reason' => Yii::t('user', 'Revoke Reason'),
+            'user_id' => Yii::t('user', 'User ID'),
+            'created_on' => Yii::t('user', 'Created On'),
+            'updated_on' => Yii::t('user', 'Updated On'),
+        ];
+    }
 
-	/**
-	 * User relation
-	 *
-	 * @return \yii\db\ActiveQuery
-	 */
-	public function getUser()
-	{
-		return $this->hasOne(User::className(), ['id' => 'id']);
-	}
+    /**
+     * User relation
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getUser()
+    {
+        return $this->hasOne(User::className(), ['id' => 'id']);
+    }
 
 }

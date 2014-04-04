@@ -24,52 +24,53 @@ use Yii;
  */
 class RemoteIdentity extends BaseModel
 {
-	/**
-	 * Table name for the RemoteIdentity model
-	 * @return string
-	 */
-	public static function tableName()
-	{
-		return '{{%remote_identity}}';
-	}
+    /**
+     * Table name for the RemoteIdentity model
+     *
+     * @return string
+     */
+    public static function tableName()
+    {
+        return '{{%remote_identity}}';
+    }
 
-	/**
-	 * RemoteIdentity model validation rules
-	 */
-	public function rules()
-	{
-		return [
-			[['profile_id', 'provider', 'user_id', 'created_on'], 'required'],
-			[['user_id'], 'integer'],
-			[['created_on', 'updated_on'], 'safe'],
-			[['profile_id'], 'string', 'max' => 100],
-			[['provider'], 'string', 'max' => 30],
-			[['provider', 'profile_id'], 'unique', 'targetAttribute' => ['provider', 'profile_id'], 'message' => 'The combination of Profile ID and Provider has already been taken.']
-		];
-	}
+    /**
+     * RemoteIdentity model validation rules
+     */
+    public function rules()
+    {
+        return [
+            [['profile_id', 'provider', 'user_id', 'created_on'], 'required'],
+            [['user_id'], 'integer'],
+            [['created_on', 'updated_on'], 'safe'],
+            [['profile_id'], 'string', 'max' => 100],
+            [['provider'], 'string', 'max' => 30],
+            [['provider', 'profile_id'], 'unique', 'targetAttribute' => ['provider', 'profile_id'], 'message' => 'The combination of Profile ID and Provider has already been taken.']
+        ];
+    }
 
-	/**
-	 * Attribute labels for the RemoteIdentity model
-	 */
-	public function attributeLabels()
-	{
-		return [
-			'id' => Yii::t('user', 'ID'),
-			'profile_id' => Yii::t('user', 'Profile ID'),
-			'provider' => Yii::t('user', 'Provider'),
-			'user_id' => Yii::t('user', 'User ID'),
-			'created_on' => Yii::t('user', 'Created On'),
-			'updated_on' => Yii::t('user', 'Updated On'),
-		];
-	}
+    /**
+     * Attribute labels for the RemoteIdentity model
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => Yii::t('user', 'ID'),
+            'profile_id' => Yii::t('user', 'Profile ID'),
+            'provider' => Yii::t('user', 'Provider'),
+            'user_id' => Yii::t('user', 'User ID'),
+            'created_on' => Yii::t('user', 'Created On'),
+            'updated_on' => Yii::t('user', 'Updated On'),
+        ];
+    }
 
-	/**
-	 * User relation
-	 *
-	 * @return \yii\db\ActiveQuery
-	 */
-	public function getUser()
-	{
-		return $this->hasOne(User::className(), ['id' => 'user_id']);
-	}
+    /**
+     * User relation
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getUser()
+    {
+        return $this->hasOne(User::className(), ['id' => 'user_id']);
+    }
 }

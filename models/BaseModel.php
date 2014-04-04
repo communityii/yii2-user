@@ -8,6 +8,7 @@
  */
 
 namespace communityii\user\models;
+
 use communityii\user\Module;
 use Yii;
 
@@ -19,33 +20,33 @@ use Yii;
  */
 class BaseModel extends \yii\db\ActiveRecord
 {
-	/* Current module */
-	protected $_module;
+    /* Current module */
+    protected $_module;
 
-	/**
-	 * Initialize the model for the user module
-	 */
-	public function init()
-	{
-		Module::validateConfig($this->_module);
-		parent::init();
-	}
+    /**
+     * Initialize the model for the user module
+     */
+    public function init()
+    {
+        Module::validateConfig($this->_module);
+        parent::init();
+    }
 
-	/**
-	 * Model behaviors
-	 */
-	public function behaviors()
-	{
-		return [
-			'timestamp' => [
-				'class' => 'yii\behaviors\TimestampBehavior',
-				'attributes' => [
-					ActiveRecord::EVENT_BEFORE_INSERT => ['created_on', 'updated_on'],
-					ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_on'],
-				],
-				'value' => call_user_func($this->_module->now),
-			],
-		];
-	}
-    
+    /**
+     * Model behaviors
+     */
+    public function behaviors()
+    {
+        return [
+            'timestamp' => [
+                'class' => 'yii\behaviors\TimestampBehavior',
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => ['created_on', 'updated_on'],
+                    ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_on'],
+                ],
+                'value' => call_user_func($this->_module->now),
+            ],
+        ];
+    }
+
 }
