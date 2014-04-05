@@ -13,7 +13,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
-use yii\web\VerbFilter;
+use yii\filters\VerbFilter;
 use communityii\user\Module;
 use communityii\user\models\LoginForm;
 use communityii\user\models\User;
@@ -33,7 +33,7 @@ class AccountController extends BaseController
     {
         return [
             'access' => [
-                'class' => \yii\web\AccessControl::className(),
+                'class' => \yii\filters\AccessControl::className(),
                 'only' => ['logout', 'register'],
                 'rules' => [
                     [
