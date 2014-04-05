@@ -43,7 +43,7 @@ Setup the module in your configuration file like below
 ```
 
 ### User Component Setup
-Setup the user component in your configuration file to reflect the module login Url.
+Setup the user component in your configuration file to setup the module login Url for the `communityii\yii2-user` module.
 
 ```php
 'components' => [
