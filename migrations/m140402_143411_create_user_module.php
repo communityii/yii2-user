@@ -48,9 +48,9 @@ class m140402_143411_create_user_module extends \yii\db\Migration
             'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
             'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
         ], $tableOptions);
-        $this->createIndex("{{%user}}_UK1", '{{%user}}', 'username', true);
-        $this->createIndex("{{%user}}_UK2", '{{%user}}', 'email', true);
-        $this->createIndex("{{%user}}_NU1", '{{%user}}', 'status');
+        $this->createIndex('{{%user_UK1}}', '{{%user}}', 'username', true);
+        $this->createIndex('{{%user_UK2}}', '{{%user}}', 'email', true);
+        $this->createIndex('{{%user_NU1}}', '{{%user}}', 'status');
 
         // Table # 2: Remote identity
         $this->createTable('{{%remote_identity}}', [
@@ -61,22 +61,22 @@ class m140402_143411_create_user_module extends \yii\db\Migration
             'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
             'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
         ], $tableOptions);
-        $this->addForeignKey("{{%remote_identity}}_FK1", '{{%remote_identity}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
-        $this->createIndex("{{%remote_identity}}_FK1", '{{%remote_identity}}', 'user_id');
+        $this->addForeignKey('{{%remote_identity_FK1}}', '{{%remote_identity}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
+        $this->createIndex('{{%remote_identity_NU1}}', '{{%remote_identity}}', 'user_id');
 
         // Table # 3: User profile
         $this->createTable('{{%user_profile}}', [
             'id' => Schema::TYPE_BIGINT . self::NN,
             'profile_name' => Schema::TYPE_STRING . '(180)',
-            'first_name' => Schema::TYPE_STRING . "(60) DEFAULT ''",
-            'last_name' => Schema::TYPE_STRING . "(60) DEFAULT ''",
+            'first_name' => Schema::TYPE_STRING . '(60) DEFAULT \'\'',
+            'last_name' => Schema::TYPE_STRING . '(60) DEFAULT \'\'',
             'avatar_url' => Schema::TYPE_TEXT,
             'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
             'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
         ], $tableOptions);
-        $this->addPrimaryKey("{{%user_profile}}_PK1", '{{%user_profile}}', 'id');
-        $this->addForeignKey("{{%user_profile}}_FK1", '{{%user_profile}}', 'id', '{{%user}}', 'id', 'CASCADE');
-        $this->createIndex("{{%user_profile}}_FK1", '{{%user_profile}}', 'id');
+        $this->addPrimaryKey('{{%user_profile_PK1}}', '{{%user_profile}}', 'id');
+        $this->addForeignKey('{{%user_profile_FK1}}', '{{%user_profile}}', 'id', '{{%user}}', 'id', 'CASCADE');
+        $this->createIndex('{{%user_profile_NU1}}', '{{%user_profile}}', 'id');
 
         // Table # 4: User ban log
         $this->createTable('{{%user_ban_log}}', [
@@ -88,8 +88,8 @@ class m140402_143411_create_user_module extends \yii\db\Migration
             'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
             'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
         ], $tableOptions);
-        $this->addForeignKey("{{%user_ban_log}}_FK1", '{{%user_ban_log}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
-        $this->createIndex("{{%user_ban_log}}_FK1", '{{%user_ban_log}}', 'user_id');
+        $this->addForeignKey('{{%user_ban_log_FK1}}', '{{%user_ban_log}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
+        $this->createIndex('{{%user_ban_log_NU1}}', '{{%user_ban_log}}', 'user_id');
 
         // Table # 5: Mail queue
         $this->createTable('{{%mail_queue}}', [
@@ -104,13 +104,13 @@ class m140402_143411_create_user_module extends \yii\db\Migration
             'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
             'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
         ], $tableOptions);
-        $this->addForeignKey("{{%mail_queue}}_FK1", '{{%mail_queue}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
-        $this->createIndex("{{%mail_queue}}_FK1", '{{%mail_queue}}', 'user_id');
+        $this->addForeignKey('{{%mail_queue_FK1}}', '{{%mail_queue}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
+        $this->createIndex('{{%mail_queue_NU1}}', '{{%mail_queue}}', 'user_id');
     }
 
     public function down()
     {
-        // echo "m140402_143411_create_user_module cannot be reverted.\n";
+        // echo 'm140402_143411_create_user_module cannot be reverted.\n';
         $this->dropTable('{{%mail_queue}}');
         $this->dropTable('{{%user_ban_log}}');
         $this->dropTable('{{%user_profile}}');
