@@ -206,7 +206,7 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
-     * Mail Queue relation
+     * Mail queues relation
      *
      * @return \yii\db\ActiveQuery
      */
