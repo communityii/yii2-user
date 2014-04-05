@@ -27,7 +27,7 @@ class User extends \yii\web\User
     /**
      * @var string|array the URL for login when [[loginRequired()]] is called.
      */
-    public $loginUrl = ['/user/auth/login'];
+    public $loginUrl = ['/user/account/login'];
 
     /**
      * Initializes the User component
