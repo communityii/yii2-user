@@ -53,7 +53,6 @@ class m140402_143411_create_user_module extends \yii\db\Migration
         $this->createIndex("{{%user}}_NU1", '{{%user}}', 'status');
 
         // Table # 2: Remote identity
-        '{{%remote_identity}}' = '{{%remote_identity}}';
         $this->createTable('{{%remote_identity}}', [
             'id' => Schema::TYPE_BIGPK,
             'profile_id' => Schema::TYPE_STRING . '(128)' . self::NN,
