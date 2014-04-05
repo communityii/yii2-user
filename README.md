@@ -43,16 +43,16 @@ Setup the module in your configuration file like below
 ```
 
 ### User Component Setup
-Setup the user component in your configuration file to setup the module login Url for the `communityii\yii2-user` module.
+Setup the user component in your configuration file to for the yii2-user module.
 
 ```php
 'components' => [
     // user authentication component
     'user' => [
-        'class' => 'yii\web\User',
-        'loginUrl' => ['/user/account/login'],
+        'class' => 'communityii\user\components\User',
+        // other component settings
     ],
-    // your other modules
+    // your other components
 ],
 ```
 
