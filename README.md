@@ -7,9 +7,9 @@ Refer the [design skeleton](https://github.com/communityii/yii2-user/blob/master
 
 > NOTE: This module is under development and not ready for an alpha release yet.
 
-## 1. Installation & Setup
+## Installation & Setup
 
-### 1.1. Installation
+### Installation
 
 The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
 
@@ -29,7 +29,7 @@ to the ```require``` section of your `composer.json` file.
 
 Run `$ php composer.phar update` from your console to get the latest version of the module packages.
 
-### 1.2. User Module Setup
+### User Module Setup
 Setup the module in your configuration file like below
 
 ```php
@@ -42,7 +42,7 @@ Setup the module in your configuration file like below
 ]
 ```
 
-### 1.3. User Component Setup
+### User Component Setup
 Setup the user component in your configuration file to reflect the module login Url.
 
 ```php
@@ -56,7 +56,7 @@ Setup the user component in your configuration file to reflect the module login 
 ],
 ```
 
-### 1.4. Database Connection Setup
+### Database Connection Setup
 Configure the database connection component `db` in your configuration file to reflect the right `tablePrefix`
 as needed for your environment.
 
@@ -77,7 +77,7 @@ as needed for your environment.
 ],
 ```
 
-### 1.5. Create User Database
+### Create User Database
 
 The last part of the module setup is running the database migrations from console to setup the database schema
 for the module.
