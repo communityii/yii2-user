@@ -73,7 +73,7 @@ as needed for your environment.
          'password' => '[SCHEMA_PASSWORD]',
          'charset' => 'utf8',
     ],
-    // your other modules
+    // your other components
 ],
 ```
 
