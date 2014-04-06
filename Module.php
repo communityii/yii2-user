@@ -27,6 +27,8 @@ class Module extends \yii\base\Module
     const LOGIN_BOTH = 3;
 
     // the major user interfaces (forms/widgets) (some of these also mirror as scenario names in the User model)
+    const UI_ACCESS = 'access';
+    const UI_INSTALL = 'install';
     const UI_LOGIN = 'login';
     const UI_REGISTER = 'register';
     const UI_ACTIVATE = 'activate';
@@ -76,6 +78,13 @@ class Module extends \yii\base\Module
     const ENQUEUE_ONLY = 1;
     const MAIL_ONLY = 2;
     const ENQUEUE_AND_MAIL = 3;
+
+    /**
+     * @var string code for accessing the user install configuration screen. You will need to
+     * enter this for setting up the superuser for a new module install. If no value is set here,
+     * and no superuser is set in the database, an exception will be raised on accessing the frontend.
+     */
+    public $installAccessCode;
 
     /**
      * @var Closure an anonymous function that will return current timestamp
@@ -277,7 +286,7 @@ class Module extends \yii\base\Module
             'rememberMeDuration' => 2592000
         ];
         $this->passwordSettings += [
-            'validateStrength' => [self::UI_REGISTER, Module::UI_RESET],
+            'validateStrength' => [self::UI_INSTALL, self::UI_REGISTER, Module::UI_RESET],
             'strengthRules' => [
                 'min' => 8,
                 'upper' => 1,
@@ -287,7 +296,7 @@ class Module extends \yii\base\Module
                 'hasUser' => true,
                 'hasEmail' => true
             ],
-            'strengthMeter' => [self::UI_REGISTER, Module::UI_RESET],
+            'strengthMeter' => [self::UI_INSTALL, self::UI_REGISTER, Module::UI_RESET],
             'activationKeyExpiry' => 172800,
             'resetKeyExpiry' => 172800,
             'passwordExpiry' => false,
@@ -376,6 +385,38 @@ class Module extends \yii\base\Module
         $module = Yii::$app->getModule('user');
         if ($module === null) {
             throw new InvalidConfigException("The module 'user' was not found . Ensure you have setup the 'user' module in your Yii configuration file.");
+        }
+    }
+
+    /**
+     * Is a superuser already set in the database?
+     * @return bool
+     */
+    public function isSuperUserSet() {
+        return count(User::find()->superuser()) > 0;
+    }
+
+    /**
+     * This method is invoked right before an action within this module is executed.
+     *
+     * @param Action $action the action to be executed.
+     * @return boolean whether the action should continue to be executed.
+     */
+    public function beforeAction($action)
+    {
+        if (parent::beforeAction($action)) {
+            if (isset($this->installAccessCode)) {
+                if (Yii::$app->db->getTableSchema('{{%user}}') == null) {
+                    throw new InvalidConfigException('User table schema not found. Ensure the database migration has been run successfully for this module.');
+                }
+                if ($this->isSuperUserSet() && strpos(Yii::$app()->request->getPathInfo(), 'user/install') === false) {
+                    Yii::$app->controller->redirect(['/user/install/index']);
+                }
+            }
+            return true;
+        }
+        else {
+            return false;
         }
     }
 }

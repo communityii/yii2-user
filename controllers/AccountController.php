@@ -13,6 +13,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use communityii\user\Module;
 use communityii\user\models\LoginForm;
@@ -33,7 +34,7 @@ class AccountController extends BaseController
     {
         return [
             'access' => [
-                'class' => \yii\filters\AccessControl::className(),
+                'class' => AccessControl::className(),
                 'only' => ['logout', 'register'],
                 'rules' => [
                     [
@@ -91,7 +92,7 @@ class AccountController extends BaseController
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $user = $model->getUser();
             $link = Html::a(Yii::t('user', 'here'), Module::ACTION_RESET);
-            if ($user->status == User::STATUS_INACTIVE) {
+            if ($user->status === User::STATUS_INACTIVE) {
                 $msg = ($user->isPasswordExpired()) ? Module::MSG_PASSWORD_EXPIRED : Module::MSG_ACCOUNT_LOCKED;
                 return $this->lockAccount(null, $msg, $link);
             } elseif ($user->isPasswordExpired()) {

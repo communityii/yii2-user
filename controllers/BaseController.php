@@ -14,7 +14,6 @@ use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use communityii\user\Module;
 
-
 /**
  * Base controller for all controllers in the user module
  *
@@ -34,6 +33,20 @@ class BaseController extends \yii\web\Controller
     {
         $route = ArrayHelper::getValue($this->module->actionSettings, $route, $route);
         return $this->redirect($route, $params);
+    }
+
+    /**
+     * Redirect users based on their authentication status
+     *
+     * @return \yii\web\Response
+     */
+    protected function safeRedirect()
+    {
+        if (Yii::$app->user->isGuest) {
+            return $this->forward(Module::ACTION_LOGIN);
+        } else {
+            return $this->forward(Module::ACTION_PROFILE_VIEW);
+        }
     }
 
     /**

@@ -44,11 +44,15 @@ use communityii\user\components\IdentityInterface;
  * @property UserBanLogs $userBanLogs
  * @property UserProfile $userProfile
  *
+ * @method \communityii\user\models\UserQuery|static|null find($q = null) static
+ * @method \communityii\user\models\UserQuery findBySql($sql, $params = []) static
+ *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
 class User extends BaseModel implements IdentityInterface
 {
+    const STATUS_SUPERUSER = -1;
     const STATUS_PENDING = 0;
     const STATUS_ACTIVE = 1;
     const STATUS_BANNED = 2;
@@ -105,19 +109,51 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
+     * Creates query for this model
+     *
+     * @return UserQuery|\yii\db\ActiveQuery
+     */
+    public static function createQuery()
+    {
+        return new UserQuery(get_called_class());
+    }
+
+    /**
+     * Creates a new user
+     *
+     * @param array $attributes the attributes given by field => value
+     * @return static|null the newly created model, or null on failure
+     */
+    public static function create($attributes, $scenario = null)
+    {
+        /** @var User $user */
+        $user = ($scenario == null) ? new static() : new static(['scenario' => $scenario]);
+        $user->setAttributes($attributes);
+        $user->setPassword($attributes['password']);
+        $user->generateAuthKey();
+        if ($user->save()) {
+            return $user;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Initialize User model
      */
     public function init()
     {
         parent::init();
         $this->_statuses = [
+            self::STATUS_SUPERUSER => Yii::t('user', 'Superuser'),
             self::STATUS_PENDING => Yii::t('user', 'Pending'),
             self::STATUS_ACTIVE => Yii::t('user', 'Active'),
             self::STATUS_BANNED => Yii::t('user', 'Banned'),
             self::STATUS_INACTIVE => Yii::t('user', 'Inactive'),
         ];
         $this->_statusClasses = [
-            self::STATUS_PENDING => 'label label-info',
+            self::STATUS_SUPERUSER => 'label label-primary',
+            self::STATUS_PENDING => 'label label-warning',
             self::STATUS_ACTIVE => 'label label-success',
             self::STATUS_BANNED => 'label label-danger',
             self::STATUS_INACTIVE => 'label label-default',
@@ -262,26 +298,6 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
-     * Creates a new user
-     *
-     * @param array $attributes the attributes given by field => value
-     * @return static|null the newly created model, or null on failure
-     */
-    public static function create($attributes)
-    {
-        /** @var User $user */
-        $user = new static();
-        $user->setAttributes($attributes);
-        $user->setPassword($attributes['password']);
-        $user->generateAuthKey();
-        if ($user->save()) {
-            return $user;
-        } else {
-            return null;
-        }
-    }
-
-    /**
      * Sets the access for user and configures user keys and statuses based on scenario
      */
     public function setAccess()
@@ -319,6 +335,16 @@ class User extends BaseModel implements IdentityInterface
             return ($expiry >= $this->_module->passwordSettings['passwordExpiry']);
         }
         return false;
+    }
+
+    /**
+     * Is account active
+     *
+     * @return bool
+     */
+    public function isAccountActive()
+    {
+        return ($this->status === self::STATUS_ACTIVE || $this->status === self::STATUS_SUPERUSER);
     }
 
     /**
@@ -384,7 +410,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByUsername($username)
     {
-        return static::find(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+        return static::find(['username' => $username])->active();
     }
 
     /**
@@ -395,7 +421,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByEmail($email)
     {
-        return static::find(['email' => $email, 'status' => self::STATUS_ACTIVE]);
+        return static::find(['email' => $email])->active();
     }
 
     /**
@@ -406,11 +432,11 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByUserOrEmail($userStr)
     {
-        return static::find()->andWhere('(username = :username OR email = :email) AND status = :status', [
-            ':username' => $userStr,
-            ':email' => $userStr,
-            ':status' => self::STATUS_ACTIVE
-        ]);
+        return static::find()->active()->
+            andWhere('username = :username OR email = :email', [
+                ':username' => $userStr,
+                ':email' => $userStr
+            ]);
     }
 
     /**
@@ -426,10 +452,7 @@ class User extends BaseModel implements IdentityInterface
             return null;
         }
 
-        return static::find([
-            'reset_key' => $key,
-            'status' => self::STATUS_ACTIVE,
-        ]);
+        return static::find(['reset_key' => $key])->active();
     }
 
     /**
@@ -651,7 +674,7 @@ class User extends BaseModel implements IdentityInterface
             $settings = $this->_module->notificationSettings[$type];
             return \Yii::$app->mail
                 ->compose($content)
-                ->setFrom([$settings['fromEmail'] => $settings['fromName'])
+                ->setFrom([$settings['fromEmail'] => $settings['fromName']])
                 ->setTo($this->email)
                 ->setSubject($settings['subject'])
                 ->send();

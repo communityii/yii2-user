@@ -9,9 +9,6 @@
 
 namespace communityii\user\controllers;
 
-use Yii;
-use communityii\user\Module;
-
 /**
  * Default controller determining the landing page/action for the module
  *
@@ -22,10 +19,6 @@ class DefaultController extends BaseController
 {
     public function actionIndex()
     {
-        if (Yii::$app->user->isGuest) {
-            return $this->forward(Module::ACTION_LOGIN);
-        } else {
-            return $this->forward(Module::ACTION_PROFILE_VIEW);
-        }
+        return $this->safeRedirect();
     }
 }
