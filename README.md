@@ -43,7 +43,7 @@ Setup the module in your configuration file like below
 ```
 
 ### User Component Setup
-Setup the user component in your configuration file to for the yii2-user module.
+Setup the user component in your configuration file for the yii2-user module.
 
 ```php
 'components' => [
