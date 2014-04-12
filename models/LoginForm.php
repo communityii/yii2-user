@@ -50,8 +50,10 @@ class LoginForm extends Model
             [['username', 'password'], 'required'],
             // rememberMe must be a boolean value
             ['rememberMe', 'boolean'],
-            // password is validated by validatePassword()
+            // check if valid password
             ['password', 'validatePassword'],
+            // check if valid user
+            ['username', 'validateUser'],
         ];
         if ($this->_settings['loginType'] === Module::LOGIN_EMAIL) {
             $rules += ['username', 'email'];
@@ -81,21 +83,39 @@ class LoginForm extends Model
     }
 
     /**
+     * Validates the user for ban validity.
+     * This method serves as the inline validation for username.
+     */
+    public function validateUser()
+    {
+        if ($this->hasErrors()) {
+            return;
+        }
+        $user = $this->getUser();
+        $outcome = ($user) ? $user->validateUserBan() : null;
+        if (!$outcome) {
+            $this->addError('username', Yii::t('user', 'User has been banned.'));
+        }
+    }
+
+    /**
      * Validates the password.
      * This method serves as the inline validation for password.
      */
     public function validatePassword()
     {
-        if (!$this->hasErrors()) {
-            $user = $this->getUser();
-            $outcome = ($user) ? $user->validatePassword($this->password) : null;
-            if (!$user || !$outcome) {
-                $this->addError('password', Yii::t('user', 'Invalid username or password.'));
-            }
-            if ($outcome !== null) {
-                $user->checkFailedLogin($outcome);
-            }
+        if ($this->hasErrors()) {
+            return;
         }
+        $user = $this->getUser();
+        $outcome = ($user) ? $user->validatePassword($this->password) : null;
+        if (!$user || !$outcome) {
+            $this->addError('password', Yii::t('user', 'Invalid username or password.'));
+        }
+        if ($outcome !== null) {
+            $user->checkFailedLogin($outcome);
+        }
+
     }
 
     /**

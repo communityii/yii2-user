@@ -29,7 +29,12 @@ class LoginForm extends BaseForm
     /**
      * @var array HTML attributes for the reset link
      */
-    public $resetLinkOptions = ['class' => 'text-warning pull-left', 'data-toggle'=>'tooltip', 'style' => 'margin-top: 7px;'];
+    public $resetLinkOptions = [
+        'class' => 'text-warning pull-left',
+        'data-toggle'=>'tooltip',
+        'style' => 'margin-top: 7px;'
+    ];
+
     public function init()
     {
         if (!isset($this->resetLinkOptions['title'])) {

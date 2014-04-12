@@ -85,6 +85,7 @@ class m140402_143411_create_user_module extends \yii\db\Migration
             'ban_reason' => Schema::TYPE_STRING,
             'revoke_reason' => Schema::TYPE_STRING,
             'user_id' => Schema::TYPE_BIGINT . self::NN,
+            'banned_till' => Schema::TYPE_TIMESTAMP . self::DT,
             'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
             'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
         ], $tableOptions);

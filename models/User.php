@@ -14,9 +14,10 @@ use yii\base\NotSupportedException;
 use yii\db\ActiveRecord;
 use yii\helpers\Security;
 use yii\helpers\ArrayHelper;
+use yii\web\IdentityInterface;
 use kartik\password\StrengthValidator;
 use communityii\user\Module;
-use yii\web\IdentityInterface;
+use communityii\user\models\UserBanLog;
 //use communityii\user\components\IdentityInterface;
 
 /**
@@ -114,7 +115,7 @@ class User extends BaseModel implements IdentityInterface
      *
      * @return UserQuery|\yii\db\ActiveQuery
      */
-    public static function createQuery()
+    public static function find()
     {
         return new UserQuery(get_called_class());
     }
@@ -432,11 +433,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByUserOrEmail($userStr)
     {
-        return static::find()->active()->
-            andWhere('username = :username OR email = :email', [
-                ':username' => $userStr,
-                ':email' => $userStr
-            ]);
+        return static::find()->andWhere(['username' => $userStr])->orWhere(['email' => $userStr]);
     }
 
     /**
@@ -537,6 +534,40 @@ class User extends BaseModel implements IdentityInterface
         return Security::validatePassword($password, $this->password);
     }
 
+    /**
+     * Validates if user is not banned.
+     * @var bool $flag if set to `true` will auto update the user status to `STATUS_ACTIVE` if ban time expired
+     * @return bool if password provided is valid for current user
+     */
+    public function validateNotBanned($flag = true)
+    {
+        if (!$this->status !== self::STATUS_BANNED) {
+            return true;
+        }
+        $id = $this->getLastBanID();
+        if ($id > 0) {
+            $banLog = UserBanLog::find($id);
+            $expiry = ($banLog) ? ($banLog->banned_till) ? null;
+            if ($flag && strtotime($expiry) > time() && $this->status === self::STATUS_BANNED) {
+                $this->status = self::STATUS_ACTIVE;
+                if ($this->save()) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Gets last ban id for the user
+     * @return integer
+     */
+    public function getLastBanID() {
+        return UserBanLog::find()->select('id')->andWhere(['user_id' => $this->id])->max();
+    }
     /**
      * Generates password hash from password and sets it to the model
      *

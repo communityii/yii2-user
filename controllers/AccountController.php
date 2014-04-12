@@ -27,6 +27,7 @@ use communityii\user\models\User;
  */
 class AccountController extends BaseController
 {
+    public $layout = 'install';
 
     /**
      * Account controller behaviors

@@ -17,6 +17,7 @@ use Yii;
  * @property string $ban_reason
  * @property string $revoke_reason
  * @property string $user_id
+ * @property string $banned_till
  * @property string $created_on
  * @property string $updated_on
  *
@@ -65,6 +66,7 @@ class UserBanLog extends BaseModel
             'ban_reason' => Yii::t('user', 'Ban Reason'),
             'revoke_reason' => Yii::t('user', 'Revoke Reason'),
             'user_id' => Yii::t('user', 'User ID'),
+            'banned_till' => Yii::t('user', 'Banned Till'),
             'created_on' => Yii::t('user', 'Created On'),
             'updated_on' => Yii::t('user', 'Updated On'),
         ];
