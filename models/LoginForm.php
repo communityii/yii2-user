@@ -118,12 +118,13 @@ class LoginForm extends Model
     {
         if ($this->_user === false) {
             if ($this->_settings['loginType'] === Module::LOGIN_USERNAME) {
-                $this->_user = User::findByUsername($this->username);
+                $user = User::findByUsername($this->username);
             } elseif ($this->_settings['loginType'] === Module::LOGIN_EMAIL) {
-                $this->_user = User::findByEmail($this->username);
+                $user = User::findByEmail($this->username);
             } else {
-                $this->_user = User::findByUserOrEmail($this->username)->limit(1);
+                $user = User::findByUserOrEmail($this->username);
             }
+            $this->_user = $user->one();
         }
 
         return $this->_user;
