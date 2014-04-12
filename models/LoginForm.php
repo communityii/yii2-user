@@ -16,7 +16,7 @@ use communityii\user\Module;
 /**
  * Model for the login form
  *
- * @property string $loginId
+ * @property string $username
  * @property string $password
  * @property string $rememberMe
  *
@@ -25,7 +25,7 @@ use communityii\user\Module;
  */
 class LoginForm extends Model
 {
-    public $loginId;
+    public $username;
     public $password;
     public $rememberMe = true;
 
@@ -46,15 +46,15 @@ class LoginForm extends Model
     public function rules()
     {
         $rules = [
-            // loginId and password are both required
-            [['loginId', 'password'], 'required'],
+            // username and password are both required
+            [['username', 'password'], 'required'],
             // rememberMe must be a boolean value
             ['rememberMe', 'boolean'],
             // password is validated by validatePassword()
             ['password', 'validatePassword'],
         ];
         if ($this->_settings['loginType'] === Module::LOGIN_EMAIL) {
-            $rules += ['loginId', 'email'];
+            $rules += ['username', 'email'];
         }
         return $rules;
     }
@@ -74,7 +74,7 @@ class LoginForm extends Model
             $userLabel = Yii::t('user', 'Username or Email');
         }
         return [
-            'loginId' => $userLabel,
+            'username' => $userLabel,
             'password' => Yii::t('user', 'Password'),
             'rememberMe' => Yii::t('user', 'Remember Me'),
         ];
@@ -118,11 +118,11 @@ class LoginForm extends Model
     {
         if ($this->_user === false) {
             if ($this->_settings['loginType'] === Module::LOGIN_USERNAME) {
-                $this->_user = User::findByUsername($this->loginId);
+                $this->_user = User::findByUsername($this->username);
             } elseif ($this->_settings['loginType'] === Module::LOGIN_EMAIL) {
-                $this->_user = User::findByEmail($this->loginId);
+                $this->_user = User::findByEmail($this->username);
             } else {
-                $this->_user = User::findByUserOrEmail($this->loginId)->limit(1);
+                $this->_user = User::findByUserOrEmail($this->username)->limit(1);
             }
         }
 

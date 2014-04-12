@@ -10,7 +10,7 @@
 namespace communityii\user\widgets;
 
 use Yii;
-use yii\base\InvalidConfigException;
+use communityii\user\Module;
 use kartik\helpers\Html;
 use kartik\widgets\ActiveForm;
 use kartik\builder\Form;
@@ -46,7 +46,7 @@ class BaseForm extends \yii\base\Widget
      * - '{reset}': will be replaced with the reset button
      * - '{submit}': will be replaced with the submit button
      */
-    public $buttons = "{reset} {submit}";
+    public $buttons;
 
     /**
      * @var array HTML attributes for the form submit button. The following additional options are recognized:
@@ -66,7 +66,7 @@ class BaseForm extends \yii\base\Widget
      * @var array|boolean the HTML attributes for the container enclosing the form action buttons.
      * If set to false, no container will used to enclose the buttons. The following additional properties
      * will be recognized:
-     * - tag: string, the HTML tag for rendering the container. Defaults to 'span'.
+     * - tag: string, the HTML tag for rendering the container. Defaults to 'div'.
      */
     public $buttonsContainer = [];
 
@@ -85,9 +85,15 @@ class BaseForm extends \yii\base\Widget
      */
     protected $_form;
 
+    /**
+     * @var \yii\base\Module the user module configuration
+     */
+    protected $_module;
+
     public function init()
     {
         parent::init();
+        Module::validateConfig($this->_module);
         if (empty($this->options['id'])) {
             $this->options['id'] = $this->getId();
         }
@@ -97,10 +103,10 @@ class BaseForm extends \yii\base\Widget
 
     public function run()
     {
-        $options = ['model' => $model, 'form' => $this->_form, 'attributes' => $this->attributes] + $this->options;x
+        $options = ['model' => $this->model, 'form' => $this->_form, 'attributes' => $this->attributes] + $this->options;
         echo Form::widget($options);
-        if ($buttons != null) {
-            $tag = ArrayHelper::remove($this->buttonsContainer, 'tag', 'span');
+        if ($this->buttons != null) {
+            $tag = ArrayHelper::remove($this->buttonsContainer, 'tag', 'div');
             echo Html::tag($tag, $this->_buttons, $this->buttonsContainer);
         }
         ActiveForm::end();
@@ -112,6 +118,9 @@ class BaseForm extends \yii\base\Widget
      */
     public function initButtonOptions()
     {
+        if (!isset($this->buttons)) {
+            $this->buttons= '{reset} {submit}';
+        }
         $this->submitButtonOptions += [
             'label' => Yii::t('user', 'Submit'),
             'icon' => 'ok',

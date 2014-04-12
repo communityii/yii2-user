@@ -7,14 +7,13 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-
 namespace communityii\user\widgets;
 
 use Yii;
 use yii\base\InvalidConfigException;
 use kartik\helpers\Html;
 use kartik\widgets\ActiveForm;
-use yii\helpers\Url;
+use kartik\builder\Form;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -25,20 +24,21 @@ use yii\helpers\ArrayHelper;
  */
 class LoginForm extends BaseForm
 {
-    public function init() {
-        if (!isset($this->attributes)) {
-            $this->attributes = [
-                'username' => [
-                    'type' => Form::INPUT_TEXT,
-                ],
-                'password' => [
-                    'type' => Form::INPUT_PASSWORD,
-                ],
-                'rememberMe' => [
-                    'type' => Form::INPUT_CHECKBOX,
-                ]
-            ];
+    public function init()
+    {
+        $this->attributes += [
+            'username' => ['type' => Form::INPUT_TEXT],
+            'password' => ['type' => Form::INPUT_PASSWORD],
+            'rememberMe' => ['type' => Form::INPUT_CHECKBOX]
+        ];
+        if (!isset($this->buttons)) {
+            $this->buttons = '{submit}';
         }
+        $this->submitButtonOptions += [
+            'label' => Yii::t('user', 'Login'),
+            'icon' => 'log-in',
+            'class' => 'btn btn-primary',
+        ];
         parent::init();
     }
 }
