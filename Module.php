@@ -7,7 +7,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\Module;
+namespace communityii\user;
 
 use Yii;
 use communityii\user\models\User;
@@ -21,6 +21,7 @@ use yii\base\InvalidConfigException;
  */
 class Module extends \yii\base\Module
 {
+
     // the valid types of login methods
     const LOGIN_USERNAME = 1;
     const LOGIN_EMAIL = 2;
@@ -78,6 +79,8 @@ class Module extends \yii\base\Module
     const ENQUEUE_ONLY = 1;
     const MAIL_ONLY = 2;
     const ENQUEUE_AND_MAIL = 3;
+
+    const PROJECT_PAGE = '<a href="http://github.com/communityii/yii2-user" class="y2u-title text-warning" target="_blank">yii2-user</a>';
 
     /**
      * @var string code for accessing the user install configuration screen. You will need to
@@ -147,7 +150,8 @@ class Module extends \yii\base\Module
      *   Defaults to `[]`.
      * - autoActivate: bool, whether account is automatically activated after registration. If set to
      *   `false`, the user will need to complete activation before login. Defaults to `false`.
-     * - userNameLength: integer, the minimum length for the username field. Defaults to 4.
+     * - userNameRules: array, the yii\validators\StringValidator rules for the username. Defaults to
+     *   `['min' => 4, 'max' => 30]`.
      * - userNamePattern: string, the regular expression to match for characters allowed in the username.
      *   Defaults to `/^[A-Za-z0-9_\-]+$/u`.
      * - userNameValidMsg: string, the error message to display if the username pattern validation fails.
@@ -236,16 +240,32 @@ class Module extends \yii\base\Module
     public function init()
     {
         parent::init();
-        $this->setConfig();
-        Yii::setAlias('@user', dirname(__FILE__));
         if (empty($this->i18n)) {
             $this->i18n = [
                 'class' => 'yii\i18n\PhpMessageSource',
-                'basePath' => '@user/messages',
+                'basePath' => '@vendor/communityii/user/messages',
                 'forceTranslation' => true
             ];
         }
         Yii::$app->i18n->translations['user'] = $this->i18n;
+        $this->setConfig();
+        Yii::setAlias('@user', dirname(__FILE__));
+    }
+
+    /**
+     * Return errors as bulleted list for model
+     * @param $model
+     * @return string
+     */
+    public static function showErrors($model) {
+        $errors = [];
+        foreach($model->getAttributes() as $attribute => $setting) {
+            $error = $model->getFirstError($attribute);
+            if (trim($error) != null) {
+                $errors[] = $error;
+            }
+        }
+        return '<ul><li>' . implode("</li>\n<li>", $errors) . '</li></ul>';
     }
 
     /**
@@ -264,7 +284,6 @@ class Module extends \yii\base\Module
             self::ACTION_LOGOUT => 'account/logout',
             self::ACTION_REGISTER => 'account/register',
             self::ACTION_ACTIVATE => 'account/activate',
-            self::ACTION_INACTIVATE => 'account/inactivate',
             self::ACTION_RESET => 'account/reset',
             self::ACTION_RECOVERY => 'account/recovery',
             // the list of social actions
@@ -307,8 +326,8 @@ class Module extends \yii\base\Module
             'enabled' => true,
             'captcha' => [],
             'autoActivate' => false,
-            'userNameLength' => 4,
-            'userNamePattern' => '/^[A-Za-z0-9_\-]+$/u',
+            'userNameRules' => ['min' => 4, 'max' => 30],
+            'userNamePattern' => '/^[A-Za-z0-9_-]+$/u',
             'userNameValidMsg' => Yii::t('user', '{attribute} can contain only letters, numbers, hyphen, and underscore.')
         ];
         $appName = \Yii::$app->name;
@@ -359,7 +378,7 @@ class Module extends \yii\base\Module
         $this->widgetSettings += [
             self::UI_LOGIN => ['type' => 'vertical'],
             self::UI_REGISTER => ['type' => 'horizontal'],
-            self::UI_ACTIVATION => ['type' => 'inline'],
+            self::UI_ACTIVATE => ['type' => 'inline'],
             self::UI_RECOVERY => ['type' => 'inline'],
             self::UI_RESET => ['type' => 'vertical'],
             self::UI_PROFILE => ['type' => 'vertical'],
@@ -389,34 +408,10 @@ class Module extends \yii\base\Module
     }
 
     /**
-     * Is a superuser already set in the database?
+     * Superuser already exists in the database?
      * @return bool
      */
-    public function isSuperUserSet() {
-        return count(User::find()->superuser()) > 0;
-    }
-
-    /**
-     * This method is invoked right before an action within this module is executed.
-     *
-     * @param Action $action the action to be executed.
-     * @return boolean whether the action should continue to be executed.
-     */
-    public function beforeAction($action)
-    {
-        if (parent::beforeAction($action)) {
-            if (isset($this->installAccessCode)) {
-                if (Yii::$app->db->getTableSchema('{{%user}}') == null) {
-                    throw new InvalidConfigException('User table schema not found. Ensure the database migration has been run successfully for this module.');
-                }
-                if ($this->isSuperUserSet() && strpos(Yii::$app()->request->getPathInfo(), 'user/install') === false) {
-                    Yii::$app->controller->redirect(['/user/install/index']);
-                }
-            }
-            return true;
-        }
-        else {
-            return false;
-        }
+    public function hasSuperUser() {
+        return count(User::find()->superuser()->all()) > 0;
     }
 }

@@ -68,7 +68,7 @@ as needed for your environment.
         // your table prefix
         'tablePrefix' => 'tbl_',
          // your connection settings
-         dsn' => 'mysql:host=localhost;dbname=[DB_NAME]',
+         'dsn' => 'mysql:host=localhost;dbname=[DB_NAME]',
          'username' => '[SCHEMA_USERNAME]',
          'password' => '[SCHEMA_PASSWORD]',
          'charset' => 'utf8',

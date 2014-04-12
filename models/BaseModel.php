@@ -11,6 +11,7 @@ namespace communityii\user\models;
 
 use communityii\user\Module;
 use Yii;
+use yii\db\ActiveRecord;
 
 /**
  * This is the base model class for all active record models
@@ -18,7 +19,7 @@ use Yii;
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class BaseModel extends \yii\db\ActiveRecord
+class BaseModel extends ActiveRecord
 {
     /* Current module */
     protected $_module;
@@ -44,7 +45,7 @@ class BaseModel extends \yii\db\ActiveRecord
                     ActiveRecord::EVENT_BEFORE_INSERT => ['created_on', 'updated_on'],
                     ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_on'],
                 ],
-                'value' => call_user_func($this->_module->now),
+                'value' => $this->_module->now,
             ],
         ];
     }

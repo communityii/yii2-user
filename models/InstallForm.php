@@ -60,13 +60,14 @@ class InstallForm extends Model
      */
     public $action;
 
+    private $_module;
+
     /**
      * Initialize InstallForm model
      */
     public function init()
     {
-        $module = null;
-        Module::validateConfig($module);
+        Module::validateConfig($this->_module);
         parent::init();
     }
 
@@ -79,15 +80,16 @@ class InstallForm extends Model
     {
         $config = $this->_module->registrationSettings;
         $rules = [
+            [['access_code', 'username', 'password', 'email', 'password_confirm', 'action'], 'safe'],
             ['access_code', 'required', 'on' => [Module::UI_ACCESS]],
             ['access_code', 'checkAccess', 'on' => [Module::UI_ACCESS]],
             [['username', 'email'], 'filter', 'filter' => 'trim', 'on' => [Module::UI_INSTALL]],
             ['email', 'email', 'on' => [Module::UI_INSTALL]],
             [['username', 'password', 'password_confirm', 'email'], 'required', 'on' => [Module::UI_INSTALL]],
-            [['username'], 'match', 'pattern' => $config['userNameLength'], 'message' => $config['userNameValidMsg'], 'on' => [Module::UI_INSTALL]],
-            [['username'], 'length', $config['length'], 'on' => [Module::UI_INSTALL]],
-            ['password', 'compare', 'compareAttribute' => 'password_confirm', 'on' => [Module::UI_INSTALL]],
-            [['password'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::UI_INSTALL]]
+            ['username', 'match', 'pattern' => $config['userNamePattern'], 'message' => $config['userNameValidMsg'], 'on' => [Module::UI_INSTALL]],
+            ['username', 'string'] + $config['userNameRules'] + ['on' => Module::UI_INSTALL],
+            ['password_confirm', 'compare', 'compareAttribute' => 'password', 'on' => [Module::UI_INSTALL]],
+            [['password'], StrengthValidator::className()] +  $this->_module->passwordSettings['strengthRules'] + ['on' => [Module::UI_INSTALL]]
         ];
         if (in_array(Module::UI_INSTALL, $this->_module->passwordSettings['validateStrength'])) {
             $rules[] = [['password'], StrengthValidator::className()] +
@@ -106,26 +108,15 @@ class InstallForm extends Model
         if ($this->_module->installAccessCode !== $this->access_code) {
             $this->addError('access_code', Yii::t('user', 'The installation access code entered is incorrect.'));
         }
-        $userComponent = Yii::$app()->get('user');
+        $userComponent = Yii::$app->get('user');
         if (!$userComponent instanceof \communityii\user\components\User) {
             $this->addError('access_code', Yii::t('user', 'You have not setup a valid class for your user component in your application configuration file. ' .
-                'The class must extend <code>\communityii\user\components\User</code>. Class currently set: <code>{class}</code>.',
-                ['class' => $userComponent::classname()]
+                'The class must extend {classValid}. Class currently set: {classSet}.', [
+                    'classValid' => '\communityii\user\components\User' ,
+                    'classSet' => $userComponent::classname()
+                ]
             ));
         }
-    }
-
-    /**
-     * InstallForm model scenarios
-     *
-     * @return array
-     */
-    public function scenarios()
-    {
-        return [
-            Module::UI_ACCESS => ['access_code', 'action'],
-            Module::UI_INSTALL => ['username', 'password', 'email', 'password_confirm', 'action'],
-        ];
     }
 
     /**
@@ -136,11 +127,22 @@ class InstallForm extends Model
     public function attributeLabels()
     {
         return [
-            'access_code' => Yii::t('user', 'Install Access Code'),
-            'username' => Yii::t('user', 'Superuser Username'),
-            'password' => Yii::t('user', 'Superuser Password'),
-            'password_confirm' => Yii::t('user', 'Superuser Password Confirm'),
-            'email' => Yii::t('user', 'Superuser Email'),
+            'access_code' => Yii::t('user', 'Installation Access Code'),
+            'username' => Yii::t('user', 'Username'),
+            'password' => Yii::t('user', 'Password'),
+            'password_confirm' => Yii::t('user', 'Confirm Password'),
+            'email' => Yii::t('user', 'Email'),
         ];
+    }
+
+    public function attributeHints() {
+        return [
+            'access_code' => Yii::t('user', 'Enter the installation access code as setup in your module configuration.'),
+            'username' => Yii::t('user', 'Select an username for the superuser'),
+            'password' => Yii::t('user', 'Select a password for the superuser'),
+            'password_confirm' => Yii::t('user', 'Reconfirm the superuser password'),
+            'email' => Yii::t('user', 'Enter a valid email for the superuser'),
+        ];
+
     }
 }

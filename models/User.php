@@ -16,7 +16,8 @@ use yii\helpers\Security;
 use yii\helpers\ArrayHelper;
 use kartik\password\StrengthValidator;
 use communityii\user\Module;
-use communityii\user\components\IdentityInterface;
+use yii\web\IdentityInterface;
+//use communityii\user\components\IdentityInterface;
 
 /**
  * This is the model class for table {{%user}}.
@@ -129,13 +130,10 @@ class User extends BaseModel implements IdentityInterface
         /** @var User $user */
         $user = ($scenario == null) ? new static() : new static(['scenario' => $scenario]);
         $user->setAttributes($attributes);
-        $user->setPassword($attributes['password']);
+        $user->setPassword($attributes['password_raw']);
         $user->generateAuthKey();
-        if ($user->save()) {
-            return $user;
-        } else {
-            return null;
-        }
+        $status = ($user->save()) ? true : false;
+        return ['status' => $status, 'model' => $user];
     }
 
     /**
@@ -169,8 +167,8 @@ class User extends BaseModel implements IdentityInterface
     {
         $config = $this->_module->registrationSettings;
         $rules = [
-            [['username'], 'match', 'pattern' => $config['userNameLength'], 'message' => $config['userNameValidMsg']],
-            [['username'], 'length', $config['length']],
+            ['username', 'match', 'pattern' => $config['userNamePattern'], 'message' => $config['userNameValidMsg']],
+            ['username', 'string'] + $config['userNameRules'],
             ['username', 'filter', 'filter' => 'trim'],
             ['username', 'required'],
             ['username', 'unique'],
@@ -211,6 +209,7 @@ class User extends BaseModel implements IdentityInterface
             Module::UI_RESET => ['password_raw', 'password_new', 'password_confirm'],
             Module::UI_PROFILE => ['username', 'email'],
             Module::UI_ADMIN => ['username', 'email'],
+            Module::UI_INSTALL => ['username', 'password_raw', 'email', 'status'],
         ];
     }
 
@@ -231,6 +230,7 @@ class User extends BaseModel implements IdentityInterface
             'reset_key' => Yii::t('user', 'Reset Key'),
             'status' => Yii::t('user', 'Status'),
             'created_on' => Yii::t('user', 'Created On'),
+            'created_on' => Yii::t('user', 'Updated On'),
             'last_login_ip' => Yii::t('user', 'Last Login IP'),
             'last_login_on' => Yii::t('user', 'Last Login On'),
             'password_reset_on' => Yii::t('user', 'Password Reset On'),

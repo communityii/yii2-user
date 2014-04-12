@@ -27,6 +27,7 @@ use communityii\user\models\User;
  */
 class AccountController extends BaseController
 {
+
     /**
      * Account controller behaviors
      */
@@ -52,7 +53,7 @@ class AccountController extends BaseController
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'logout' => ['post'],
+                    //'logout' => ['post'],
                 ],
             ],
         ];

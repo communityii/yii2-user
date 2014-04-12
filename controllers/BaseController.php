@@ -13,6 +13,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use communityii\user\Module;
+use communityii\user\models\User;
 
 /**
  * Base controller for all controllers in the user module
@@ -22,6 +23,43 @@ use communityii\user\Module;
  */
 class BaseController extends \yii\web\Controller
 {
+
+    /**
+     * This method is invoked right before an action within this module is executed.
+     *
+     * @param Action $action the action to be executed.
+     * @return boolean whether the action should continue to be executed.
+     */
+    public function beforeAction($action)
+    {
+        if (parent::beforeAction($action)) {
+            $this->validateInstallation();
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    /**
+     * Validates the module installation
+     * @return \yii\web\Response
+     * @throws \yii\base\InvalidConfigException
+     */
+    protected function validateInstallation() {
+        if (isset($this->module->installAccessCode)) {
+            if (Yii::$app->db->getTableSchema('{{%user}}') == null) {
+                throw new InvalidConfigException('User table schema not found. Ensure the database migration has been run successfully for this module.');
+            }
+            if (!$this->module->hasSuperUser() && strpos(Yii::$app->request->getPathInfo(), 'user/install') === false) {
+                return $this->redirect(['install/index']);
+            }
+        }
+        elseif (!$this->module->hasSuperUser()) {
+            throw new InvalidConfigException('You must setup the installAccessCode in the configuration file in order to install the yii2-user module.');
+        }
+    }
+
     /**
      * Forwards to a specified action based on the route set in module action settings.
      * If the route is not found in the module config, will use the passed route string.
@@ -32,7 +70,10 @@ class BaseController extends \yii\web\Controller
     protected function forward($route, $params = [])
     {
         $route = ArrayHelper::getValue($this->module->actionSettings, $route, $route);
-        return $this->redirect($route, $params);
+        if (!is_array($route)) {
+            $route = [$route];
+        }
+        return $this->redirect(array_merge($route, $params));
     }
 
     /**
@@ -43,6 +84,7 @@ class BaseController extends \yii\web\Controller
     protected function safeRedirect()
     {
         if (Yii::$app->user->isGuest) {
+            $this->validateInstallation();
             return $this->forward(Module::ACTION_LOGIN);
         } else {
             return $this->forward(Module::ACTION_PROFILE_VIEW);
