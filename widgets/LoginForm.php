@@ -15,6 +15,8 @@ use kartik\helpers\Html;
 use kartik\widgets\ActiveForm;
 use kartik\builder\Form;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
+use communityii\user\Module;
 
 /**
  * Login form widget for the yii2-user module
@@ -24,15 +26,24 @@ use yii\helpers\ArrayHelper;
  */
 class LoginForm extends BaseForm
 {
+    /**
+     * @var array HTML attributes for the reset link
+     */
+    public $resetLinkOptions = ['class' => 'text-warning pull-left', 'data-toggle'=>'tooltip', 'style' => 'margin-top: 7px;'];
     public function init()
     {
+        if (!isset($this->resetLinkOptions['title'])) {
+            $this->resetLinkOptions['title'] = Yii::t('user', 'Click here to reset your lost password.');
+        }
+        Module::validateConfig($this->_module);
         $this->attributes += [
             'username' => ['type' => Form::INPUT_TEXT],
             'password' => ['type' => Form::INPUT_PASSWORD],
             'rememberMe' => ['type' => Form::INPUT_CHECKBOX]
         ];
+        $resetLink = Html::a(Yii::t('user', 'Forgot password?'), Url::to($this->_module->actionSettings[Module::ACTION_RECOVERY]), $this->resetLinkOptions);
         if (!isset($this->buttons)) {
-            $this->buttons = '{submit}';
+            $this->buttons = $resetLink . '&nbsp; {submit}';
         }
         $this->submitButtonOptions += [
             'label' => Yii::t('user', 'Login'),

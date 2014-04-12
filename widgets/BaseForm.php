@@ -93,7 +93,6 @@ class BaseForm extends \yii\base\Widget
     public function init()
     {
         parent::init();
-        Module::validateConfig($this->_module);
         if (empty($this->options['id'])) {
             $this->options['id'] = $this->getId();
         }
