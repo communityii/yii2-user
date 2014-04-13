@@ -535,11 +535,11 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
-     * Validates if user is not banned.
+     * Validates if user is not banned and allowed to login. If ban time is expired, the user is auto activated.
      * @var bool $flag if set to `true` will auto update the user status to `STATUS_ACTIVE` if ban time expired
      * @return bool if password provided is valid for current user
      */
-    public function validateNotBanned($flag = true)
+    public function validateBan($flag = true)
     {
         if (!$this->status !== self::STATUS_BANNED) {
             return true;
