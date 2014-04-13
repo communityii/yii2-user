@@ -112,7 +112,7 @@ class AdminController extends BaseController
      */
     protected function findModel($id)
     {
-        if (($model = User::find($id)) !== null) {
+        if (($model = User::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');

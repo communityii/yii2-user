@@ -546,8 +546,8 @@ class User extends BaseModel implements IdentityInterface
         }
         $id = $this->getLastBanID();
         if ($id > 0) {
-            $banLog = UserBanLog::find($id);
-            $expiry = ($banLog) ? ($banLog->banned_till) ? null;
+            $banLog = UserBanLog::findOne($id);
+            $expiry = $banLog ? $banLog->banned_till : null;
             if ($flag && strtotime($expiry) > time() && $this->status === self::STATUS_BANNED) {
                 $this->status = self::STATUS_ACTIVE;
                 if ($this->save()) {
