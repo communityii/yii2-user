@@ -398,7 +398,7 @@ class User extends BaseModel implements IdentityInterface
     /**
      * @inheritdoc
      */
-    public static function findIdentityByAccessToken($token)
+    public static function findIdentityByAccessToken($token,$temp=null)
     {
         throw new NotSupportedException('"findIdentityByAccessToken" is not implemented.');
     }
