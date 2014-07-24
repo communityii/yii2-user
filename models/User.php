@@ -531,7 +531,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function validatePassword($password)
     {
-        return Security::validatePassword($password, $this->password);
+        return Yii::$app->security->validatePassword($password, $this->password);
     }
 
     /**
