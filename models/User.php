@@ -477,7 +477,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function generateKey($expire = 0)
     {
-        $key = Security::generateRandomKey();
+        $key = Yii::$app->security->generateRandomKey();
         return (!empty($expire) && $expire > 0) ? $key . '_' . time() : $key;
     }
 
@@ -575,7 +575,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function setPassword($password)
     {
-        $this->password = Security::generatePasswordHash($password);
+        $this->password = Yii::$app->security->generatePasswordHash($password);
     }
 
     /**
