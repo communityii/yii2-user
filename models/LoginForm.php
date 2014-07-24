@@ -92,7 +92,7 @@ class LoginForm extends Model
             return;
         }
         $user = $this->getUser();
-        $outcome = ($user) ? $user->validateUserBan() : null;
+        $outcome = ($user) ? $user->validateBan() : null;
         if (!$outcome) {
             $this->addError('username', Yii::t('user', 'User has been banned.'));
         }
