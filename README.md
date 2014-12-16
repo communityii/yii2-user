@@ -16,13 +16,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-$ php composer.phar require communityii\yii2-user "dev-master"
+$ php composer.phar require communityii/yii2-user "dev-master"
 ```
 
 or add
 
 ```
-"communityii\yii2-user": "dev-master"
+"communityii/yii2-user": "dev-master"
 ```
 
 to the ```require``` section of your `composer.json` file.
