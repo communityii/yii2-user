@@ -13,10 +13,9 @@
         }
     ],
     "require": {
-        "kartik-v/yii2-widget-activeform": "~1.4",
-        "kartik-v/yii2-password": "~1.5",
-        "kartik-v/yii2-builder": "~1.6",
-        "kartik-v/yii2-detail-view": "~1.7"
+        "kartik-v/yii2-password": "*",
+        "kartik-v/yii2-builder": "*",
+        "kartik-v/yii2-detail-view": "*"
     },
     "autoload": {
         "psr-4": {

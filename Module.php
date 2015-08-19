@@ -39,11 +39,6 @@ class Module extends \yii\base\Module
     const UI_PROFILE = 'profile';
     const UI_ADMIN = 'admin';
 
-    // the rbac integration settings
-    const RBAC_SIMPLE = 1;
-    const RBAC_PHP = 2;
-    const RBAC_DB = 3;
-
     // the list of account actions
     const ACTION_LOGIN = 1; // login as new user
     const ACTION_LOGOUT = 2; // logout of account
@@ -199,14 +194,6 @@ class Module extends \yii\base\Module
      * @see `setConfig()` method for the default settings
      */
     public $avatarSettings = [];
-
-    /**
-     * @var array the settings for rbac. Contains
-     * - enabled: bool, whether the rbac integration is enabled for the module. Defaults to `true`.
-     * - `type`: string, the type of rbac. Defaults to RBAC_SIMPLE.
-     * @see `setConfig()` method for the default settings
-     */
-    public $rbacSettings = [];
 
 
     /**
@@ -367,13 +354,6 @@ class Module extends \yii\base\Module
                 'maxSize' => 2097152
             ],
             'linkSocial' => true
-        ];
-        $this->rbacSettings += [
-            'enabled' => true,
-            'type' => self::RBAC_SIMPLE,
-            'config' => [
-                'class' => '\communityii\rbac\SimpleRBAC',
-            ]
         ];
         $this->widgetSettings += [
             self::UI_LOGIN => ['type' => 'vertical'],
