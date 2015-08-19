@@ -10,19 +10,13 @@
             "name": "Kartik Visweswaran",
             "email": "kartikv2@gmail.com",
             "homepage": "http://www.krajee.com/"
-        },
-        {
-            "name": "Tobias Munk",
-            "email": "schmunk@usrbin.de"
         }
     ],
     "require": {
-        "yiisoft/yii2": "dev-master",
-        "yiisoft/yii2-bootstrap": "dev-master",
-        "kartik-v/yii2-widgets": "dev-master",
-        "kartik-v/yii2-builder": "dev-master",
-        "kartik-v/yii2-helpers": "dev-master",
-        "kartik-v/yii2-password": "dev-master"
+        "kartik-v/yii2-widget-activeform": "~1.4",
+        "kartik-v/yii2-password": "~1.5",
+        "kartik-v/yii2-builder": "~1.6",
+        "kartik-v/yii2-detail-view": "~1.7"
     },
     "autoload": {
         "psr-4": {

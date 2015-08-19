@@ -386,10 +386,10 @@ class Module extends \yii\base\Module
         ];
         $this->messages += [
             self::MSG_REGISTRATION_ACTIVE => "You have been successfully registered and logged in as '{username}'",
-            self::MSG_PENDING_ACTIVATION => "Your registration form has been received. Instructions for activating your account has been sent to your email '{email}'.",
-            self::MSG_PENDING_ACTIVATION_ERR => "Your registration form has been received. Activation instructions could not be sent to your email '{email}'. Contact the system administrator.",
-            self::MSG_PASSWORD_EXPIRED => "Your password has expired. You may reset your password by clicking {resetLink}.",
-            self::MSG_ACCOUNT_LOCKED => "Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {resetLink}."
+            self::MSG_PENDING_ACTIVATION => "Instructions for activating your account has been sent to your email '{email}'.",
+            self::MSG_PENDING_ACTIVATION_ERR => "Could not send activation instructions to your email '{email}'. Contact the system administrator.",
+            self::MSG_PASSWORD_EXPIRED => "Your password has expired. You may reset your password by clicking {link}.",
+            self::MSG_ACCOUNT_LOCKED => "Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {link}."
         ];
     }
 
