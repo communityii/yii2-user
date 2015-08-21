@@ -6,12 +6,12 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\models;
+namespace comyii\user\models;
 
 use Yii;
 use yii\base\Model;
 use yii\helpers\ArrayHelper;
-use communityii\user\Module;
+use comyii\user\Module;
 
 /**
  * Model for the login form

@@ -1,12 +1,12 @@
 <?php
 
-use communityii\user\Module;
+use comyii\user\Module;
 use kartik\helpers\Html;
 use kartik\widgets\ActiveForm;
 
 /**
  * @var yii\web\View $this
- * @var communityii\user\models\InstallForm $model
+ * @var comyii\user\models\InstallForm $model
  * @var kartik\widgets\ActiveForm $form
  */
 $model->action = Module::UI_ACCESS;
@@ -38,7 +38,7 @@ $hints = $model->attributeHints();
     <small>
     <ul style="padding-left: 15px">
         <li>You must have setup a module named <code>user</code> and setup an install access code for the module in your configuration file.</li>
-        <li>You must have setup the user component in your configuration file to use/extend <code>communityii\user\components\User</code> class.</li>
+        <li>You must have setup the user component in your configuration file to use/extend <code>comyii\user\components\User</code> class.</li>
         <li>You must have run the database migrations as mentioned in documentation.</li>
         <li>You should optionally edit the user module settings for your user and password preferences.</li>
         <li>The installer would guide you to create a superuser. Ensure you remember the superuser access credentials for future.</li>

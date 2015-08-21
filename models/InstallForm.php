@@ -6,13 +6,13 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\models;
+namespace comyii\user\models;
 
 use Yii;
 use yii\base\Model;
 use yii\helpers\ArrayHelper;
 use kartik\password\StrengthValidator;
-use communityii\user\Module;
+use comyii\user\Module;
 
 /**
  * Installation Form model for the module
@@ -109,10 +109,10 @@ class InstallForm extends Model
             $this->addError('access_code', Yii::t('user', 'The installation access code entered is incorrect.'));
         }
         $userComponent = Yii::$app->get('user');
-        if (!$userComponent instanceof \communityii\user\components\User) {
+        if (!$userComponent instanceof \comyii\user\components\User) {
             $this->addError('access_code', Yii::t('user', 'You have not setup a valid class for your user component in your application configuration file. ' .
                 'The class must extend {classValid}. Class currently set: {classSet}.', [
-                    'classValid' => '\communityii\user\components\User' ,
+                    'classValid' => '\comyii\user\components\User' ,
                     'classSet' => $userComponent::classname()
                 ]
             ));

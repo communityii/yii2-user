@@ -1,12 +1,12 @@
 <?php
 
-use communityii\user\Module;
-use communityii\user\assets\UserAsset;
+use comyii\user\Module;
+use comyii\user\assets\UserAsset;
 use kartik\helpers\Html;
 use kartik\widgets\AlertBlock;
 
 UserAsset::register($this);
-$asset = $this->assetBundles['communityii\user\assets\UserAsset'];
+$asset = $this->assetBundles['comyii\user\assets\UserAsset'];
 ?>
 <?php $this->beginPage(); ?>
 <!DOCTYPE html>

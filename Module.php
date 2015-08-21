@@ -7,10 +7,10 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user;
+namespace comyii\user;
 
 use Yii;
-use communityii\user\models\User;
+use comyii\user\models\User;
 use yii\base\InvalidConfigException;
 
 /**

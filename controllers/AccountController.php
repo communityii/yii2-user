@@ -7,7 +7,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\controllers;
+namespace comyii\user\controllers;
 
 use Yii;
 use yii\base\InvalidConfigException;
@@ -15,9 +15,9 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
-use communityii\user\Module;
-use communityii\user\models\LoginForm;
-use communityii\user\models\User;
+use comyii\user\Module;
+use comyii\user\models\LoginForm;
+use comyii\user\models\User;
 
 /**
  * Account controller for authentication of various user actions.

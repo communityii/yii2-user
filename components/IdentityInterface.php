@@ -7,10 +7,10 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\components;
+namespace comyii\user\components;
 
 use Yii;
-use communityii\user\models\User;
+use comyii\user\models\User;
 
 /**
  * User identity interface

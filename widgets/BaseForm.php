@@ -7,10 +7,10 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\widgets;
+namespace comyii\user\widgets;
 
 use Yii;
-use communityii\user\Module;
+use comyii\user\Module;
 use kartik\helpers\Html;
 use kartik\widgets\ActiveForm;
 use kartik\builder\Form;

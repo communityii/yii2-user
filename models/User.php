@@ -7,7 +7,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\models;
+namespace comyii\user\models;
 
 use Yii;
 use yii\base\NotSupportedException;
@@ -16,9 +16,9 @@ use yii\helpers\Security;
 use yii\helpers\ArrayHelper;
 use yii\web\IdentityInterface;
 use kartik\password\StrengthValidator;
-use communityii\user\Module;
-use communityii\user\models\UserBanLog;
-//use communityii\user\components\IdentityInterface;
+use comyii\user\Module;
+use comyii\user\models\UserBanLog;
+//use comyii\user\components\IdentityInterface;
 
 /**
  * This is the model class for table {{%user}}.
@@ -46,8 +46,8 @@ use communityii\user\models\UserBanLog;
  * @property UserBanLogs $userBanLogs
  * @property UserProfile $userProfile
  *
- * @method \communityii\user\models\UserQuery|static|null find($q = null) static
- * @method \communityii\user\models\UserQuery findBySql($sql, $params = []) static
+ * @method \comyii\user\models\UserQuery|static|null find($q = null) static
+ * @method \comyii\user\models\UserQuery findBySql($sql, $params = []) static
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0

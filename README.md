@@ -35,7 +35,7 @@ Setup the module in your configuration file like below
 ```php
 'modules' => [
     'user' => [
-        'class' => 'communityii\user\Module',
+        'class' => 'comyii\user\Module',
          // other module settings
     ],
     // your other modules
@@ -49,7 +49,7 @@ Setup the user component in your configuration file for the yii2-user module.
 'components' => [
     // user authentication component
     'user' => [
-        'class' => 'communityii\user\components\User',
+        'class' => 'comyii\user\components\User',
         // other component settings
     ],
     // your other components

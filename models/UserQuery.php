@@ -7,15 +7,15 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\models;
+namespace comyii\user\models;
 
 use Yii;
 
 /**
  * This is the query class for the `User` Model
  *
- * @method \communityii\user\models\User|array|null one($db = null)
- * @method \communityii\user\models\User[]|array all($db = null)
+ * @method \comyii\user\models\User|array|null one($db = null)
+ * @method \comyii\user\models\User[]|array all($db = null)
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0

@@ -1,11 +1,11 @@
 <?php
 
-namespace communityii\user\controllers;
+namespace comyii\user\controllers;
 
 use Yii;
-use communityii\user\models\User;
-use communityii\user\models\UserSearch;
-use communityii\user\controllers\BaseController;
+use comyii\user\models\User;
+use comyii\user\models\UserSearch;
+use comyii\user\controllers\BaseController;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 

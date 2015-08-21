@@ -7,7 +7,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\controllers;
+namespace comyii\user\controllers;
 
 /**
  * Default controller determining the landing page/action for the module

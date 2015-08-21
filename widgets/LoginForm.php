@@ -7,7 +7,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\widgets;
+namespace comyii\user\widgets;
 
 use Yii;
 use yii\base\InvalidConfigException;
@@ -16,7 +16,7 @@ use kartik\widgets\ActiveForm;
 use kartik\builder\Form;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
-use communityii\user\Module;
+use comyii\user\Module;
 
 /**
  * Login form widget for the yii2-user module

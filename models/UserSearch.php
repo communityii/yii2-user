@@ -1,14 +1,14 @@
 <?php
 
-namespace communityii\user\models;
+namespace comyii\user\models;
 
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use communityii\user\models\User;
+use comyii\user\models\User;
 
 /**
- * UserSearch represents the model behind the search form about `communityii\user\models\User`.
+ * UserSearch represents the model behind the search form about `comyii\user\models\User`.
  */
 class UserSearch extends User
 {

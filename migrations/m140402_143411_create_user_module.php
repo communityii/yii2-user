@@ -8,10 +8,10 @@
  */
 
 use yii\db\Schema;
-use communityii\user\Module;
+use comyii\user\Module;
 
 /**
- * Migration for creating the database structure for the communityii\yii2-user module.
+ * Migration for creating the database structure for the comyii\yii2-user module.
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0

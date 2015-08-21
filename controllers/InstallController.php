@@ -7,12 +7,12 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\controllers;
+namespace comyii\user\controllers;
 
 use Yii;
-use communityii\user\Module;
-use communityii\user\models\User;
-use communityii\user\models\InstallForm;
+use comyii\user\Module;
+use comyii\user\models\User;
+use comyii\user\models\InstallForm;
 
 /**
  * Install controller for managing the install and setup of admin user for this module.

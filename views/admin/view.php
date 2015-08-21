@@ -5,7 +5,7 @@ use yii\widgets\DetailView;
 
 /**
  * @var yii\web\View $this
- * @var communityii\user\models\User $model
+ * @var comyii\user\models\User $model
  */
 
 $this->title = $model->id;

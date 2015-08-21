@@ -7,7 +7,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\assets;
+namespace comyii\user\assets;
 
 /**
  * Asset bundle for user module

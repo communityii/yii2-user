@@ -7,9 +7,9 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\models;
+namespace comyii\user\models;
 
-use communityii\user\Module;
+use comyii\user\Module;
 use Yii;
 use yii\db\ActiveRecord;
 

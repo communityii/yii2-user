@@ -1,10 +1,10 @@
 <?php
 
-use communityii\user\widgets\LoginForm;
+use comyii\user\widgets\LoginForm;
 
 /**
  * @var yii\web\View $this
- * @var communityii\user\models\Login $model
+ * @var comyii\user\models\Login $model
  */
 ?>
 <div class="y2u-box">

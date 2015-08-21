@@ -7,7 +7,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\components;
+namespace comyii\user\components;
 
 use Yii;
 
@@ -35,7 +35,7 @@ class User extends \yii\web\User
     public function init()
     {
         if ($this->identityClass == null) {
-            $this->identityClass = 'communityii\user\models\User';
+            $this->identityClass = 'comyii\user\models\User';
         }
         parent::init();
     }

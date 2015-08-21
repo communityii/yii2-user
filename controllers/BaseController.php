@@ -7,13 +7,13 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace communityii\user\controllers;
+namespace comyii\user\controllers;
 
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
-use communityii\user\Module;
-use communityii\user\models\User;
+use comyii\user\Module;
+use comyii\user\models\User;
 
 /**
  * Base controller for all controllers in the user module
