@@ -18,12 +18,6 @@ use comyii\user\Module;
  */
 class m140402_143411_create_user_module extends \yii\db\Migration
 {
-    // not null specification
-    const NN = ' NOT NULL';
-
-    // default timestamp
-    const DT = " DEFAULT '0000-00-00 00:00:00'";
-
     public function up()
     {
         $tableOptions = null;
@@ -33,80 +27,79 @@ class m140402_143411_create_user_module extends \yii\db\Migration
 
         // Table # 1: User
         $this->createTable('{{%user}}', [
-            'id' => Schema::TYPE_BIGPK,
-            'username' => Schema::TYPE_STRING . self::NN,
-            'email' => Schema::TYPE_STRING . self::NN,
-            'password' => Schema::TYPE_STRING . self::NN,
-            'auth_key' => Schema::TYPE_STRING . '(128)' . self::NN,
-            'activation_key' => Schema::TYPE_STRING . '(128)',
-            'reset_key' => Schema::TYPE_STRING . '(128)',
-            'status' => Schema::TYPE_SMALLINT . self::NN . ' DEFAULT 0',
-            'password_fail_attempts' => Schema::TYPE_SMALLINT . ' DEFAULT 0',
-            'last_login_ip' => Schema::TYPE_STRING . '(50)',
-            'last_login_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
-            'password_reset_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
-            'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
-            'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
+            'id' => $this->bigPrimaryKey(),
+            'username' => $this->string(30)->notNull(),
+            'email' => $this->string(255)->notNull(),
+            'password' => $this->string(30)->notNull(),
+            'auth_key' => $this->string(128)->notNull(),
+            'activation_key' => $this->string(128),
+            'reset_key' => $this->string(128),
+            'status' => $this->smallInteger()->notNull()->defaultValue(0),
+            'password_fail_attempts' => $this->smallInteger()->defaultValue(0),
+            'last_login_ip' => $this->string(50),
+            'last_login_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
+            'password_reset_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
+            'created_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
+            'updated_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
         ], $tableOptions);
-        $this->createIndex('{{%user_UK1}}', '{{%user}}', 'username', true);
-        $this->createIndex('{{%user_UK2}}', '{{%user}}', 'email', true);
-        $this->createIndex('{{%user_NU1}}', '{{%user}}', 'status');
+        $this->createIndex('user_username_uk', '{{%user}}', 'username', true);
+        $this->createIndex('user_email_uk', '{{%user}}', 'email', true);
+        $this->createIndex('user_status_nu', '{{%user}}', 'status');
 
         // Table # 2: Remote identity
         $this->createTable('{{%remote_identity}}', [
-            'id' => Schema::TYPE_BIGPK,
-            'profile_id' => Schema::TYPE_STRING . '(128)' . self::NN,
-            'provider' => Schema::TYPE_STRING . '(30)' . self::NN,
-            'user_id' => Schema::TYPE_BIGINT . self::NN,
-            'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
-            'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
+            'id' => $this->bigInteger(),
+            'profile_id' => $this->string(128)->notNull(),
+            'provider' => $this->string(30)->notNull(),
+            'user_id' => $this->bigInteger()->notNull(),
+            'created_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
+            'updated_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
         ], $tableOptions);
-        $this->addForeignKey('{{%remote_identity_FK1}}', '{{%remote_identity}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
-        $this->createIndex('{{%remote_identity_NU1}}', '{{%remote_identity}}', 'user_id');
+        $this->addForeignKey('remote_identity_fk', '{{%remote_identity}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
+        $this->createIndex('remote_identity_nu', '{{%remote_identity}}', 'user_id');
 
         // Table # 3: User profile
         $this->createTable('{{%user_profile}}', [
-            'id' => Schema::TYPE_BIGINT . self::NN,
-            'profile_name' => Schema::TYPE_STRING . '(180)',
-            'first_name' => Schema::TYPE_STRING . '(60) DEFAULT \'\'',
-            'last_name' => Schema::TYPE_STRING . '(60) DEFAULT \'\'',
-            'avatar_url' => Schema::TYPE_TEXT,
-            'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
-            'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
+            'id' => $this->bigInteger()->notNull(),
+            'display_name' => $this->string(120),
+            'first_name' => $this->string(60),
+            'last_name' => $this->string(60),
+            'avatar_url' => $this->text(),
+            'created_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
+            'updated_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
         ], $tableOptions);
-        $this->addPrimaryKey('{{%user_profile_PK1}}', '{{%user_profile}}', 'id');
-        $this->addForeignKey('{{%user_profile_FK1}}', '{{%user_profile}}', 'id', '{{%user}}', 'id', 'CASCADE');
-        $this->createIndex('{{%user_profile_NU1}}', '{{%user_profile}}', 'id');
+        $this->addPrimaryKey('user_profile_pk', '{{%user_profile}}', 'id');
+        $this->addForeignKey('user_profile_fk', '{{%user_profile}}', 'id', '{{%user}}', 'id', 'CASCADE');
 
         // Table # 4: User ban log
         $this->createTable('{{%user_ban_log}}', [
-            'id' => Schema::TYPE_BIGPK,
-            'user_ip' => Schema::TYPE_STRING . '(60)',
-            'ban_reason' => Schema::TYPE_STRING,
-            'revoke_reason' => Schema::TYPE_STRING,
-            'user_id' => Schema::TYPE_BIGINT . self::NN,
-            'banned_till' => Schema::TYPE_TIMESTAMP . self::DT,
-            'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
-            'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
+            'id' => $this->bigPrimaryKey(),
+            'user_ip' => $this->string(60),
+            'ban_reason' => $this->string(255),
+            'revoke_reason' => $this->string(255),
+            'user_id' => $this->bigInteger()->notNull(),
+            'banned_till' => $this->timestamp()->defaultValue('0000-00-00 00:00:00'),
+            'created_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
+            'updated_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
         ], $tableOptions);
-        $this->addForeignKey('{{%user_ban_log_FK1}}', '{{%user_ban_log}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
-        $this->createIndex('{{%user_ban_log_NU1}}', '{{%user_ban_log}}', 'user_id');
+        $this->addForeignKey('user_ban_log_fk', '{{%user_ban_log}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
+        $this->createIndex('user_ban_log_nu}}', '{{%user_ban_log}}', 'user_id');
 
         // Table # 5: Mail queue
         $this->createTable('{{%mail_queue}}', [
-            'id' => Schema::TYPE_BIGPK,
-            'from_email' => Schema::TYPE_STRING . self::NN,
-            'from_name' => Schema::TYPE_STRING,
-            'subject' => Schema::TYPE_STRING . self::NN,
-            'template' => Schema::TYPE_STRING . '(60)' . self::NN,
-            'user_id' => Schema::TYPE_BIGINT . self::NN,
-            'mail_log' => Schema::TYPE_TEXT,
-            'status' => Schema::TYPE_SMALLINT . self::NN . ' DEFAULT 0',
-            'created_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
-            'updated_on' => Schema::TYPE_TIMESTAMP . self::NN . self::DT,
+            'id' => $this->bigPrimaryKey(),
+            'from_email' => $this->string(255)->notNull  (),
+            'from_name' => $this->string(255),
+            'subject' => $this->string(255)->notNull(),
+            'template' => $this->string(60)->notNull(),
+            'user_id' => $this->bigInteger()->notNull(),
+            'mail_log' => $this->text(),
+            'status' => $this->smallInteger()->notNull()->defaultValue(0),
+            'created_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
+            'updated_on' => $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00'),
         ], $tableOptions);
-        $this->addForeignKey('{{%mail_queue_FK1}}', '{{%mail_queue}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
-        $this->createIndex('{{%mail_queue_NU1}}', '{{%mail_queue}}', 'user_id');
+        $this->addForeignKey('mail_queue_fk', '{{%mail_queue}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
+        $this->createIndex('mail_queue_nu', '{{%mail_queue}}', 'user_id');
     }
 
     public function down()
