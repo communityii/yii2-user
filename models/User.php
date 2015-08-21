@@ -392,7 +392,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findIdentity($id)
     {
-        return static::find($id);
+        return static::findOne(['id'=>$id]);
     }
 
     /**
