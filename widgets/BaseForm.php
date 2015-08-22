@@ -74,6 +74,13 @@ class BaseForm extends \yii\base\Widget
      * @var array the options and HTML attributes for the kartik\builder\Form
      */
     public $options = [];
+    
+    /**
+     * @var template to render the widget. The tag `{fields}` will be replaced 
+     * with form fields, while the tag `{buttons}` will be replaced with the
+     * markup of the buttons.
+     */
+    public $template = "{fields}\n{buttons}";
 
     /**
      * @var string the parsed HTML markup for the buttons
@@ -109,11 +116,16 @@ class BaseForm extends \yii\base\Widget
     public function run()
     {
         $options = ['model' => $this->model, 'form' => $this->_form, 'attributes' => $this->attributes] + $this->options;
-        echo Form::widget($options);
+        $fields = Form::widget($options);
+        $buttons = '';
         if ($this->buttons != null) {
             $tag = ArrayHelper::remove($this->buttonsContainer, 'tag', 'div');
-            echo Html::tag($tag, $this->_buttons, $this->buttonsContainer);
+            $buttons = Html::tag($tag, $this->_buttons, $this->buttonsContainer);
         }
+        echo strtr($this->template, [
+            '{fields}' => $fields,
+            '{buttons}' => $buttons
+        ]);
         ActiveForm::end();
     }
 

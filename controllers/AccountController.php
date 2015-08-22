@@ -175,9 +175,9 @@ class AccountController extends BaseController
             return $this->goBack();
         }
         $url = $this->getConfig('loginSettings', 'loginRedirectUrl');
-        $hasSocialAuth = $this->getConfig('socialSettings', 'enabled', false);
+        $hasSocialAuth = $this->getConfig('socialAuthSettings', 'enabled', false);
         $authAction = $this->getConfig('actionSettings', Module::ACTION_SOCIAL_AUTH);
-        if ($$hasSocialAuth && empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
+        if ($hasSocialAuth && empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
             throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
         }
         $this->layout = $this->getConfig('layoutSettings', Module::ACTION_LOGIN);
@@ -201,7 +201,9 @@ class AccountController extends BaseController
         return $this->render(Module::UI_LOGIN, [
             'model' => $model, 
             'hasSocialAuth' => $hasSocialAuth,
-            'authAction' => $authAction
+            'authAction' => $authAction,
+            'loginTitle' => $this->module->message('login-title'),
+            'authTitle' => $this->module->message('social-auth-title')
         ]);
     }
 

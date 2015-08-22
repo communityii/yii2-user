@@ -64,22 +64,23 @@ class InstallController extends BaseController
                 elseif ($model->action === Module::UI_INSTALL) {
                     $model->access_code = $m->installAccessCode;
                     if ($model->validate()) {
-                        $createUser = User::create([
+                        $user = new User([
                             'username' => $model->username,
                             'password_raw' => $model->password,
                             'email' => $model->email,
-                            'status' => User::STATUS_SUPERUSER
-                        ], Module::UI_INSTALL);
-                        $user = $createUser['model'];
-                        if (!$createUser['status']) {
-                            $m->setFlash('error', 'install-error', ['errors' => Module::showErrors($user));
+                            'status' => User::STATUS_SUPERUSER,
+                            'scenario' => Module::UI_INSTALL
+                        ]);
+                        if (!$user->save()) {
+                            $m->setFlash('error', 'install-error', ['errors' => Module::showErrors($user)]);
                             $model->action = Module::UI_INSTALL;
                             $model->scenario = Module::UI_INSTALL;
                         }
                         else {
                             $m->setFlash('success', 'install-success',  ['username' => $model->username]);
-                            $m->setFlash('success', 'install-warning')
+                            $m->setFlash('warning', 'install-warning');
                             Yii::$app->user->login($user);
+                            $user->setLastLogin();
                             return $this->forward(Module::ACTION_ADMIN_VIEW, ['id'=>$user->id]);
                         }
                     }

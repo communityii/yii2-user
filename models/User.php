@@ -127,11 +127,11 @@ class User extends BaseModel implements IdentityInterface
         parent::init();
         $m = $this->_module;
         $this->_statuses = [
-            self::STATUS_SUPERUSER => $m->getMessage('status-superuser'),
-            self::STATUS_PENDING => $m->getMessage('status-Pending'),
-            self::STATUS_ACTIVE => $m->getMessage('status-active'),
-            self::STATUS_BANNED => $m->getMessage('status-banned'),
-            self::STATUS_INACTIVE => $m->getMessage('status-inactive'),
+            self::STATUS_SUPERUSER => $m->message('status-superuser'),
+            self::STATUS_PENDING => $m->message('status-pending'),
+            self::STATUS_ACTIVE => $m->message('status-active'),
+            self::STATUS_BANNED => $m->message('status-banned'),
+            self::STATUS_INACTIVE => $m->message('status-inactive'),
         ];
         $this->_statusClasses = [
             self::STATUS_SUPERUSER => 'label label-primary',
@@ -206,12 +206,11 @@ class User extends BaseModel implements IdentityInterface
     {
         $m = $this->_module;
         $status = $m->message('label-status');
-        $password = $m->message('label-password');
         return [
             'id' => $m->message('label-id'),
             'username' => $m->message('label-username'),
             'email' => $m->message('label-email'),
-            'password_hash' => $password,
+            'password_hash' => $m->message('label-password-hash'),
             'auth_key' => $m->message('label-auth-key'),
             'activation_key' => $m->message('label-activation-key'),
             'reset_key' => $m->message('label-reset-key'),
@@ -219,12 +218,12 @@ class User extends BaseModel implements IdentityInterface
             'statusText' => $status,
             'statusHtml' => $status,
             'created_on' => $m->message('label-created-on'),
-            'created_on' => $m->message('label-updated-on'),
+            'updated_on' => $m->message('label-updated-on'),
             'last_login_ip' => $m->message('label-last-login-ip'),
             'last_login_on' => $m->message('label-last-login-on'),
             'password_reset_on' => $m->message('label-password-reset-on'),
             'password_fail_attempts' => $m->message('label-password-fail-attempts'), 
-            'password_raw' => $password,
+            'password_raw' => $m->message('label-password'),
             'password_new' => $m->message('label-password-new'),
             'password_confirm' => $m->message('label-password-confirm')
         ];

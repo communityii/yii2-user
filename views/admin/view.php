@@ -8,36 +8,65 @@ use kartik\detail\DetailView;
  * @var comyii\user\models\User $model
  */
 
-$this->title = $model->username;
+$m = Yii::$app->getModule('user');
+$this->title =  $m->message('user-details-title') . ' &raquo; ' . $model->username;
 $this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'Users'), 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
+$this->params['breadcrumbs'][] = $model->username;
 ?>
 <div class="user-view">
-
-    <h1><?= Html::encode($this->title) ?></h1>
-    <p>
-        <?= Html::a(Yii::t('user', 'Update'), ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a(Yii::t('user', 'Delete'), ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => Yii::t('user', 'Are you sure you want to delete this item?'),
-                'method' => 'post',
-            ],
-        ]) ?>
-    </p>
-
     <?= DetailView::widget([
         'model' => $model,
+        'panel' => [
+            'type' => 'primary',
+            'heading' => '<i class="glyphicon glyphicon-user"></i> ' . $this->title,
+        ],
         'attributes' => [
-            'id',
-            'username',
-            'email:email',
-            'statusHtml:html',
-            'last_login_ip',
-            'last_login_on',
-            'password_reset_on',
-            'created_on',
-            'updated_on',
+            [
+                'group'=>true,
+                'label'=> '<i class="glyphicon glyphicon-tag"></i> ' . $m->message('user-id-info-title'),
+                'rowOptions'=>['class'=>'info']
+            ],
+            ['attribute'=> 'id', 'displayOnly' => true], 
+            [
+                'attribute' => 'username',
+                'inputContainer' => ['class'=>'col-sm-6'],
+            ],
+            [
+                'attribute' => 'email',
+                'format' => 'email',
+                'inputContainer' => ['class'=>'col-sm-6'],
+            ],    
+            [
+                'attribute'=> 'status', 
+                'format' => 'html',
+                'value'=>$model->statusHtml, 
+                'type' => DetailView::INPUT_SELECT2,
+                'widgetOptions'=>[
+                    'data' => $model->getStatusList(),
+                    'options' => ['placeholder' => 'Select ...'],
+                    'pluginOptions' => ['allowClear' => true, 'width' => '100%']
+                ],
+                'inputContainer' => ['class'=>'col-sm-6'],
+            ],
+            [
+                'group'=>true,
+                'label'=> '<i class="glyphicon glyphicon-time"></i> ' . $m->message('user-log-info-title'),
+                'rowOptions'=>['class'=>'info'],
+            ],
+            ['attribute'=> 'last_login_ip', 'displayOnly' => true],
+            ['attribute'=> 'last_login_on', 'displayOnly' => true],              
+            ['attribute'=> 'password_reset_on', 'displayOnly' => true],              
+            ['attribute'=> 'created_on', 'displayOnly' => true],              
+            ['attribute'=> 'updated_on', 'displayOnly' => true],
+            [
+                'group'=>true,
+                'label'=> '<i class="glyphicon glyphicon-lock"></i> ' . $m->message('user-hidden-info-title'),
+                'rowOptions'=>['class'=>'info']
+            ],
+            ['attribute'=> 'password_hash', 'displayOnly' => true],
+            ['attribute'=> 'auth_key', 'displayOnly' => true],
+            ['attribute'=> 'activation_key', 'displayOnly' => true],
+            ['attribute'=> 'reset_key', 'displayOnly' => true],
         ],
     ]) ?>
 

@@ -3,6 +3,7 @@
 namespace comyii\user\controllers;
 
 use Yii;
+use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\models\UserSearch;
 use comyii\user\controllers\BaseController;
@@ -48,6 +49,17 @@ class AdminController extends BaseController
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+        $model->setScenario(Module::UI_ADMIN);
+        $post = Yii::$app->request->post();
+        if ($model->load($post)) {
+            if ($model->save()) {
+                $this->module->setFlash('success', 'user-details-saved', [
+                    'id' => $model->id,
+                    'user' => $model->username,
+                ]);
+            }
+        }
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);

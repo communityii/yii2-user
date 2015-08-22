@@ -62,3 +62,20 @@
     text-align: right;
 }
 
+.y2u-social-clients {
+    text-align: center;
+}
+
+.y2u-social-clients ul {
+    padding: 0;
+    display: inline-block;
+}
+
+@media screen and (max-width: 720px) {
+    .y2u-container, .y2u-container-pad {
+       width: 100%;
+    }
+    .y2u-box {
+       margin: auto 15px;
+    }
+}

@@ -117,7 +117,7 @@ class InstallForm extends Model
             $this->addError('access_code', $m->message('install-invalid-usercomp', [
                 'classValid' => '\comyii\user\components\User' ,
                 'classSet' => $userComponent::classname()
-            ]);
+            ]));
         }
     }
 

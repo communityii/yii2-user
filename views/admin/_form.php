@@ -20,7 +20,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'email')->textInput(['maxlength' => 255]) ?>
 
-    <?= $form->field($model, 'password_hash')->password_hashInput(['maxlength' => 255]) ?>
+    <?= $form->field($model, 'password_hash')->passwordInput(['maxlength' => 255]) ?>
 
     <?= $form->field($model, 'auth_key')->textInput(['maxlength' => 128]) ?>
 

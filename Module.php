@@ -272,7 +272,7 @@ class Module extends \yii\base\Module
             self::ACTION_RESET => 'account/reset',
             self::ACTION_RECOVERY => 'account/recovery',
             // the list of social actions
-            self::ACTION_SOCIAL_AUTH => 'account/login',
+            self::ACTION_SOCIAL_AUTH => 'account/auth',
             // the list of profile actions
             self::ACTION_PROFILE_VIEW => 'profile/view',
             self::ACTION_PROFILE_LIST => 'profile/index',
@@ -418,21 +418,32 @@ class Module extends \yii\base\Module
             'pending-activation-error' => 'Could not send activation instructions to your email <b>{email}</b>. Contact the system administrator.',
             'password-expired' => 'Your password has expired. You may reset your password by clicking {link}.',
             'account-locked' => 'Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {link}.',
+            'login-title' => 'Please sign in',
+            'social-auth-title' => 'Or login using',
             'social-email-exists' => 'User with the same email as in <b>{client}</b> account already exists but is not linked to it. Login using email first to link it.',  
             'social-auth-success-new' => 'Successfully authenticated <b>{client}</b> account.',
             'social-auth-success-curr' => 'Successfully authenticated <b>{client}</b> account for <b>{user}</b>.',
             'social-auth-error-new' => 'Error while authenticating <b>{client}</b> account. {errors}',
             'social-auth-error-curr' => 'Error while authenticating <b>{client}</b> account for <b>{user}</b>. {errors}',
+            'reset-password-label' => 'Forgot password?',
+            'reset-password-title' => 'Click here to reset your lost password',
+            'user-details-title' => 'User Details',
+            'user-id-info-title' => 'Identification Information',
+            'user-log-info-title' => 'User Log Information',
+            'user-hidden-info-title' => 'Hidden Information',
+            'user-details-saved' => 'Successfully saved details for <b>{user}</b> with ID <b>{id}</b>.',
             'login-banned' => 'User has been banned.',
             'login-invalid' => 'Invalid username or password.',
             'label-id' => 'ID',
             'label-username' => 'Username',
             'label-password' => 'Password',
+            'label-password-hash' => 'Password Hash',
             'label-password-new' => 'New Password',
             'label-password-confirm' => 'Confirm Password',
             'label-email' => 'Email',
             'label-user-or-email' => 'Username or Email',
             'label-remember-me' => 'Remember Me',
+            'label-status' => 'Status',
             'label-created-on' => 'Created On',
             'label-updated-on' => 'Updated On',
             'label-auth-key' => 'Auth Key',
@@ -466,7 +477,7 @@ class Module extends \yii\base\Module
         if (!isset($this->messages[$id])) {
             return null;
         }
-        return Yii::t('user', $this->messages[$id], ['client' => $client->getTitle()]);
+        return Yii::t('user', $this->messages[$id], $params);
     }
     
     /**
