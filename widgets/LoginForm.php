@@ -35,6 +35,9 @@ class LoginForm extends BaseForm
         'style' => 'margin-top: 7px;'
     ];
 
+    /**
+     * @inheritdoc
+     */
     public function init()
     {
         if (!isset($this->resetLinkOptions['title'])) {

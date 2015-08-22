@@ -15,8 +15,10 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
+use yii\authclient\AuthAction;
 use comyii\user\Module;
 use comyii\user\models\LoginForm;
+use comyii\user\models\SocialAuth;
 use comyii\user\models\User;
 
 /**
@@ -27,8 +29,6 @@ use comyii\user\models\User;
  */
 class AccountController extends BaseController
 {
-    public $layout = 'install';
-
     /**
      * Account controller behaviors
      */
@@ -72,8 +72,96 @@ class AccountController extends BaseController
             return [];
         }
         return [
-            'captcha' => ['class' => 'yii\captcha\CaptchaAction'] + $captcha
+            'captcha' => ['class' => 'yii\captcha\CaptchaAction'] + $captcha,
+            'auth' => [
+                'class' => AuthAction::classname(),
+                'successCallback' => [$this, 'onAuthSuccess'],
+            ],
         ];
+    }
+
+    /**
+     * Social client authorization callback
+     * @param yii\authclient\Client $client
+     */
+    public function onAuthSuccess($client)
+    {
+        $attributes = $client->getUserAttributes();
+        $clientId = $client->getId();
+        $clientTitle = $client->getTitle();
+
+        /** @var Auth $auth */
+        $auth = SocialAuth::find()->where([
+            'source' => $clientId,
+            'source_id' => $attributes['id'],
+        ])->one();
+        
+        if (Yii::$app->user->isGuest) {
+            $m = $this->module;
+            if ($auth) { // login
+                $user = $auth->user;
+                Yii::$app->user->login($user);
+            } else { // signup
+                if (isset($attributes['email']) && isset($attributes['username']) && 
+                    User::find()->where(['email' => $attributes['email']])->exists()) {
+                    $m->setFlash('error', 'social-email-exists', ['client' => $clientTitle]);
+                } else {
+                    $password = Yii::$app->security->generateRandomString(6);
+                    $user = new User([
+                        'username' => $attributes['login'],
+                        'email' => $attributes['email'],
+                        'password' => $password,
+                    ]);
+                    $user->generateAuthKey();
+                    $user->generateResetKey();
+                    $success = false;
+                    $transaction = $user->getDb()->beginTransaction();
+                    if ($user->save()) {
+                        $auth = new SocialAuth([
+                            'user_id' => $user->id,
+                            'source' => $clientId,
+                            'source_id' => (string)$attributes['id'],
+                        ]);
+                        if ($auth->save()) {
+                            $transaction->commit();
+                            $success = true;
+                            Yii::$app->user->login($user);
+                        }
+                    }
+                    if (!$success) {
+                        $transaction->rollback();
+                        $m->setFlash('error', 'social-auth-error-new', [
+                            'client' => $clientTitle,
+                            'errors' => '<pre>' . print_r($user->getErrors(), true) . '</pre>'
+                        ]);
+                    } else {
+                        $m->setFlash('success', 'social-auth-success-new', ['client' => $clientTitle]);
+                    }
+                }
+            }
+        } else { // user already logged in
+            if (!$auth) { // add auth provider
+                $id = Yii::$app->user->id;
+                $user = User::findOne($id);
+                $auth = new SocialAuth([
+                    'user_id' => $id,
+                    'source' => $clientId,
+                    'source_id' => $attributes['id'],
+                ]);
+                if ($auth->save()) {
+                    $m->setFlash('success', 'social-auth-success-curr', [
+                        'client' => $clientTitle,
+                        'user' => $user->username
+                    ]);
+                } else {
+                    $m->setFlash('error', 'social-auth-error-curr', [
+                        'client' => $clientTitle,
+                        'user' => $user->username,
+                        'errors' => '<pre>' . print_r($auth->getErrors(), true) . '</pre>'
+                    ]);
+                }
+            }
+        }
     }
 
     /**
@@ -86,27 +174,35 @@ class AccountController extends BaseController
         if (!\Yii::$app->user->isGuest) {
             return $this->goBack();
         }
-
         $url = $this->getConfig('loginSettings', 'loginRedirectUrl');
-
+        $hasSocialAuth = $this->getConfig('socialSettings', 'enabled', false);
+        $authAction = $this->getConfig('actionSettings', Module::ACTION_SOCIAL_AUTH);
+        if ($$hasSocialAuth && empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
+            throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
+        }
+        $this->layout = $this->getConfig('layoutSettings', Module::ACTION_LOGIN);
         $model = new LoginForm();
 
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $user = $model->getUser();
-            $link = Html::a(Yii::t('user', 'here'), Module::ACTION_RESET);
+            $link = Html::a($this->module->message('here'), Module::ACTION_RESET);
             if ($user->status === User::STATUS_INACTIVE) {
-                $msg = ($user->isPasswordExpired()) ? Module::MSG_PASSWORD_EXPIRED : Module::MSG_ACCOUNT_LOCKED;
+                $msg = ($user->isPasswordExpired()) ? 'password-expired' : 'account-locked';
                 return $this->lockAccount(null, $msg, $link);
             } elseif ($user->isPasswordExpired()) {
-                return $this->lockAccount($user, Module::MSG_PASSWORD_EXPIRED, $link);
+                return $this->lockAccount($user, 'password-expired', $link);
             } elseif ($user->isAccountLocked()) {
-                return $this->lockAccount($user, Module::MSG_ACCOUNT_LOCKED, $link);
+                return $this->lockAccount($user, 'account-locked', $link);
             } elseif ($model->login($user)) {
                 $user->setLastLogin();
                 return $this->goBack($url);
             }
         }
-        return $this->render(Module::UI_LOGIN, ['model' => $model]);
+        return $this->render(Module::UI_LOGIN, [
+            'model' => $model, 
+            'hasSocialAuth' => $hasSocialAuth,
+            'authAction' => $authAction
+        ]);
     }
 
     /**
@@ -125,7 +221,7 @@ class AccountController extends BaseController
             $user->scenario = Module::UI_LOCKED;
             $user->save();
         }
-        Yii::$app->session->setFlash('error', Yii::t('user', $msg, ['resetLink' => $link]));
+        $this->module->setFlash('error', $msg, ['resetLink' => $link]);
         return $this->render(Module::UI_LOCKED, ['user' => $user]);
     }
 
@@ -148,23 +244,25 @@ class AccountController extends BaseController
      */
     public function actionRegister()
     {
+        $this->layout = $this->getConfig('layoutSettings', Module::ACTION_REGISTER);
         $config = $this->module->registrationSettings;
         if (!$config['enabled']) {
             return $this->goBack();
         }
         $model = new User(['scenario' => Module::UI_REGISTER]);
+        $m = $this->module;
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             if ($config['autoActivate']) {
                 $model->setStatus(User::STATUS_ACTIVE);
                 $model->save();
-                Yii::$app->session->setFlash("success", Yii::t('user', Module::MSG_REGISTRATION_ACTIVE, ['username' => $model->username]));
+                $m->setFlash('success', 'registration-active', ['username' => $model->username]);
                 return $this->goHome();
             } else {
                 $model->save();
                 if ($model->sendEmail('activation')) {
-                    Yii::$app->session->setFlash("success", Yii::t('user', Module::MSG_PENDING_ACTIVATION, ['email' => $model->email]));
+                    $m->setFlash('success', 'pending-activation', ['email' => $model->email]);
                 } else {
-                    Yii::$app->session->setFlash("warning", Yii::t('user', Module::MSG_PENDING_ACTIVATION_ERR, ['email' => $model->email]));
+                    $m->setFlash('warning', 'pending-activation-error', ['email' => $model->email]);
                 }
             }
         }

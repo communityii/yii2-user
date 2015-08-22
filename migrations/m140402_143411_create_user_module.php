@@ -30,13 +30,13 @@ class m140402_143411_create_user_module extends Migration
             'id' => $this->bigPrimaryKey(),
             'username' => $this->string(30)->notNull()->unique(),
             'email' => $this->string(255)->notNull()->unique(),
-            'password' => $this->string(30)->notNull(),
+            'password_hash' => $this->string(128)->notNull(),
             'auth_key' => $this->string(128)->notNull(),
             'activation_key' => $this->string(128),
             'reset_key' => $this->string(128),
             'status' => $this->smallInteger()->notNull()->defaultValue(0),
-            'pwd_fail_attempts' => $this->smallInteger()->defaultValue(0),
-            'pwd_reset_on' => $timestamp,
+            'password_fail_attempts' => $this->smallInteger()->defaultValue(0),
+            'password_reset_on' => $timestamp,
             'created_on' => $timestamp,
             'updated_on' => $timestamp,
             'last_login_on' => $timestamp,
@@ -44,24 +44,24 @@ class m140402_143411_create_user_module extends Migration
         ], $tableOptions);
         $this->createIndex('user_status_idx', '{{%user}}', 'status');
 
-        // Table # 2: Remote identity
-        $this->createTable('{{%remote_identity}}', [
+        // Table # 2: Social authentication
+        $this->createTable('{{%social_auth}}', [
             'id' => $this->bigPrimaryKey(),
-            'profile_id' => $this->string(128)->notNull(),
-            'provider' => $this->string(30)->notNull(),
+            'source' => $this->string(255)->notNull(),
+            'source_id' => $this->string(255)->notNull(),
             'user_id' => $this->bigInteger()->notNull(),
             'created_on' => $timestamp,
             'updated_on' => $timestamp,
         ], $tableOptions);
         $this->addForeignKey(
-            'remote_identity_user_id_fk',
-            '{{%remote_identity}}',
+            'social_auth_user_id_fk',
+            '{{%social_auth}}',
             'user_id',
             '{{%user}}',
             'id',
             'CASCADE'
         );
-        $this->createIndex('remote_identity_user_id_idx', '{{%remote_identity}}', 'user_id');
+        $this->createIndex('social_auth_user_id_idx', '{{%social_auth}}', 'user_id');
 
         // Table # 3: User profile
         $this->createTable('{{%user_profile}}', [
@@ -91,6 +91,7 @@ class m140402_143411_create_user_module extends Migration
             'revoke_reason' => $this->string(255),
             'user_id' => $this->bigInteger()->notNull(),
             'banned_till' => $this->timestamp()->defaultValue('0000-00-00 00:00:00'),
+            'banned_by' => $this->bigInteger()->notNull(),
             'created_on' => $timestamp,
             'updated_on' => $timestamp,
         ], $tableOptions);
@@ -127,7 +128,7 @@ class m140402_143411_create_user_module extends Migration
         $this->dropTable('{{%mail_queue}}');
         $this->dropTable('{{%user_ban_log}}');
         $this->dropTable('{{%user_profile}}');
-        $this->dropTable('{{%remote_identity}}');
+        $this->dropTable('{{%social_auth}}');
         $this->dropTable('{{%user}}');
     }
 }

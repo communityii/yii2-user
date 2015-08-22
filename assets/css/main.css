@@ -1,13 +1,24 @@
-.y2u-padding {
-    padding: 15px;
+.y2u-body {
+    background: #dedede;
 }
 
-.y2u-container {
-    max-width: 600px;
-    margin: 0 auto;
+.y2u-container, .y2u-container-pad {
+    margin: auto;
+    width: 600px;
+}
+
+.y2u-container-pad {
+    margin: 7% auto;
+}
+
+.y2u-app-title {
+    margin-bottom: 20px;
+    text-align: center;
 }
 
 .y2u-box {
+    padding: 15px;
+    background: #fff;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05) inset;
@@ -19,7 +30,7 @@
 }
 
 .y2u-title {
-    font-size: 30px;
+    font-size: 24px;
 }
 
 .y2u-center {
@@ -30,20 +41,24 @@
     margin-top: 10px;
 }
 
-.y2u-box h3 {
-    margin: 0;
-    padding: 0;
-}
 .y2u-box .hint-block {
     color: #999;
     font-size: 12px;
     font-style: italic;
 }
+
+.y2u-box h2, .y2u-box h3{
+    margin: 0;
+    padding: 0;
+}
+
+.y2u-box .y2u-header {
+    padding: 15px 0 ;
+}
+
 .y2u-box-footer {
-    padding: 10px;
-    border-top: 1px solid #ccc;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
-    background-color: #eee;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
     text-align: right;
 }
+

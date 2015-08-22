@@ -48,7 +48,7 @@ class Module extends \yii\base\Module
     const ACTION_RECOVERY = 6; // account recovery
 
     // the list of social actions
-    const ACTION_SOCIAL_LOGIN = 20; // social auth & login
+    const ACTION_SOCIAL_AUTH = 20; // social auth & login
 
     // the list of profile actions
     const ACTION_PROFILE_VIEW = 50; // profile view
@@ -63,19 +63,10 @@ class Module extends \yii\base\Module
     const ACTION_ADMIN_BAN = 103; // user ban
     const ACTION_ADMIN_UNBAN = 104; // user unban
 
-    // the list of module messages
-    const MSG_REGISTRATION_ACTIVE = 200;
-    const MSG_PENDING_ACTIVATION = 201;
-    const MSG_PENDING_ACTIVATION_ERR = 202;
-    const MSG_PASSWORD_EXPIRED = 203;
-    const MSG_ACCOUNT_LOCKED = 204;
-
     // the mail delivery settings
     const ENQUEUE_ONLY = 1;
     const MAIL_ONLY = 2;
     const ENQUEUE_AND_MAIL = 3;
-
-    const PROJECT_PAGE = '<a href="http://github.com/communityii/yii2-user" class="y2u-title text-warning" target="_blank">yii2-user</a>';
 
     /**
      * @var string code for accessing the user install configuration screen. You will need to
@@ -97,6 +88,14 @@ class Module extends \yii\base\Module
      * @see `setConfig()` method for the default settings
      */
     public $actionSettings = [];
+    
+
+    /**
+     * @var array the view layout to use for each action in the module. The keys will be one 
+     * of the `Module::ACTION_` constants and the value will be the view layout location. 
+     * @see `setConfig()` method for the default settings
+     */
+    public $layoutSettings = [];
 
     /**
      * @var array the login settings for the module. The following options can be set:
@@ -173,7 +172,6 @@ class Module extends \yii\base\Module
      * @var array the social authorization settings for the module. The following options should be set:
      * - enabled: bool, whether the social authorization is enabled for the module. Defaults to `true`. If set
      *   to `false`, the remote authentication through social providers will be disabled.
-     * - providers: array, the social provider configuration for remote authentication.
      * - refreshAttributes: array, the attributes that will be automatically refreshed in the UserProfile,
      *   based on the user consent, after social authentication. The 'email' field will be updated in the
      *   base user table.
@@ -274,7 +272,29 @@ class Module extends \yii\base\Module
             self::ACTION_RESET => 'account/reset',
             self::ACTION_RECOVERY => 'account/recovery',
             // the list of social actions
-            self::ACTION_SOCIAL_LOGIN => 'social/login',
+            self::ACTION_SOCIAL_AUTH => 'account/login',
+            // the list of profile actions
+            self::ACTION_PROFILE_VIEW => 'profile/view',
+            self::ACTION_PROFILE_LIST => 'profile/index',
+            self::ACTION_PROFILE_EDIT => 'profile/update',
+            self::ACTION_PROFILE_UPLOAD => 'profile/upload',
+            // the list of admin actions
+            self::ACTION_ADMIN_LIST => 'admin/index',
+            self::ACTION_ADMIN_VIEW => 'admin/view',
+            self::ACTION_ADMIN_EDIT => 'admin/update',
+            self::ACTION_ADMIN_BAN => 'admin/ban',
+            self::ACTION_ADMIN_UNBAN => 'admin/unban',
+        ];
+        $this->layoutSettings += [
+            // layouts for the various account actions
+            self::ACTION_LOGIN => 'install',
+            self::ACTION_LOGOUT => 'install',
+            self::ACTION_REGISTER => 'install',
+            self::ACTION_ACTIVATE => 'install',
+            self::ACTION_RESET => 'install',
+            self::ACTION_RECOVERY => 'install',
+            // the list of social actions
+            self::ACTION_SOCIAL_AUTH => 'social/login',
             // the list of profile actions
             self::ACTION_PROFILE_VIEW => 'profile/view',
             self::ACTION_PROFILE_LIST => 'profile/index',
@@ -341,7 +361,7 @@ class Module extends \yii\base\Module
         $this->socialAuthSettings += [
             'enabled' => true,
             'refreshAttributes' => [
-                'profile_name',
+                'display_name',
                 'email'
             ],
         ];
@@ -364,13 +384,7 @@ class Module extends \yii\base\Module
             self::UI_PROFILE => ['type' => 'vertical'],
             self::UI_ADMIN => ['type' => 'vertical'],
         ];
-        $this->messages += [
-            self::MSG_REGISTRATION_ACTIVE => "You have been successfully registered and logged in as '{username}'",
-            self::MSG_PENDING_ACTIVATION => "Instructions for activating your account has been sent to your email '{email}'.",
-            self::MSG_PENDING_ACTIVATION_ERR => "Could not send activation instructions to your email '{email}'. Contact the system administrator.",
-            self::MSG_PASSWORD_EXPIRED => "Your password has expired. You may reset your password by clicking {link}.",
-            self::MSG_ACCOUNT_LOCKED => "Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {link}."
-        ];
+        $this->initMessages();
     }
 
     /**
@@ -384,6 +398,87 @@ class Module extends \yii\base\Module
         $module = Yii::$app->getModule('user');
         if ($module === null) {
             throw new InvalidConfigException("The module 'user' was not found . Ensure you have setup the 'user' module in your Yii configuration file.");
+        }
+    }
+    
+    /**
+     * Initialize messages for the module
+     */
+    public function initMessages() {
+        $this->messages += [
+            'here' => 'here',
+            'install-error' => 'Error creating the superuser. Fix the following errors:<br>{errors}',
+            'install-success' => 'User module successfully installed! You have been automatically logged in as the superuser (username: <b>{username}</b>).',
+            'install-warning' => 'You should now remove the <code>installAccessCode</code> setting from user module configuration for better security.',
+            'install-invalid-access' => 'The installation access code entered is incorrect.',
+            'install-invalid-usercomp' => 'You have not setup a valid class for your user component in your application configuration file. ' .
+                'The class must extend {classValid}. Class currently set: {classSet}.',
+            'registration-active' => 'You have been successfully registered and logged in as <b>{username}</b>.',
+            'pending-activation' => 'Instructions for activating your account has been sent to your email <b>{email}</b>.',
+            'pending-activation-error' => 'Could not send activation instructions to your email <b>{email}</b>. Contact the system administrator.',
+            'password-expired' => 'Your password has expired. You may reset your password by clicking {link}.',
+            'account-locked' => 'Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {link}.',
+            'social-email-exists' => 'User with the same email as in <b>{client}</b> account already exists but is not linked to it. Login using email first to link it.',  
+            'social-auth-success-new' => 'Successfully authenticated <b>{client}</b> account.',
+            'social-auth-success-curr' => 'Successfully authenticated <b>{client}</b> account for <b>{user}</b>.',
+            'social-auth-error-new' => 'Error while authenticating <b>{client}</b> account. {errors}',
+            'social-auth-error-curr' => 'Error while authenticating <b>{client}</b> account for <b>{user}</b>. {errors}',
+            'login-banned' => 'User has been banned.',
+            'login-invalid' => 'Invalid username or password.',
+            'label-id' => 'ID',
+            'label-username' => 'Username',
+            'label-password' => 'Password',
+            'label-password-new' => 'New Password',
+            'label-password-confirm' => 'Confirm Password',
+            'label-email' => 'Email',
+            'label-user-or-email' => 'Username or Email',
+            'label-remember-me' => 'Remember Me',
+            'label-created-on' => 'Created On',
+            'label-updated-on' => 'Updated On',
+            'label-auth-key' => 'Auth Key',
+            'label-activation-key' => 'Activation Key',
+            'label-reset-key' => 'Reset Key',
+            'label-last-login-ip' => 'Last Login IP',
+            'label-last-login-on' => 'Last Login On',
+            'label-password-reset-on' => 'Password Reset On',
+            'label-password-fail-attempts' => 'Password Fail Attempts',
+            'status-superuser' => 'Superuser',
+            'status-pending' => 'Pending',
+            'status-active' => 'Active',
+            'status-inactive' => 'Inactive',
+            'status-banned' => 'Banned',
+            'label-install-access-code' => 'Installation Access Code',
+            'hint-install-access-code' => 'Enter the installation access code as setup in your module configuration.',
+            'hint-install-username' => 'Select an username for the superuser',
+            'hint-install-password' => 'Select a password for the superuser',
+            'hint-install-password-confirm' => 'Reconfirm the superuser password',
+            'hint-install-email' => 'Enter a valid email for the superuser',
+        ];
+    }
+    
+    /**
+     * Fetch the message for a message identifier
+     * @param string $id the message identifier
+     * @param array $params the message parameters
+     * @return string the parsed message
+     */
+    public function message($id, $params = []) {
+        if (!isset($this->messages[$id])) {
+            return null;
+        }
+        return Yii::t('user', $this->messages[$id], ['client' => $client->getTitle()]);
+    }
+    
+    /**
+     * Sets a message flash
+     * @param string $cat the message flash category 
+     * @param string $id the message identifier
+     * @param array $params the message parameters
+     */
+    public function setFlash($cat, $id, $params = []) {
+        $message = $this->message($id, $params);
+        if ($message) { 
+            Yii::$app->session->setFlash($cat, $message);
         }
     }
 

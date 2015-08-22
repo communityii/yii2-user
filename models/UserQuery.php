@@ -36,7 +36,7 @@ class UserQuery extends \yii\db\ActiveQuery
 
     public function active()
     {
-        $this->andWhere('or', 'status = ' . User::STATUS_ACTIVE, 'status = ' . User::STATUS_SUPERUSER);
+        $this->andWhere(['status' => User::STATUS_ACTIVE])->orWhere(['status' => User::STATUS_SUPERUSER]);
         return $this;
     }
 

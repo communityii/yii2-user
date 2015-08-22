@@ -11,8 +11,9 @@ use kartik\form\ActiveForm;
  */
 $model->action = Module::UI_ACCESS;
 $hints = $model->attributeHints();
+$this->params['showModuleLogo'] = true;
 ?>
-<p class="text-info text-center"><?= Yii::t('user', 'Welcome! You are 2 steps away to start using the yii2-user module.') ?></p>
+<p class="text-info text-center"><?= Yii::t('user', '<b>Welcome!</b> You are 2 steps away to start using the yii2-user module.') ?></p>
 <?php $form = ActiveForm::begin(); ?>
 <div class="y2u-box">
     <div class = "y2u-padding">

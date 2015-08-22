@@ -18,7 +18,6 @@ use yii\web\IdentityInterface;
 use kartik\password\StrengthValidator;
 use comyii\user\Module;
 use comyii\user\models\UserBanLog;
-//use comyii\user\components\IdentityInterface;
 
 /**
  * This is the model class for table {{%user}}.
@@ -26,7 +25,7 @@ use comyii\user\models\UserBanLog;
  * @property string $id
  * @property string $username
  * @property string $email
- * @property string $password
+ * @property string $password_hash
  * @property string $auth_key
  * @property string $activation_key
  * @property string $reset_key
@@ -121,34 +120,18 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
-     * Creates a new user
-     *
-     * @param array $attributes the attributes given by field => value
-     * @return static|null the newly created model, or null on failure
-     */
-    public static function create($attributes, $scenario = null)
-    {
-        /** @var User $user */
-        $user = ($scenario == null) ? new static() : new static(['scenario' => $scenario]);
-        $user->setAttributes($attributes);
-        $user->setPassword($attributes['password_raw']);
-        $user->generateAuthKey();
-        $status = ($user->save()) ? true : false;
-        return ['status' => $status, 'model' => $user];
-    }
-
-    /**
      * Initialize User model
      */
     public function init()
     {
         parent::init();
+        $m = $this->_module;
         $this->_statuses = [
-            self::STATUS_SUPERUSER => Yii::t('user', 'Superuser'),
-            self::STATUS_PENDING => Yii::t('user', 'Pending'),
-            self::STATUS_ACTIVE => Yii::t('user', 'Active'),
-            self::STATUS_BANNED => Yii::t('user', 'Banned'),
-            self::STATUS_INACTIVE => Yii::t('user', 'Inactive'),
+            self::STATUS_SUPERUSER => $m->getMessage('status-superuser'),
+            self::STATUS_PENDING => $m->getMessage('status-Pending'),
+            self::STATUS_ACTIVE => $m->getMessage('status-active'),
+            self::STATUS_BANNED => $m->getMessage('status-banned'),
+            self::STATUS_INACTIVE => $m->getMessage('status-inactive'),
         ];
         $this->_statusClasses = [
             self::STATUS_SUPERUSER => 'label label-primary',
@@ -221,24 +204,29 @@ class User extends BaseModel implements IdentityInterface
      */
     public function attributeLabels()
     {
+        $m = $this->_module;
+        $status = $m->message('label-status');
+        $password = $m->message('label-password');
         return [
-            'id' => Yii::t('user', 'ID'),
-            'username' => Yii::t('user', 'Username'),
-            'email' => Yii::t('user', 'Email'),
-            'password' => Yii::t('user', 'Password'),
-            'auth_key' => Yii::t('user', 'Auth Key'),
-            'activation_key' => Yii::t('user', 'Activation Key'),
-            'reset_key' => Yii::t('user', 'Reset Key'),
-            'status' => Yii::t('user', 'Status'),
-            'created_on' => Yii::t('user', 'Created On'),
-            'created_on' => Yii::t('user', 'Updated On'),
-            'last_login_ip' => Yii::t('user', 'Last Login IP'),
-            'last_login_on' => Yii::t('user', 'Last Login On'),
-            'password_reset_on' => Yii::t('user', 'Password Reset On'),
-            'password_fail_attempts' => Yii::t('user', 'Password Fail Attempts'),
-            'password_raw' => Yii::t('user', 'Password'),
-            'password_new' => Yii::t('user', 'New Password'),
-            'password_confirm' => Yii::t('user', 'Confirm Password'),
+            'id' => $m->message('label-id'),
+            'username' => $m->message('label-username'),
+            'email' => $m->message('label-email'),
+            'password_hash' => $password,
+            'auth_key' => $m->message('label-auth-key'),
+            'activation_key' => $m->message('label-activation-key'),
+            'reset_key' => $m->message('label-reset-key'),
+            'status' => $status,
+            'statusText' => $status,
+            'statusHtml' => $status,
+            'created_on' => $m->message('label-created-on'),
+            'created_on' => $m->message('label-updated-on'),
+            'last_login_ip' => $m->message('label-last-login-ip'),
+            'last_login_on' => $m->message('label-last-login-on'),
+            'password_reset_on' => $m->message('label-password-reset-on'),
+            'password_fail_attempts' => $m->message('label-password-fail-attempts'), 
+            'password_raw' => $password,
+            'password_new' => $m->message('label-password-new'),
+            'password_confirm' => $m->message('label-password-confirm')
         ];
     }
 
@@ -257,9 +245,9 @@ class User extends BaseModel implements IdentityInterface
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getRemoteIdentities()
+    public function getSocialAuth()
     {
-        return $this->hasMany(RemoteIdentity::className(), ['user_id' => 'id']);
+        return $this->hasMany(SocialAuth::className(), ['user_id' => 'id']);
     }
 
     /**
@@ -392,7 +380,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findIdentity($id)
     {
-        return static::findOne(['id' => $id]);
+        return static::find(['id' => $id])->active()->one();
     }
 
     /**
@@ -402,6 +390,7 @@ class User extends BaseModel implements IdentityInterface
     {
         throw new NotSupportedException('"findIdentityByAccessToken" is not implemented.');
     }
+    
 
     /**
      * Finds user by username
@@ -411,7 +400,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByUsername($username)
     {
-        return static::find(['username' => $username])->active();
+        return static::find(['username' => $username])->active()->one();
     }
 
     /**
@@ -422,7 +411,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByEmail($email)
     {
-        return static::find(['email' => $email])->active();
+        return static::find(['email' => $email])->active()->one();
     }
 
     /**
@@ -431,9 +420,9 @@ class User extends BaseModel implements IdentityInterface
      * @param string $userStr
      * @return static|null
      */
-    public static function findByUserOrEmail($userStr)
+    public static function findByUserOrEmail($input)
     {
-        return static::find()->andWhere(['username' => $userStr])->orWhere(['email' => $userStr]);
+        return static::find()->andWhere(['username' => $input])->orWhere(['email' => $input])->one();
     }
 
     /**
@@ -445,28 +434,27 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByPasswordResetKey($key, $expire)
     {
-        if (static::isKeyExpired($key, $expire)) {
+        if (!static::isKeyValid($key, $expire)) {
             return null;
         }
 
-        return static::find(['reset_key' => $key])->active();
+        return static::find(['reset_key' => $key])->active()->one;
     }
 
     /**
-     * Check if a key is expired
+     * Check if a key is valid
      *
      * @param $key string the key
      * @param $expire integer the expiry time in seconds
      * @return bool
      */
-    public static function isKeyExpired($key, $expire)
+    public static function isKeyValid($key, $expire)
     {
-        $parts = explode('_', $key);
-        if (count($parts) <= 1 || empty($expire) || $expire <= 0) {
+        if (empty($key)) {
             return false;
         }
-        $timestamp = (int)end($parts);
-        return (($timestamp + $expire) < time());
+        $timestamp = (int) substr($key, strrpos($key, '_') + 1);
+        return timestamp + $expire >= time();
     }
 
     /**
@@ -477,7 +465,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function generateKey($expire = 0)
     {
-        $key = Yii::$app->security->generateRandomKey();
+        $key = Yii::$app->security->generateRandomString();
         return (!empty($expire) && $expire > 0) ? $key . '_' . time() : $key;
     }
 
@@ -531,7 +519,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function validatePassword($password)
     {
-        return Yii::$app->security->validatePassword($password, $this->password);
+        return Yii::$app->security->validatePassword($password, $this->password_hash);
     }
 
     /**
@@ -575,7 +563,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function setPassword($password)
     {
-        $this->password = Yii::$app->security->generatePasswordHash($password);
+        $this->password_hash = Yii::$app->security->generatePasswordHash($password);
     }
 
     /**
@@ -689,7 +677,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function getStatusHtml()
     {
-        return '<span class="' . $this->_statusClasses[$this->status] . '">' . $this->statusName . '</span>';
+        return '<span class="' . $this->_statusClasses[$this->status] . '">' . $this->statusText . '</span>';
     }
 
     /**

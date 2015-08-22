@@ -41,16 +41,16 @@ class UserSearch extends User
         $query->andFilterWhere([
             'id' => $this->id,
             'status' => $this->status,
-            'password_fail_attempts' => $this->password_fail_attempts,
+            'password_fail_attempts' => $this->password_hash_fail_attempts,
             'last_login_on' => $this->last_login_on,
-            'password_reset_on' => $this->password_reset_on,
+            'password_reset_on' => $this->password_hash_reset_on,
             'created_on' => $this->created_on,
             'updated_on' => $this->updated_on,
         ]);
 
         $query->andFilterWhere(['like', 'username', $this->username])
             ->andFilterWhere(['like', 'email', $this->email])
-            ->andFilterWhere(['like', 'password', $this->password])
+            ->andFilterWhere(['like', 'password', $this->password_hash])
             ->andFilterWhere(['like', 'auth_key', $this->auth_key])
             ->andFilterWhere(['like', 'activation_key', $this->activation_key])
             ->andFilterWhere(['like', 'reset_key', $this->reset_key])

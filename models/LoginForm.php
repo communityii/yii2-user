@@ -32,11 +32,15 @@ class LoginForm extends Model
     private $_user = false;
     private $_settings = [];
 
+    /**
+     * @var Module the module instance
+     */
+    private $_module;
+
     public function init()
     {
-        $module = null;
-        Module::validateConfig($module);
-        $this->_settings = $module->loginSettings;
+        Module::validateConfig($this->_module);
+        $this->_settings = $this->_module->loginSettings;
         parent::init();
     }
 
@@ -68,17 +72,18 @@ class LoginForm extends Model
      */
     public function attributeLabels()
     {
+      
+        $m = $this->_module;
+        $msgId = 'label-user-or-email';
         if ($this->_settings['loginType'] === Module::LOGIN_USERNAME) {
-            $userLabel = Yii::t('user', 'Username');
+            $msgId = $m->message('label-username');
         } elseif ($this->_settings['loginType'] === Module::LOGIN_EMAIL) {
-            $userLabel = Yii::t('user', 'Email');
-        } else {
-            $userLabel = Yii::t('user', 'Username or Email');
+            $msgId = $m->message('label-email');
         }
         return [
-            'username' => $userLabel,
-            'password' => Yii::t('user', 'Password'),
-            'rememberMe' => Yii::t('user', 'Remember Me'),
+            'username' => $m->message($msgId),
+            'password' => $m->message('label-password'),
+            'rememberMe' =>  $m->message('label-remember-me'), 
         ];
     }
 
@@ -94,15 +99,18 @@ class LoginForm extends Model
         $user = $this->getUser();
         $outcome = ($user) ? $user->validateBan() : null;
         if (!$outcome) {
-            $this->addError('username', Yii::t('user', 'User has been banned.'));
+            $this->addError('username', $this->_module->message('login-banned'));
         }
     }
 
     /**
      * Validates the password.
      * This method serves as the inline validation for password.
+     *
+     * @param string $attribute the attribute currently being validated
+     * @param array $params the additional name-value pairs given in the rule
      */
-    public function validatePassword()
+    public function validatePassword($attribute, $params)
     {
         if ($this->hasErrors()) {
             return;
@@ -110,7 +118,7 @@ class LoginForm extends Model
         $user = $this->getUser();
         $outcome = ($user) ? $user->validatePassword($this->password) : null;
         if (!$user || !$outcome) {
-            $this->addError('password', Yii::t('user', 'Invalid username or password.'));
+            $this->addError($attribute, $this->_module->message('login-invalid'));
         }
         if ($outcome !== null) {
             $user->checkFailedLogin($outcome);
@@ -126,6 +134,7 @@ class LoginForm extends Model
      */
     public function login($user)
     {
+        $user->setScenario('default');
         return Yii::$app->user->login($user, $this->rememberMe ? $this->_settings['rememberMeDuration'] : 0);
     }
 
@@ -144,9 +153,8 @@ class LoginForm extends Model
             } else {
                 $user = User::findByUserOrEmail($this->username);
             }
-            $this->_user = $user->one();
+            $this->_user = $user;
         }
-
         return $this->_user;
     }
 }

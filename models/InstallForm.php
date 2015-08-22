@@ -60,6 +60,9 @@ class InstallForm extends Model
      */
     public $action;
 
+    /**
+     * @var Module the module instance
+     */
     private $_module;
 
     /**
@@ -105,44 +108,45 @@ class InstallForm extends Model
      */
     public function checkAccess()
     {
-        if ($this->_module->installAccessCode !== $this->access_code) {
-            $this->addError('access_code', Yii::t('user', 'The installation access code entered is incorrect.'));
+        $m = $this->_module;
+        if ($m->installAccessCode !== $this->access_code) {
+            $this->addError('access_code', $m->message('install-invalid-access'));
         }
         $userComponent = Yii::$app->get('user');
         if (!$userComponent instanceof \comyii\user\components\User) {
-            $this->addError('access_code', Yii::t('user', 'You have not setup a valid class for your user component in your application configuration file. ' .
-                'The class must extend {classValid}. Class currently set: {classSet}.', [
-                    'classValid' => '\comyii\user\components\User' ,
-                    'classSet' => $userComponent::classname()
-                ]
-            ));
+            $this->addError('access_code', $m->message('install-invalid-usercomp', [
+                'classValid' => '\comyii\user\components\User' ,
+                'classSet' => $userComponent::classname()
+            ]);
         }
     }
 
     /**
-     * Attribute labels for the InstallForm model
-     *
-     * @return array
+     * @inheritdoc
      */
     public function attributeLabels()
     {
+        $m = $this->_module;
         return [
-            'access_code' => Yii::t('user', 'Installation Access Code'),
-            'username' => Yii::t('user', 'Username'),
-            'password' => Yii::t('user', 'Password'),
-            'password_confirm' => Yii::t('user', 'Confirm Password'),
-            'email' => Yii::t('user', 'Email'),
+            'access_code' => $m->message('label-install-access-code'),
+            'username' => $m->message('label-username'),
+            'password' => $m->message('label-password'),
+            'password_confirm' => $m->message('label-password-confirm'),
+            'email' => $m->message('label-email'),
         ];
     }
 
+    /**
+     * @inheritdoc
+     */
     public function attributeHints() {
+        $m = $this->_module;
         return [
-            'access_code' => Yii::t('user', 'Enter the installation access code as setup in your module configuration.'),
-            'username' => Yii::t('user', 'Select an username for the superuser'),
-            'password' => Yii::t('user', 'Select a password for the superuser'),
-            'password_confirm' => Yii::t('user', 'Reconfirm the superuser password'),
-            'email' => Yii::t('user', 'Enter a valid email for the superuser'),
+            'access_code' => $m->message('hint-install-access-code'),
+            'username' => $m->message('hint-install-username'),
+            'password' => $m->message('hint-install-password'),
+            'password_confirm' => $m->message('hint-install-password-confirm'),
+            'email' => $m->message('hint-install-email'),
         ];
-
     }
 }

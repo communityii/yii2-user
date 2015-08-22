@@ -10,8 +10,9 @@ use kartik\form\ActiveForm;
  * @var kartik\form\ActiveForm $form
  */
 $model->action = Module::UI_INSTALL;
+$this->params['showModuleLogo'] = true;
 ?>
-<p class="text-success text-center"><?= Yii::t('user', 'Access code validated! Setup a superuser to finish the install.') ?></p>
+<p class="text-success text-center"><?= Yii::t('user', '<b>Access code validated!</b> Setup a superuser to finish the install.') ?></p>
 <?php $form = ActiveForm::begin(); ?>
 <div class="y2u-box">
     <div class = "y2u-padding">

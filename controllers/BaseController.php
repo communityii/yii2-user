@@ -56,7 +56,7 @@ class BaseController extends \yii\web\Controller
             }
         }
         elseif (!$this->module->hasSuperUser()) {
-            throw new InvalidConfigException('You must setup the installAccessCode in the configuration file in order to install the yii2-user module.');
+            throw new InvalidConfigException('Module installation for "communityii\yii2-user" cannot proceed. You must set a valid "installAccessCode" for the "user" module in your application configuration file.');
         }
     }
 

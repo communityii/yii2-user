@@ -7,6 +7,7 @@ use kartik\alert\AlertBlock;
 
 UserAsset::register($this);
 $asset = $this->assetBundles['comyii\user\assets\UserAsset'];
+$hasModuleLogo = (isset($this->params['showModuleLogo']) && $this->params['showModuleLogo']);
 ?>
 <?php $this->beginPage(); ?>
 <!DOCTYPE html>
@@ -16,11 +17,15 @@ $asset = $this->assetBundles['comyii\user\assets\UserAsset'];
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head(); ?>
 </head>
-<body class="y2u-padding">
-    <div class="y2u-container">
+<body class="y2u-body">
+    <div class="<?= $hasModuleLogo ? 'y2u-container' : 'y2u-container-pad' ?>">
+        <?php if ($hasModuleLogo): ?>
         <div class="text-center">
-            <?= Html::img($asset->baseUrl . '/img/communityii.png', ['class'=>'y2u-logo']) . Module::PROJECT_PAGE ?>
+            <a href="http://github.com/communityii/yii2-user" class="y2u-title text-warning" target="_blank">
+                <?= Html::img($asset->baseUrl . '/img/communityii.png', ['class'=>'y2u-logo']) ?>communityii/yii2-user
+            </a>
         </div>
+        <?php endif; ?>
         <?= AlertBlock::widget(['delay'=>0]) ?>
         <?php $this->beginBody(); ?>
         <?= $content ?>

@@ -81,15 +81,18 @@ class BaseForm extends \yii\base\Widget
     protected $_buttons;
 
     /**
-     * @var \kartik\form\ActiveForm instance
+     * @var ActiveForm the form instance
      */
     protected $_form;
 
     /**
-     * @var \yii\base\Module the user module configuration
+     * @var Module the user module configuration
      */
     protected $_module;
 
+    /**
+     * @inheritdoc
+     */
     public function init()
     {
         parent::init();
@@ -100,6 +103,9 @@ class BaseForm extends \yii\base\Widget
         $this->_form = ActiveForm::begin($this->formOptions);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function run()
     {
         $options = ['model' => $this->model, 'form' => $this->_form, 'attributes' => $this->attributes] + $this->options;

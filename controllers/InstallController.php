@@ -43,7 +43,8 @@ class InstallController extends BaseController
 
     public function actionIndex()
     {
-        if (isset($this->module->installAccessCode) && !$this->module->hasSuperUser()) {
+        $m = $this->module;
+        if (isset($m->installAccessCode) && !$m->hasSuperUser()) {
             $model = new InstallForm(['scenario' => Module::UI_ACCESS]);
             if (!isset($model->action)) {
                 $model->action = self::UI_INIT_SETUP;
@@ -61,7 +62,7 @@ class InstallController extends BaseController
                     }
                 }
                 elseif ($model->action === Module::UI_INSTALL) {
-                    $model->access_code = $this->module->installAccessCode;
+                    $model->access_code = $m->installAccessCode;
                     if ($model->validate()) {
                         $createUser = User::create([
                             'username' => $model->username,
@@ -71,17 +72,13 @@ class InstallController extends BaseController
                         ], Module::UI_INSTALL);
                         $user = $createUser['model'];
                         if (!$createUser['status']) {
-                            Yii::$app->session->setFlash('error', Yii::t('user', 'Error creating the superuser. Fix the following errors:') . '<br/><br/>' .
-                                Module::showErrors($user)
-                            );
+                            $m->setFlash('error', 'install-error', ['errors' => Module::showErrors($user));
                             $model->action = Module::UI_INSTALL;
                             $model->scenario = Module::UI_INSTALL;
                         }
                         else {
-                            Yii::$app->session->setFlash('success', Yii::t('user',
-                                'The user module has been successfully installed. You have been automatically logged in as the superuser (username: {username}).',
-                                ['username' => "<strong>'" . $model->username . "'</strong>"]));
-                            Yii::$app->session->setFlash('warning', Yii::t('user', 'It is recommended to remove the install access code from your module configuration for better performance and security.'));
+                            $m->setFlash('success', 'install-success',  ['username' => $model->username]);
+                            $m->setFlash('success', 'install-warning')
                             Yii::$app->user->login($user);
                             return $this->forward(Module::ACTION_ADMIN_VIEW, ['id'=>$user->id]);
                         }
