@@ -71,6 +71,9 @@ class InstallController extends BaseController
                             'status' => User::STATUS_SUPERUSER,
                             'scenario' => Module::UI_INSTALL
                         ]);
+                        $user->setPassword($model->password);
+                        $user->generateAuthKey();
+                        $user->generateResetKey();                        
                         if (!$user->save()) {
                             $m->setFlash('error', 'install-error', ['errors' => Module::showErrors($user)]);
                             $model->action = Module::UI_INSTALL;
