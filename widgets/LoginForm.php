@@ -12,7 +12,7 @@ namespace comyii\user\widgets;
 use Yii;
 use yii\base\InvalidConfigException;
 use kartik\helpers\Html;
-use kartik\widgets\ActiveForm;
+use kartik\form\ActiveForm;
 use kartik\builder\Form;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;

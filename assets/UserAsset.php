@@ -15,7 +15,7 @@ namespace comyii\user\assets;
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class UserAsset extends \kartik\widgets\AssetBundle
+class UserAsset extends \kartik\base\AssetBundle
 {
    
     public function init()

@@ -12,7 +12,7 @@ namespace comyii\user\widgets;
 use Yii;
 use comyii\user\Module;
 use kartik\helpers\Html;
-use kartik\widgets\ActiveForm;
+use kartik\form\ActiveForm;
 use kartik\builder\Form;
 use yii\helpers\ArrayHelper;
 
@@ -81,7 +81,7 @@ class BaseForm extends \yii\base\Widget
     protected $_buttons;
 
     /**
-     * @var \kartik\widgets\ActiveForm instance
+     * @var \kartik\form\ActiveForm instance
      */
     protected $_form;
 

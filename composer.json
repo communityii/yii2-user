@@ -13,6 +13,7 @@
         }
     ],
     "require": {
+        "kartik-v/yii2-widget-alert": "*",
         "kartik-v/yii2-password": "*",
         "kartik-v/yii2-builder": "*",
         "kartik-v/yii2-detail-view": "*"

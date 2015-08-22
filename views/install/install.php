@@ -2,12 +2,12 @@
 
 use comyii\user\Module;
 use kartik\helpers\Html;
-use kartik\widgets\ActiveForm;
+use kartik\form\ActiveForm;
 
 /**
  * @var yii\web\View $this
  * @var comyii\user\models\InstallForm $model
- * @var kartik\widgets\ActiveForm $form
+ * @var kartik\form\ActiveForm $form
  */
 $model->action = Module::UI_INSTALL;
 ?>

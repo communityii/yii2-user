@@ -3,7 +3,7 @@
 use comyii\user\Module;
 use comyii\user\assets\UserAsset;
 use kartik\helpers\Html;
-use kartik\widgets\AlertBlock;
+use kartik\alert\AlertBlock;
 
 UserAsset::register($this);
 $asset = $this->assetBundles['comyii\user\assets\UserAsset'];
