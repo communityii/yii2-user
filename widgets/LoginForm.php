@@ -63,7 +63,7 @@ class LoginForm extends BaseForm
     {
         $m = Yii::$app->getModule('user');
         if (!isset($this->resetLinkOptions['title'])) {
-            $this->resetLinkOptions['title'] = $m->message('reset-password-title');
+            $this->resetLinkOptions['title'] = $m->message('tooltip-forgot-password');
         }
         Module::validateConfig($this->_module);
         $this->attributes += [
@@ -71,7 +71,7 @@ class LoginForm extends BaseForm
             'password' => ['type' => Form::INPUT_PASSWORD],
             'rememberMe' => ['type' => Form::INPUT_CHECKBOX]
         ];
-        $resetLink = Html::a($m->message('reset-password-label'), Url::to($this->_module->actionSettings[Module::ACTION_RECOVERY]), $this->resetLinkOptions);
+        $resetLink = Html::a($m->message('label-forgot-password'), Url::to($this->_module->actionSettings[Module::ACTION_RECOVERY]), $this->resetLinkOptions);
         if (!isset($this->buttons)) {
             $this->buttons = $resetLink . '&nbsp; {submit}';
         }

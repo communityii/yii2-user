@@ -1,7 +1,9 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\ArrayHelper;
 use kartik\detail\DetailView;
+use comyii\user\Module;
 
 /**
  * @var yii\web\View $this
@@ -9,13 +11,15 @@ use kartik\detail\DetailView;
  */
 
 $m = Yii::$app->getModule('user');
-$this->title =  $m->message('user-details-title') . ' &raquo; ' . $model->username;
+$this->title =  $m->message('user-details-title') . ': ' . $model->username;
 $this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'Users'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $model->username;
 ?>
 <div class="user-view">
     <?= DetailView::widget([
         'model' => $model,
+        'striped' => false,
+        'hover' => true,
         'panel' => [
             'type' => 'primary',
             'heading' => '<i class="glyphicon glyphicon-user"></i> ' . $this->title,
@@ -26,38 +30,81 @@ $this->params['breadcrumbs'][] = $model->username;
                 'label'=> '<i class="glyphicon glyphicon-tag"></i> ' . $m->message('user-id-info-title'),
                 'rowOptions'=>['class'=>'info']
             ],
-            ['attribute'=> 'id', 'displayOnly' => true], 
             [
-                'attribute' => 'username',
-                'inputContainer' => ['class'=>'col-sm-6'],
+                'columns' => [
+                    [
+                        'attribute'=> 'id',
+                        'format' => 'raw',
+                        'value' => '<code><big>' . $model->id . '</big></code>',
+                        'displayOnly' => true,
+                        'valueColOptions' => ['style' => 'width: 30%']
+                    ], 
+                    [
+                        'attribute' => 'username',
+                        'valueColOptions' => ['style' => 'width: 30%']
+                    ],
+                ]
             ],
             [
-                'attribute' => 'email',
-                'format' => 'email',
-                'inputContainer' => ['class'=>'col-sm-6'],
-            ],    
-            [
-                'attribute'=> 'status', 
-                'format' => 'html',
-                'value'=>$model->statusHtml, 
-                'type' => DetailView::INPUT_SELECT2,
-                'widgetOptions'=>[
-                    'data' => $model->getStatusList(),
-                    'options' => ['placeholder' => 'Select ...'],
-                    'pluginOptions' => ['allowClear' => true, 'width' => '100%']
+                'columns' => [
+                    [
+                        'attribute' => 'email',
+                        'format' => 'email',
+                        'valueColOptions' => ['style' => 'width: 30%']
+                    ],    
+                    [
+                        'attribute'=> 'status', 
+                        'format' => 'html',
+                        'value'=>$model->statusHtml, 
+                        'type' => DetailView::INPUT_SELECT2,
+                        'valueColOptions' => ['style' => 'width: 30%'],
+                        'widgetOptions'=>[
+                            'data' => $model->getStatusList(),
+                            'pluginOptions' => ['width' => '100%']
+                        ]
+                    ],
                 ],
-                'inputContainer' => ['class'=>'col-sm-6'],
             ],
             [
                 'group'=>true,
                 'label'=> '<i class="glyphicon glyphicon-time"></i> ' . $m->message('user-log-info-title'),
                 'rowOptions'=>['class'=>'info'],
             ],
-            ['attribute'=> 'last_login_ip', 'displayOnly' => true],
-            ['attribute'=> 'last_login_on', 'displayOnly' => true],              
-            ['attribute'=> 'password_reset_on', 'displayOnly' => true],              
-            ['attribute'=> 'created_on', 'displayOnly' => true],              
-            ['attribute'=> 'updated_on', 'displayOnly' => true],
+            [
+                'columns' => [
+                    [
+                        'attribute' => 'last_login_ip', 
+                        'format' => 'raw',
+                        'value' => '<kbd>' . $model->last_login_ip . '</kbd> ' . \comyii\user\widgets\IpInfo::widget(['ip'=>'15.28.249.21']), //12.215.42.19
+                        'valueColOptions' => ['style' => 'width: 30%'], 
+                        'displayOnly' => true
+                    ],
+                    ['attribute'=> 'created_on', 'valueColOptions' => ['style' => 'width: 30%'], 'displayOnly' => true],
+                ]
+            ],
+            [
+                'columns' => [
+                    ['attribute'=> 'last_login_on', 'valueColOptions' => ['style' => 'width: 30%'], 'displayOnly' => true],
+                    ['attribute'=> 'updated_on', 'valueColOptions' => ['style' => 'width: 30%'], 'displayOnly' => true],
+                ]
+            ],
+            [
+                'columns' => [
+                    [
+                        'attribute'=> 'password_reset_on', 
+                        'valueColOptions' => ['style' => 'width: 30%'],
+                        'displayOnly' => true
+                    ],
+                    [
+                        'label' => $m->message('label-password-actions'),
+                        'format' => 'raw',
+                        'displayOnly' => true,
+                        'value' => $m->actionButton(Module::ACTION_CHANGE, 'label-change-password', 'lock') . ' ' .
+                            $m->actionButton(Module::ACTION_RESET, 'label-reset-password', 'refresh'),
+                        'valueColOptions' => ['style' => 'width:30%']
+                    ],
+                ]
+            ],
             [
                 'group'=>true,
                 'label'=> '<i class="glyphicon glyphicon-lock"></i> ' . $m->message('user-hidden-info-title'),

@@ -61,7 +61,7 @@ class AdminController extends BaseController
             }
         }
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ]);
     }
 

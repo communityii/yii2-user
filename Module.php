@@ -10,6 +10,8 @@
 namespace comyii\user;
 
 use Yii;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 use comyii\user\models\User;
 use yii\base\InvalidConfigException;
 
@@ -40,28 +42,27 @@ class Module extends \yii\base\Module
     const UI_ADMIN = 'admin';
 
     // the list of account actions
-    const ACTION_LOGIN = 1; // login as new user
-    const ACTION_LOGOUT = 2; // logout of account
-    const ACTION_REGISTER = 3; // new account registration
-    const ACTION_ACTIVATE = 4; // account activation
-    const ACTION_RESET = 5; // account password reset
-    const ACTION_RECOVERY = 6; // account recovery
-
-    // the list of social actions
-    const ACTION_SOCIAL_AUTH = 20; // social auth & login
+    const ACTION_LOGIN = 1;             // login as new user
+    const ACTION_LOGOUT = 2;            // logout of account
+    const ACTION_REGISTER = 3;          // new account registration
+    const ACTION_ACTIVATE = 4;          // account activation
+    const ACTION_RESET = 5;             // account password reset
+    const ACTION_CHANGE = 6;            // account password change
+    const ACTION_RECOVERY = 7;          // account recovery
+    const ACTION_SOCIAL_AUTH = 20;      // social auth & login
 
     // the list of profile actions
-    const ACTION_PROFILE_VIEW = 50; // profile view
-    const ACTION_PROFILE_LIST = 51; // user listing
-    const ACTION_PROFILE_EDIT = 52; // profile update
-    const ACTION_PROFILE_UPLOAD = 53; // avatar image upload
+    const ACTION_PROFILE_VIEW = 50;     // profile view
+    const ACTION_PROFILE_LIST = 51;     // user listing
+    const ACTION_PROFILE_EDIT = 52;     // profile update
+    const ACTION_PROFILE_UPLOAD = 53;   // avatar image upload
 
     // the list of admin actions
-    const ACTION_ADMIN_LIST = 100; // user listing
-    const ACTION_ADMIN_VIEW = 101; // user view
-    const ACTION_ADMIN_EDIT = 102; // user edit
-    const ACTION_ADMIN_BAN = 103; // user ban
-    const ACTION_ADMIN_UNBAN = 104; // user unban
+    const ACTION_ADMIN_LIST = 100;      // user listing
+    const ACTION_ADMIN_VIEW = 101;      // user view
+    const ACTION_ADMIN_EDIT = 102;      // user edit
+    const ACTION_ADMIN_BAN = 103;       // user ban
+    const ACTION_ADMIN_UNBAN = 104;     // user unban
 
     // the mail delivery settings
     const ENQUEUE_ONLY = 1;
@@ -270,6 +271,7 @@ class Module extends \yii\base\Module
             self::ACTION_REGISTER => 'account/register',
             self::ACTION_ACTIVATE => 'account/activate',
             self::ACTION_RESET => 'account/reset',
+            self::ACTION_CHANGE => 'account/change',
             self::ACTION_RECOVERY => 'account/recovery',
             // the list of social actions
             self::ACTION_SOCIAL_AUTH => 'account/auth',
@@ -292,6 +294,7 @@ class Module extends \yii\base\Module
             self::ACTION_REGISTER => 'install',
             self::ACTION_ACTIVATE => 'install',
             self::ACTION_RESET => 'install',
+            self::ACTION_CHANGE => 'install',
             self::ACTION_RECOVERY => 'install',
             // the list of social actions
             self::ACTION_SOCIAL_AUTH => 'social/login',
@@ -425,8 +428,6 @@ class Module extends \yii\base\Module
             'social-auth-success-curr' => 'Successfully authenticated <b>{client}</b> account for <b>{user}</b>.',
             'social-auth-error-new' => 'Error while authenticating <b>{client}</b> account. {errors}',
             'social-auth-error-curr' => 'Error while authenticating <b>{client}</b> account for <b>{user}</b>. {errors}',
-            'reset-password-label' => 'Forgot password?',
-            'reset-password-title' => 'Click here to reset your lost password',
             'user-details-title' => 'User Details',
             'user-id-info-title' => 'Identification Information',
             'user-log-info-title' => 'User Log Information',
@@ -434,6 +435,13 @@ class Module extends \yii\base\Module
             'user-details-saved' => 'Successfully saved details for <b>{user}</b> with ID <b>{id}</b>.',
             'login-banned' => 'User has been banned.',
             'login-invalid' => 'Invalid username or password.',
+            'tooltip-change-password' => 'Change password for the user',
+            'tooltip-reset-password' => 'Reset password for the user',
+            'tooltip-forgot-password' => 'Click here to reset your lost password',
+            'label-forgot-password' => 'Forgot password?',
+            'label-reset-password' => 'Reset password',
+            'label-change-password' => 'Change password',
+            'label-password-actions' => 'Password Actions',
             'label-id' => 'ID',
             'label-username' => 'Username',
             'label-password' => 'Password',
@@ -499,5 +507,18 @@ class Module extends \yii\base\Module
      */
     public function hasSuperUser() {
         return count(User::find()->superuser()->all()) > 0;
+    }
+    
+    /**
+     * Generate action button
+     */
+    public function actionButton($action, $msgId, $icon, $options = ['class' => 'btn-xs'], $titleId = '', $prefix = 'glyphicon glyphicon-')
+    {
+        Html::addCssClass($options, 'btn');
+        if (!empty($titleId)) {
+            $options['title'] = $this->message($titleId);
+        }
+        $label = "<i class='{$prefix}{$icon}'></i> " . $this->message($msgId);
+        return Html::a($label, ArrayHelper::getValue($this->actionSettings, [$action], '#'), $options);
     }
 }
