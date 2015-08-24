@@ -14,6 +14,7 @@
     ],
     "require": {
         "yiisoft/yii2-authclient": "*",
+        "kartik-v/yii2-ipinfo": "*",
         "kartik-v/yii2-widget-alert": "*",
         "kartik-v/yii2-widget-datetimepicker": "*",
         "kartik-v/yii2-widget-fileinput": "*",
