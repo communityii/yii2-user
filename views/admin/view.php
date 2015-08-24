@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 use kartik\detail\DetailView;
+use kartik\ipinfo\IpInfo;
 use comyii\user\Module;
 
 /**
@@ -75,7 +76,7 @@ $this->params['breadcrumbs'][] = $model->username;
                     [
                         'attribute' => 'last_login_ip', 
                         'format' => 'raw',
-                        'value' => '<kbd>' . $model->last_login_ip . '</kbd> ' . \comyii\user\widgets\IpInfo::widget(['ip'=>'15.28.249.21']), //12.215.42.19
+                        'value' => '<kbd>' . $model->last_login_ip . '</kbd> ' . IpInfo::widget(['ip'=>$model->last_login_ip]),
                         'valueColOptions' => ['style' => 'width: 30%'], 
                         'displayOnly' => true
                     ],

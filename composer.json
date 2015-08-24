@@ -21,7 +21,8 @@
         "kartik-v/yii2-widget-select2": "*",
         "kartik-v/yii2-password": "*",
         "kartik-v/yii2-builder": "*",
-        "kartik-v/yii2-detail-view": "*"
+        "kartik-v/yii2-detail-view": "*",
+        "kartik-v/yii2-ipinfo": "*"
     },
     "autoload": {
         "psr-4": {
