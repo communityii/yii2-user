@@ -1,6 +1,6 @@
 <?php
 
-use comyii\user\widgets\LoginForm;
+use comyii\user\widgets\RegistrationForm;
 use comyii\user\widgets\Logo;
 /**
  * @var yii\web\View $this
@@ -11,9 +11,9 @@ use comyii\user\widgets\Logo;
     <?= Logo::widget() ?>
 </div>
 <div class="y2u-box">
-    <?= LoginForm::widget([
+    <?= RegistrationForm::widget([
         'model' => $model,
-        'title' => $loginTitle,
+        'title' => $registerTitle,
         'hasSocialAuth' => $hasSocialAuth,
         'authAction' => $authAction,
         'authTitle' => $authTitle

@@ -1,41 +1,49 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\DetailView;
+use yii\helpers\ArrayHelper;
+use kartik\detail\DetailView;
+use kartik\ipinfo\IpInfo;
+use comyii\user\Module;
+use comyii\user\models\User;
 
-/* @var $this yii\web\View */
-/* @var $model comyii\user\models\UserProfile */
+/**
+ * @var yii\web\View $this
+ * @var comyii\user\models\User $user
+ */
 
-$this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'User Profiles'), 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
+$m = $this->context->module;
+$this->title =  Yii::t('user', 'User Profile') . ' (' . $user->username . ')';
+$this->params['breadcrumbs'][] = $user->username;
 ?>
-<div class="user-profile-view">
-
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <p>
-        <?= Html::a(Yii::t('user', 'Update'), ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a(Yii::t('user', 'Delete'), ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => Yii::t('user', 'Are you sure you want to delete this item?'),
-                'method' => 'post',
-            ],
-        ]) ?>
-    </p>
-
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            'id',
-            'display_name',
-            'first_name',
-            'last_name',
-            'avatar_url:ntext',
-            'created_on',
-            'updated_on',
+<?= DetailView::widget([
+    'model' => $user,
+    'striped' => false,
+    'hover' => true,
+    'buttons1' => "{update}",
+    'panel' => [
+        'type' => 'primary',
+        'heading' => $m->icon('user') . ' ' . $this->title,
+    ],
+    'buttonContainer'=>['style'=>'margin-right:-10px;float:right'],
+    'attributes' => [
+        [
+            'group'=>true,
+            'label'=> $m->icon('tag') . ' ' . Yii::t('user', 'Identification Information'),
+            'rowOptions'=>['class'=>'info']
         ],
-    ]) ?>
-
-</div>
+        [
+            'columns' => [
+                [
+                    'attribute' => 'username',
+                    'valueColOptions' => ['style' => 'width: 30%']
+                ],
+                [
+                    'attribute' => 'email',
+                    'format' => 'email',
+                    'valueColOptions' => ['style' => 'width: 30%']
+                ],    
+            ]
+        ],
+    ]
+]) ?>

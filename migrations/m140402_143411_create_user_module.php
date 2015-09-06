@@ -83,29 +83,7 @@ class m140402_143411_create_user_module extends Migration
             'CASCADE'
         );
 
-        // Table # 4: User ban log
-        $this->createTable('{{%user_ban_log}}', [
-            'id' => $this->bigPrimaryKey(),
-            'user_ip' => $this->string(60),
-            'ban_reason' => $this->string(255),
-            'revoke_reason' => $this->string(255),
-            'user_id' => $this->bigInteger()->notNull(),
-            'banned_till' => $this->timestamp()->defaultValue('0000-00-00 00:00:00'),
-            'banned_by' => $this->bigInteger()->notNull(),
-            'created_on' => $timestamp,
-            'updated_on' => $timestamp,
-        ], $tableOptions);
-        $this->addForeignKey(
-            'user_ban_log_user_id_fk',
-            '{{%user_ban_log}}',
-            'user_id',
-            '{{%user}}',
-            'id',
-            'CASCADE'
-        );
-        $this->createIndex('user_ban_log_user_id_idx}}', '{{%user_ban_log}}', 'user_id');
-
-        // Table # 5: Mail queue
+        // Table # 4: Mail queue
         $this->createTable('{{%mail_queue}}', [
             'id' => $this->bigPrimaryKey(),
             'from_email' => $this->string(255)->notNull(),
@@ -126,7 +104,6 @@ class m140402_143411_create_user_module extends Migration
     {
         // echo 'm140402_143411_create_user_module cannot be reverted.\n';
         $this->dropTable('{{%mail_queue}}');
-        $this->dropTable('{{%user_ban_log}}');
         $this->dropTable('{{%user_profile}}');
         $this->dropTable('{{%social_auth}}');
         $this->dropTable('{{%user}}');

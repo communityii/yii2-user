@@ -10,10 +10,11 @@
 namespace comyii\user;
 
 use Yii;
-use yii\helpers\ArrayHelper;
-use yii\helpers\Html;
-use comyii\user\models\User;
 use yii\base\InvalidConfigException;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
+use kartik\helpers\Html;
+use comyii\user\models\User;
 
 /**
  * User module with inbuilt social authentication for Yii framework 2.0.
@@ -46,23 +47,52 @@ class Module extends \yii\base\Module
     const ACTION_LOGOUT = 2;            // logout of account
     const ACTION_REGISTER = 3;          // new account registration
     const ACTION_ACTIVATE = 4;          // account activation
-    const ACTION_RESET = 5;             // account password reset
-    const ACTION_CHANGE = 6;            // account password change
-    const ACTION_RECOVERY = 7;          // account recovery
+    const ACTION_RECOVERY = 5;          // account password recovery request
+    const ACTION_RESET = 6;             // account password reset
+    const ACTION_CHANGE = 7;            // account password change
+    const ACTION_CAPTCHA = 8;           // account captcha for registration
     const ACTION_SOCIAL_AUTH = 20;      // social auth & login
+    const ACTION_SOCIAL_VIEW = 21;      // social profile view
 
     // the list of profile actions
     const ACTION_PROFILE_VIEW = 50;     // profile view
-    const ACTION_PROFILE_LIST = 51;     // user listing
-    const ACTION_PROFILE_EDIT = 52;     // profile update
-    const ACTION_PROFILE_UPLOAD = 53;   // avatar image upload
+    const ACTION_PROFILE_EDIT = 51;     // profile update
+    const ACTION_PROFILE_UPLOAD = 52;   // profile image upload
 
     // the list of admin actions
     const ACTION_ADMIN_LIST = 100;      // user listing
     const ACTION_ADMIN_VIEW = 101;      // user view
     const ACTION_ADMIN_EDIT = 102;      // user edit
-    const ACTION_ADMIN_BAN = 103;       // user ban
-    const ACTION_ADMIN_UNBAN = 104;     // user unban
+    const ACTION_ADMIN_CREATE = 103;    // user creation (only for admin)
+    const ACTION_ADMIN_RESET = 104;     // user password reset
+
+    // the list of various action buttons
+    const BTN_HOME = 'home';                        // back to home page
+    const BTN_BACK = 'back';                        // back to previous page
+    const BTN_RESET_FORM = 'reset-form';            // reset form button
+    const BTN_SUBMIT_FORM = 'submit-form';          // submit button
+    const BTN_FORGOT_PASSWORD = 'forgot-password';  // forgot password link
+    const BTN_RESET_PASSWORD = 'reset-password';    // reset password action button
+    const BTN_ADMIN_RESET = 'admin-reset';          // reset password for any user by admin
+    const BTN_ALREADY_REGISTERED = 'already-reg';   // forgot password link
+    const BTN_LOGIN = 'login';                      // login submit button
+    const BTN_LOGOUT = 'logout';                    // logout link
+    const BTN_NEW_USER = 'new-user';                // new user registration link
+    const BTN_REGISTER = 'register';                // registration submit button
+    const BTN_SOCIAL_VIEW = 'social-view';          // user social profile view
+    const BTN_PROFILE_VIEW = 'profile-view';        // user profile view button
+    const BTN_PROFILE_EDIT = 'profile-edit';        // user profile edit button
+    const BTN_USER_CREATE = 'user-create';          // user create button
+    const BTN_USER_REFRESH = 'user-refresh';        // user list refresh button
+
+    // the list of model classes
+    const MODEL_LOGIN = 'LoginForm';                  // login form model
+    const MODEL_USER = 'User';                        // user model
+    const MODEL_USER_SEARCH = 'UserSearch';           // user search model
+    const MODEL_PROFILE = 'UserProfile';              // user profile model
+    const MODEL_SOCIAL_PROFILE = 'SocialProfile';     // social profile model
+    const MODEL_PROFILE_SEARCH = 'UserProfileSearch'; // user profile search model
+    const MODEL_RECOVERY = 'RecoveryForm';            // user password recovery model
 
     // the mail delivery settings
     const ENQUEUE_ONLY = 1;
@@ -75,6 +105,16 @@ class Module extends \yii\base\Module
      * and no superuser is set in the database, an exception will be raised on accessing the frontend.
      */
     public $installAccessCode;
+    
+    /**
+     * @var string the icon CSS class prefix to use
+     */
+    public $iconPrefix = 'glyphicon glyphicon-';
+
+    /**
+     * @var array configuration of various buttons used in the application
+     */
+    public $buttons = [];
 
     /**
      * @var Closure an anonymous function that will return current timestamp
@@ -82,6 +122,24 @@ class Module extends \yii\base\Module
      * `function() { return date("Y-m-d H:i:s"); }`
      */
     public $now;
+    
+    /**
+     * @var string the default date time format
+     */
+    public $datetimeFormat = 'php:Y-m-d H:i:s';
+    
+    /**
+     * @var string the default date format
+     */
+    public $dateFormat = 'php:Y-m-d';
+
+    /**
+     * @var array the model settings for the module. The keys will be one of the `Module::MODEL_` constants
+     * and the value will be the model class names you wish to set.
+     *
+     * @see `setConfig()` method for the default settings
+     */
+    public $modelSettings = [];
 
     /**
      * @var array the action settings for the module. The keys will be one of the `Module::ACTION_` constants
@@ -141,8 +199,11 @@ class Module extends \yii\base\Module
      * - enabled: bool, whether the registration is enabled for the module. Defaults to `true`. If set
      *   to `false`, admins will need to create users. All the other registration settings will
      *   be skipped if this is set to `false`.
-     * - captcha: array|bool, the settings for the captcha. If set to `false`, no captcha will be displayed.
-     *   Defaults to `[]`.
+     * - captcha: array|bool, the settings for the captcha action, validator, and widget . If set to `false`, 
+     *   no captcha will be displayed. The following settings can be set:
+     *   - `action`: array, the captcha action settings.
+     *   - `validator`: array, the captcha validator settings.
+     *   - `widget`: array, the captcha widget settings.
      * - autoActivate: bool, whether account is automatically activated after registration. If set to
      *   `false`, the user will need to complete activation before login. Defaults to `false`.
      * - userNameRules: array, the yii\validators\StringValidator rules for the username. Defaults to
@@ -181,18 +242,13 @@ class Module extends \yii\base\Module
     public $socialAuthSettings = [];
 
     /**
-     * @var array the settings for the user avatar.
-     * - enabled: bool, whether the user avatar is enabled for the module. Defaults to `true`.
-     * - uploadSettings: array, the settings for upload of the avatar
-     *   - registration: bool, whether avatar can be uploaded at registration. Defaults to `false`.
-     *   - profile: bool, whether avatar can be uploaded from user profile. Defaults to `true`.
-     *   - allowedTypes: string, the list of file types allowed for upload.
-     *   - maxSize: integer, the maximum size (bytes) allowed for the uploaded file.
-     * - linkSocial: bool, whether the avatar image can be linked with a social profile's avatar
-     *   based on user consent. Defaults to `true`.
+     * @var array the settings for the user profile.
+     * - enabled: bool, whether the user profile is enabled for the module. Defaults to `true`.
+     * - uploadSettings: array|bool, the widget settings for FileInput widget to upload the avatar.
+     *   If this is set to `false`, no avatar / image upload will be enabled for the user.
      * @see `setConfig()` method for the default settings
      */
-    public $avatarSettings = [];
+    public $profileSettings = [];
 
 
     /**
@@ -202,17 +258,22 @@ class Module extends \yii\base\Module
      * @see `setConfig()` method for the default settings
      */
     public $widgetSettings = [];
-
+    
     /**
-     * @var the messages displayed to the user for various actions
-     * @see `setConfig()` method for the default settings
+     * @var string The prefix for user module URL.
+     *
+     * @See [[GroupUrlRule::prefix]]
      */
-    public $messages = [];
-
+    public $urlPrefix = 'user';
+    
     /**
-     * @var array the list of admins/superusers.
+     * @var array the list of url rules
      */
-    public $admins = [];
+    public $urlRules = [
+        '<id:\d+>' => 'profile/view',
+        '<action>' => 'account/<action>',
+        '<controller>/<action>' => '<controller>/<action>'
+    ];
 
     /**
      * @var array the the internalization configuration for
@@ -273,19 +334,19 @@ class Module extends \yii\base\Module
             self::ACTION_RESET => 'account/reset',
             self::ACTION_CHANGE => 'account/change',
             self::ACTION_RECOVERY => 'account/recovery',
+            self::ACTION_CAPTCHA => 'account/captcha',
             // the list of social actions
             self::ACTION_SOCIAL_AUTH => 'account/auth',
+            self::ACTION_SOCIAL_VIEW => 'account/social',
             // the list of profile actions
             self::ACTION_PROFILE_VIEW => 'profile/view',
-            self::ACTION_PROFILE_LIST => 'profile/index',
             self::ACTION_PROFILE_EDIT => 'profile/update',
             self::ACTION_PROFILE_UPLOAD => 'profile/upload',
             // the list of admin actions
             self::ACTION_ADMIN_LIST => 'admin/index',
             self::ACTION_ADMIN_VIEW => 'admin/view',
             self::ACTION_ADMIN_EDIT => 'admin/update',
-            self::ACTION_ADMIN_BAN => 'admin/ban',
-            self::ACTION_ADMIN_UNBAN => 'admin/unban',
+            self::ACTION_ADMIN_RESET => 'admin/reset',
         ];
         $this->layoutSettings += [
             // layouts for the various account actions
@@ -300,21 +361,19 @@ class Module extends \yii\base\Module
             self::ACTION_SOCIAL_AUTH => 'social/login',
             // the list of profile actions
             self::ACTION_PROFILE_VIEW => 'profile/view',
-            self::ACTION_PROFILE_LIST => 'profile/index',
             self::ACTION_PROFILE_EDIT => 'profile/update',
             self::ACTION_PROFILE_UPLOAD => 'profile/upload',
             // the list of admin actions
             self::ACTION_ADMIN_LIST => 'admin/index',
             self::ACTION_ADMIN_VIEW => 'admin/view',
             self::ACTION_ADMIN_EDIT => 'admin/update',
-            self::ACTION_ADMIN_BAN => 'admin/ban',
-            self::ACTION_ADMIN_UNBAN => 'admin/unban',
+            self::ACTION_ADMIN_RESET => 'admin/reset',
         ];
-        $this->loginSettings += [
+        $this->loginSettings = array_replace_recursive([
             'loginType' => self::LOGIN_BOTH,
             'rememberMeDuration' => 2592000
-        ];
-        $this->passwordSettings += [
+        ], $this->loginSettings);
+        $this->passwordSettings = array_replace_recursive([
             'validateStrength' => [self::UI_INSTALL, self::UI_REGISTER, Module::UI_RESET],
             'strengthRules' => [
                 'min' => 8,
@@ -331,18 +390,42 @@ class Module extends \yii\base\Module
             'passwordExpiry' => false,
             'wrongAttempts' => false,
             'enableRecovery' => true
-        ];
-        $this->registrationSettings += [
+        ], $this->passwordSettings);
+        $captchaTemplate = <<< HTML
+<div class="row" style="margin-bottom:-10px">
+    <div class="col-sm-8">
+        {input}
+    </div>
+    <div class="col-sm-4">
+        {image}
+    </div>
+</div>
+HTML;
+        $this->registrationSettings = array_replace_recursive([
             'enabled' => true,
-            'captcha' => [],
+            'captcha' => [
+                'action' => ['class' => 'yii\captcha\CaptchaAction'],
+                'widget' => [
+                    'captchaAction' => $this->actionSettings[self::ACTION_CAPTCHA],
+                    'template' => $captchaTemplate,
+                    'imageOptions' => [
+                        'title' => Yii::t('user', 'Click image to refresh and get a new code')
+                    ],
+                    'options' => [
+                        'class' => 'form-control',
+                        'placeholder' => Yii::t('user', 'Enter text as seen in image'),
+                    ]
+                ],
+                'validator' => ['captchaAction' => 'user/' . $this->actionSettings[self::ACTION_CAPTCHA]],
+            ],
             'autoActivate' => false,
             'userNameRules' => ['min' => 4, 'max' => 30],
             'userNamePattern' => '/^[A-Za-z0-9_-]+$/u',
             'userNameValidMsg' => Yii::t('user', '{attribute} can contain only letters, numbers, hyphen, and underscore.')
-        ];
+        ], $this->registrationSettings);
         $appName = \Yii::$app->name;
         $supportEmail = isset(\Yii::$app->params['supportEmail']) ? \Yii::$app->params['supportEmail'] : 'nobody@support.com';
-        $this->notificationSettings += [
+        $this->notificationSettings = array_replace_recursive([
             'enabled' => true,
             'viewPath' => '@communityii/user/views/mail',
             'activation' => [
@@ -360,25 +443,33 @@ class Module extends \yii\base\Module
                 'template' => 'recovery'
             ],
             'mailDelivery' => self::ENQUEUE_AND_MAIL
-        ];
-        $this->socialAuthSettings += [
+        ],  $this->notificationSettings);
+        $this->socialAuthSettings = array_replace_recursive([
             'enabled' => true,
             'refreshAttributes' => [
                 'display_name',
                 'email'
             ],
-        ];
-        $this->avatarSettings += [
+        ], $this->socialAuthSettings);
+        $this->profileSettings = array_replace_recursive([
             'enabled' => true,
             'uploadSettings' => [
-                'registration' => false,
-                'profile' => true,
-                'allowedTypes' => '.jpg, .gif, .png',
-                'maxSize' => 2097152
-            ],
-            'linkSocial' => true
+                'pluginOptions' => [
+                    'allowedFileExtensions' => ['.jpg, .gif, .png'],
+                    'maxFileSize' => 2097152
+                ]
+            ]
+        ], $this->profileSettings);
+        $this->modelSettings += [
+            self::MODEL_LOGIN => 'comyii\user\models\LoginForm',
+            self::MODEL_USER => 'comyii\user\models\User',
+            self::MODEL_USER_SEARCH => 'comyii\user\models\UserSearch',
+            self::MODEL_PROFILE => 'comyii\user\models\UserProfile',
+            self::MODEL_SOCIAL_PROFILE => 'comyii\user\models\SocialProfile',
+            self::MODEL_PROFILE_SEARCH => 'comyii\user\models\UserProfileSearch',
+            self::MODEL_RECOVERY => 'comyii\user\models\RecoveryForm',
         ];
-        $this->widgetSettings += [
+        $this->widgetSettings = array_replace_recursive([
             self::UI_LOGIN => ['type' => 'vertical'],
             self::UI_REGISTER => ['type' => 'horizontal'],
             self::UI_ACTIVATE => ['type' => 'inline'],
@@ -386,8 +477,68 @@ class Module extends \yii\base\Module
             self::UI_RESET => ['type' => 'vertical'],
             self::UI_PROFILE => ['type' => 'vertical'],
             self::UI_ADMIN => ['type' => 'vertical'],
-        ];
-        $this->initMessages();
+        ], $this->widgetSettings);
+        $this->buttons = array_replace_recursive(static::getDefaultButtonConfig(), $this->buttons);
+    }
+
+    /**
+     * Superuser already exists in the database?
+     * @return bool
+     */
+    public function hasSuperUser() {
+        return count(User::find()->superuser()->all()) > 0;
+    }
+    
+    /**
+     * Fetch the icon for a icon identifier
+     * @param string $id suffix the icon suffix name
+     * @param array $options the icon HTML attributes
+     * @param string $prefix the icon css prefix name
+     * @return string the parsed icon
+     */
+    public function icon($id, $options = ['style'=>'margin-right:5px'], $prefix = null)
+    {   
+        if ($prefix === null) {
+            $prefix = $this->iconPrefix;
+        }
+        Html::addCssClass($options, explode(' ', $prefix . $id));
+        return Html::tag('i', '', $options);
+    }
+    
+    /**
+     * Generates an action button
+     * @param string $key the button identification key
+     * @param array $params the parameters to pass to the button action
+     * @param array $config the button configuration options to override
+     */
+    public function button($key, $params = [], $config = [])
+    {
+        $btn = ArrayHelper::getValue($this->buttons, $key, []);
+        if (empty($btn)) {
+            return '';
+        }
+        $iconPrefix = $this->iconPrefix;
+        $label = $icon = $action = $type = '';
+        $options = [];
+        $iconOptions = ['style'=>'margin-right:5px'];
+        extract($btn);
+        if (!empty($icon)) {
+            Html::addCssClass($iconOptions, explode(' ', $iconPrefix . $icon));
+            $icon = Html::tag('i', '', $iconOptions);
+        }
+        $label = $icon . $label;
+        $options = array_replace_recursive($options, $config);
+        if (!empty($action)) {
+            $action = ArrayHelper::getValue($this->actionSettings, $action, $action);
+            $action = Url::to([$action] + $params);
+            return Html::a($label, $action, $options);
+        }
+        if (!empty($type) && $type === 'submit' || $type === 'reset') {
+            $type .= 'Button';
+        } else {
+            $type = 'button';
+        }
+        return Html::$type($label, $options);
     }
 
     /**
@@ -403,122 +554,140 @@ class Module extends \yii\base\Module
             throw new InvalidConfigException("The module 'user' was not found . Ensure you have setup the 'user' module in your Yii configuration file.");
         }
     }
-    
+ 
     /**
-     * Initialize messages for the module
+     * Gets the default button configuration
      */
-    public function initMessages() {
-        $this->messages += [
-            'here' => 'here',
-            'install-error' => 'Error creating the superuser. Fix the following errors:<br>{errors}',
-            'install-success' => 'User module successfully installed! You have been automatically logged in as the superuser (username: <b>{username}</b>).',
-            'install-warning' => 'You should now remove the <code>installAccessCode</code> setting from user module configuration for better security.',
-            'install-invalid-access' => 'The installation access code entered is incorrect.',
-            'install-invalid-usercomp' => 'You have not setup a valid class for your user component in your application configuration file. ' .
-                'The class must extend {classValid}. Class currently set: {classSet}.',
-            'registration-active' => 'You have been successfully registered and logged in as <b>{username}</b>.',
-            'pending-activation' => 'Instructions for activating your account has been sent to your email <b>{email}</b>.',
-            'pending-activation-error' => 'Could not send activation instructions to your email <b>{email}</b>. Contact the system administrator.',
-            'password-expired' => 'Your password has expired. You may reset your password by clicking {link}.',
-            'account-locked' => 'Your account has been locked due to multiple wrong password attempts. You may reset and activate your account by clicking {link}.',
-            'login-title' => 'Please sign in',
-            'social-auth-title' => 'Or login using',
-            'social-email-exists' => 'User with the same email as in <b>{client}</b> account already exists but is not linked to it. Login using email first to link it.',  
-            'social-auth-success-new' => 'Successfully authenticated <b>{client}</b> account.',
-            'social-auth-success-curr' => 'Successfully authenticated <b>{client}</b> account for <b>{user}</b>.',
-            'social-auth-error-new' => 'Error while authenticating <b>{client}</b> account. {errors}',
-            'social-auth-error-curr' => 'Error while authenticating <b>{client}</b> account for <b>{user}</b>. {errors}',
-            'user-details-title' => 'User Details',
-            'user-id-info-title' => 'Identification Information',
-            'user-log-info-title' => 'User Log Information',
-            'user-hidden-info-title' => 'Hidden Information',
-            'user-details-saved' => 'Successfully saved details for <b>{user}</b> with ID <b>{id}</b>.',
-            'login-banned' => 'User has been banned.',
-            'login-invalid' => 'Invalid username or password.',
-            'tooltip-change-password' => 'Change password for the user',
-            'tooltip-reset-password' => 'Reset password for the user',
-            'tooltip-forgot-password' => 'Click here to reset your lost password',
-            'label-forgot-password' => 'Forgot password?',
-            'label-reset-password' => 'Reset password',
-            'label-change-password' => 'Change password',
-            'label-password-actions' => 'Password Actions',
-            'label-id' => 'ID',
-            'label-username' => 'Username',
-            'label-password' => 'Password',
-            'label-password-hash' => 'Password Hash',
-            'label-password-new' => 'New Password',
-            'label-password-confirm' => 'Confirm Password',
-            'label-email' => 'Email',
-            'label-user-or-email' => 'Username or Email',
-            'label-remember-me' => 'Remember Me',
-            'label-status' => 'Status',
-            'label-created-on' => 'Created On',
-            'label-updated-on' => 'Updated On',
-            'label-auth-key' => 'Auth Key',
-            'label-activation-key' => 'Activation Key',
-            'label-reset-key' => 'Reset Key',
-            'label-last-login-ip' => 'Last Login IP',
-            'label-last-login-on' => 'Last Login On',
-            'label-password-reset-on' => 'Password Reset On',
-            'label-password-fail-attempts' => 'Password Fail Attempts',
-            'status-superuser' => 'Superuser',
-            'status-pending' => 'Pending',
-            'status-active' => 'Active',
-            'status-inactive' => 'Inactive',
-            'status-banned' => 'Banned',
-            'label-install-access-code' => 'Installation Access Code',
-            'hint-install-access-code' => 'Enter the installation access code as setup in your module configuration.',
-            'hint-install-username' => 'Select an username for the superuser',
-            'hint-install-password' => 'Select a password for the superuser',
-            'hint-install-password-confirm' => 'Reconfirm the superuser password',
-            'hint-install-email' => 'Enter a valid email for the superuser',
-        ];
-    }
-    
-    /**
-     * Fetch the message for a message identifier
-     * @param string $id the message identifier
-     * @param array $params the message parameters
-     * @return string the parsed message
-     */
-    public function message($id, $params = []) {
-        if (!isset($this->messages[$id])) {
-            return null;
-        }
-        return Yii::t('user', $this->messages[$id], $params);
-    }
-    
-    /**
-     * Sets a message flash
-     * @param string $cat the message flash category 
-     * @param string $id the message identifier
-     * @param array $params the message parameters
-     */
-    public function setFlash($cat, $id, $params = []) {
-        $message = $this->message($id, $params);
-        if ($message) { 
-            Yii::$app->session->setFlash($cat, $message);
-        }
-    }
-
-    /**
-     * Superuser already exists in the database?
-     * @return bool
-     */
-    public function hasSuperUser() {
-        return count(User::find()->superuser()->all()) > 0;
-    }
-    
-    /**
-     * Generate action button
-     */
-    public function actionButton($action, $msgId, $icon, $options = ['class' => 'btn-xs'], $titleId = '', $prefix = 'glyphicon glyphicon-')
+    protected static function getDefaultButtonConfig()
     {
-        Html::addCssClass($options, 'btn');
-        if (!empty($titleId)) {
-            $options['title'] = $this->message($titleId);
-        }
-        $label = "<i class='{$prefix}{$icon}'></i> " . $this->message($msgId);
-        return Html::a($label, ArrayHelper::getValue($this->actionSettings, [$action], '#'), $options);
+        return [
+            self::BTN_HOME => [
+                'label' => Yii::t('user', 'Home'),
+                'icon' => 'home',
+                'action' => '/',
+                'options' => [
+                    'class' => 'btn btn-link y2u-link',
+                    'title' => Yii::t('user', 'Back to home'),
+                ],
+            ],
+            self::BTN_BACK => [
+                'label' => Yii::t('user', 'Return'),
+                'icon' => 'arrow-left',
+                'action' => Yii::$app->user->returnUrl,
+                'options' => ['class' => 'btn btn-link y2u-link'],
+            ],
+            self::BTN_RESET_FORM => [
+                'type' => 'reset',
+                'label' => Yii::t('user', 'Reset Form'),
+                'icon' => 'repeat',
+                'options' => ['class' => 'btn btn-default'],
+            ],
+            self::BTN_SUBMIT_FORM => [
+                'type' => 'submit',
+                'label' => Yii::t('user', 'Submit'),
+                'icon' => 'save',
+                'options' => ['class' => 'btn btn-primary'],
+            ],
+            self::BTN_FORGOT_PASSWORD => [
+                'label' => Yii::t('user', 'Forgot Password?'),
+                'icon' => 'info-sign',
+                'action' => self::ACTION_RECOVERY,
+                'options' => [
+                    'class' => 'btn btn-link y2u-link',
+                    'title' => Yii::t('user', 'Recover your lost password')
+                ],
+            ],
+            self::BTN_RESET_PASSWORD => [
+                'label' => Yii::t('user', 'Reset Password'),
+                'icon' => 'lock',
+                'action' => self::ACTION_RECOVERY,
+                'options' => ['class' => 'btn btn-default'],
+            ],
+            self::BTN_ADMIN_RESET => [
+                'label' => Yii::t('user', 'Reset Password'),
+                'icon' => 'lock',
+                'action' => self::ACTION_ADMIN_RESET,
+                'options' => ['class' => 'btn btn-sm btn-default'],
+            ],
+            self::BTN_ALREADY_REGISTERED => [
+                'label' => Yii::t('user', 'Already registered?'),
+                'icon' => 'hand-up',
+                'action' => self::ACTION_LOGIN,
+                'options' => [
+                    'class' => 'btn btn-link y2u-link',
+                    'title' => Yii::t('user', 'Click here to login')
+                ],
+            ],
+            self::BTN_LOGIN => [
+                'type' => 'submit',
+                'label' => Yii::t('user', 'Login'),
+                'icon' => 'log-in',
+                'options' => ['class' => 'btn btn-primary'],
+            ],
+            self::BTN_LOGOUT => [
+                'label' => Yii::t('user', 'Logout'),
+                'action' => self::ACTION_LOGOUT,
+                'icon' => 'log-out',
+                'options' => ['class' => 'btn btn-link y2u-link'],
+            ],
+            self::BTN_NEW_USER => [
+                'label' => Yii::t('user', 'New user?'),
+                'icon' => 'edit',
+                'action' => self::ACTION_REGISTER,
+                'options' => [
+                    'class' => 'btn btn-link y2u-link',
+                    'title' => Yii::t('user', 'Register for a new user account')
+                ],
+            ],
+            self::BTN_REGISTER => [
+                'type' => 'submit',
+                'label' => Yii::t('user', 'Register'),
+                'icon' => 'edit',
+                'options' => ['class' => 'btn btn-primary'],
+            ],
+            self::BTN_SOCIAL_VIEW => [
+                'label' => Yii::t('user', 'View'),
+                'icon' => 'eye-open',
+                'action' => self::ACTION_SOCIAL_VIEW,
+                'options' => [
+                    'class' => 'btn btn-sm btn-default',
+                    'title' => Yii::t('user', 'View social profile'),
+                ],
+            ],
+            self::BTN_PROFILE_VIEW => [
+                'label' => Yii::t('user', 'View'),
+                'icon' => 'eye-open',
+                'action' => self::ACTION_PROFILE_VIEW,
+                'options' => [
+                    'class' => 'btn btn-sm btn-default',
+                    'title' => Yii::t('user', 'View user profile'),
+                ],
+            ],
+            self::BTN_PROFILE_EDIT => [
+                'label' => Yii::t('user', 'Edit'),
+                'icon' => 'pencil',
+                'action' => self::ACTION_PROFILE_EDIT,
+                'options' => [
+                    'class' => 'btn btn-primary',
+                    'title' => Yii::t('user', 'Edit user profile'),
+                ],
+            ],
+            self::BTN_USER_CREATE => [
+                'icon' => 'plus',
+                'action' => self::ACTION_ADMIN_CREATE,
+                'options' => [
+                    'class' => 'btn btn-success',
+                    'title' => Yii::t('user', 'Add new user'),
+                ],
+            ],
+            self::BTN_USER_REFRESH => [
+                'icon' => 'refresh',
+                'action' => self::ACTION_ADMIN_LIST,
+                'options' => [
+                    'class' => 'btn btn-default',
+                    'title' => Yii::t('user', 'Refresh user list'),
+                ],
+            ],
+        ];
     }
 }

@@ -28,26 +28,12 @@ use comyii\user\Module;
 class LoginForm extends BaseForm
 {
     /**
-     * @var array HTML attributes for the reset link
-     */
-    public $resetLinkOptions = [
-        'class' => 'text-warning pull-left',
-        'data-toggle'=>'tooltip',
-        'style' => 'margin-top: 7px;'
-    ];
-
-    /**
      * @var bool has social authorization
      */
     public $hasSocialAuth = false;
 
     /**
-     * @var string the social authorization action
-     */
-    public $loginTitle = '';
-
-    /**
-     * @var string the social authorization action
+     * @var string the social authorization title
      */
     public $authTitle = '';
 
@@ -62,45 +48,36 @@ class LoginForm extends BaseForm
     public function init()
     {
         $m = Yii::$app->getModule('user');
-        if (!isset($this->resetLinkOptions['title'])) {
-            $this->resetLinkOptions['title'] = $m->message('tooltip-forgot-password');
-        }
         Module::validateConfig($this->_module);
         $this->attributes += [
             'username' => ['type' => Form::INPUT_TEXT],
             'password' => ['type' => Form::INPUT_PASSWORD],
             'rememberMe' => ['type' => Form::INPUT_CHECKBOX]
         ];
-        $resetLink = Html::a($m->message('label-forgot-password'), Url::to($this->_module->actionSettings[Module::ACTION_RECOVERY]), $this->resetLinkOptions);
-        if (!isset($this->buttons)) {
-            $this->buttons = $resetLink . '&nbsp; {submit}';
-        }
-        $this->submitButtonOptions += [
-            'label' => Yii::t('user', 'Login'),
-            'icon' => 'log-in',
-            'class' => 'btn btn-primary',
-        ];
+        $this->leftFooter = $m->button(Module::BTN_FORGOT_PASSWORD) . $m->button(Module::BTN_NEW_USER);
+        $this->rightFooter = $m->button(Module::BTN_LOGIN);
         if ($this->hasSocialAuth) {
             $social = AuthChoice::widget([
                  'baseAuthUrl' => [$this->authAction],
                  'popupMode' => false,
             ]);
-            $this->template = <<< HTML
+            if (!isset($this->template)) {
+                $this->template = <<< HTML
 <div class="row">
-    <div class="col-sm-7">
-        <legend>{$this->loginTitle}</legend>
+    <div class="col-sm-8">
+        <legend>{$this->title}</legend>
         {fields}
     </div>
-    <div class="col-sm-5 y2u-social-clients">
+    <div class="col-sm-4 y2u-social-clients">
         <legend>{$this->authTitle}</legend>
         {$social}
     </div>
 </div>
-{buttons}
+{footer}
 HTML;
-        } else {
-            $this->template = "<legend>{$this->loginTitle}</legend>\n{fields}\n{buttons}";
+            } else {
+                $this->template = str_replace('{social}', $social, $this->template);
+            }
         }
-        parent::init();
     }
 }

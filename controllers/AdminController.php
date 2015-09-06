@@ -3,30 +3,38 @@
 namespace comyii\user\controllers;
 
 use Yii;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
+use yii\web\BadRequestHttpException;
+use yii\web\NotFoundHttpException;
+use yii\helpers\Json;
 use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\models\UserSearch;
 use comyii\user\controllers\BaseController;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * AdminController implements the CRUD actions for User model.
  */
 class AdminController extends BaseController
 {
+    /**
+     * Admin controller behaviors
+     */
     public function behaviors()
     {
+        $user = Yii::$app->user;
         return [
-            'verbs' => [
-                'class' => VerbFilter::className(),
-                'actions' => [
-                    'delete' => ['post'],
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => $user->isAdmin || $user->isSuperuser 
+                    ],
                 ],
-            ],
+            ]
         ];
     }
-
     /**
      * Lists all User models.
      * @return mixed
@@ -43,7 +51,7 @@ class AdminController extends BaseController
     }
 
     /**
-     * Displays a single User model.
+     * Manages a single User model (view and edit).
      * @param string $id
      * @return mixed
      */
@@ -66,13 +74,35 @@ class AdminController extends BaseController
     }
 
     /**
+     * Batch update statuses for User.
+     * @return mixed
+     */
+    public function actionBatchUpdate()
+    {
+        if (!Yii::$app->request->isAjax || !Yii::$app->request->isPost) {
+            throw new BadRequestHttpException('This operation is not allowed');
+        }
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $post = Yii::$app->request->post();
+        if (empty($post) || empty($post['keys'])) {
+            return null;
+        }
+        $keys = $post['keys'];
+        $status = $post['status'];
+        $user = User::tableName();
+        Yii::$app->db->createCommand()->update($user, ['status' => $status], ['and', ['id' => $keys], 'status <> ' . User::STATUS_SUPERUSER])->execute();
+        return $keys;
+    }
+
+    /**
      * Creates a new User model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
     public function actionCreate()
     {
-        $model = new User;
+        $userClass = $this->getConfig('modelSettings', Module::MODEL_USER);
+        $model = new $userClass;
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
@@ -84,38 +114,6 @@ class AdminController extends BaseController
     }
 
     /**
-     * Updates an existing User model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param string $id
-     * @return mixed
-     */
-    public function actionUpdate($id)
-    {
-        $model = $this->findModel($id);
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        } else {
-            return $this->render('update', [
-                'model' => $model,
-            ]);
-        }
-    }
-
-    /**
-     * Deletes an existing User model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param string $id
-     * @return mixed
-     */
-    public function actionDelete($id)
-    {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
-    }
-
-    /**
      * Finds the User model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param string $id
@@ -124,7 +122,8 @@ class AdminController extends BaseController
      */
     protected function findModel($id)
     {
-        if (($model = User::findOne($id)) !== null) {
+        $userClass = $this->getConfig('modelSettings', Module::MODEL_USER);
+        if (($model = $userClass::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');

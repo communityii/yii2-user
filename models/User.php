@@ -14,10 +14,10 @@ use yii\base\NotSupportedException;
 use yii\db\ActiveRecord;
 use yii\helpers\Security;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 use yii\web\IdentityInterface;
 use kartik\password\StrengthValidator;
 use comyii\user\Module;
-use comyii\user\models\UserBanLog;
 
 /**
  * This is the model class for table {{%user}}.
@@ -36,13 +36,13 @@ use comyii\user\models\UserBanLog;
  * @property string $last_login_on
  * @property string $password_reset_on
  * @property string $password_fail_attempts
- * @property string $password_raw write-only password
+ * @property string $password write-only password
  * @property string $password_new write-only password
  * @property string $password_confirm write-only password
+ * @property string $captcha the captcha for registration
  *
  * @property MailQueues $mailQueues
  * @property RemoteIdentity[] $remoteIdentities
- * @property UserBanLogs $userBanLogs
  * @property UserProfile $userProfile
  *
  * @method \comyii\user\models\UserQuery|static|null find($q = null) static
@@ -54,25 +54,31 @@ use comyii\user\models\UserBanLog;
 class User extends BaseModel implements IdentityInterface
 {
     const STATUS_SUPERUSER = -1;
-    const STATUS_PENDING = 0;
+    const STATUS_PENDING  = 0;
     const STATUS_ACTIVE = 1;
-    const STATUS_BANNED = 2;
-    const STATUS_INACTIVE = 3;
+    const STATUS_INACTIVE = 2;
+    const STATUS_ADMIN = 3;
 
     /**
-     * @var the write only password
+     * @var string the write only password
      */
-    public $password_raw;
+    public $password;
 
     /**
-     * @var the write only new password (required for password change)
+     * @var string the new password (required for password change)
      */
     public $password_new;
 
     /**
-     * @var the write only new password confirmation (required for password change)
+     * @var string the new password confirmation
+     * (required during reset and password change)
      */
     public $password_confirm;
+
+    /**
+     * @var string the captcha if applicable
+     */
+    public $captcha;
 
     /**
      * @var array the list of statuses
@@ -127,18 +133,18 @@ class User extends BaseModel implements IdentityInterface
         parent::init();
         $m = $this->_module;
         $this->_statuses = [
-            self::STATUS_SUPERUSER => $m->message('status-superuser'),
-            self::STATUS_PENDING => $m->message('status-pending'),
-            self::STATUS_ACTIVE => $m->message('status-active'),
-            self::STATUS_BANNED => $m->message('status-banned'),
-            self::STATUS_INACTIVE => $m->message('status-inactive'),
+            self::STATUS_SUPERUSER => Yii::t('user', 'Superuser'),
+            self::STATUS_PENDING => Yii::t('user', 'Pending'),
+            self::STATUS_ACTIVE => Yii::t('user', 'Active'),
+            self::STATUS_INACTIVE => Yii::t('user', 'Inactive'),
+            self::STATUS_ADMIN => Yii::t('user', 'Admin'),
         ];
         $this->_statusClasses = [
             self::STATUS_SUPERUSER => 'label label-primary',
             self::STATUS_PENDING => 'label label-warning',
             self::STATUS_ACTIVE => 'label label-success',
-            self::STATUS_BANNED => 'label label-danger',
-            self::STATUS_INACTIVE => 'label label-default',
+            self::STATUS_INACTIVE => 'label label-danger',
+            self::STATUS_ADMIN => 'label label-info',
         ];
     }
 
@@ -149,33 +155,40 @@ class User extends BaseModel implements IdentityInterface
      */
     public function rules()
     {
-        $config = $this->_module->registrationSettings;
+        $m = $this->_module;
+        $config = $m->registrationSettings;
         $rules = [
             ['username', 'match', 'pattern' => $config['userNamePattern'], 'message' => $config['userNameValidMsg']],
             ['username', 'string'] + $config['userNameRules'],
             ['username', 'filter', 'filter' => 'trim'],
             ['username', 'required'],
-            ['username', 'unique'],
+            ['username', 'unique', 'targetClass' => self::classname(), 'message' => Yii::t('user', 'This username has already been taken')],
 
             ['email', 'filter', 'filter' => 'trim'],
             ['email', 'required'],
             ['email', 'email'],
-            ['email', 'unique'],
+            ['email', 'unique', 'targetClass' => self::classname(), 'message' => Yii::t('user', 'This email address is already registered')],
 
-            [['status'], 'default', 'value' => self::STATUS_PENDING],
+            ['status', 'default', 'value' => self::STATUS_PENDING],
             ['status', 'in', 'range' => array_keys($this->_statuses)],
 
-            [['password_raw'], 'required', 'on' => [Module::UI_REGISTER, Module::UI_RESET]],
-            [['password_new', 'password_confirm'], 'required', 'on' => [Module::UI_RESET]],
-            ['password_new', 'compare', 'compareAttribute' => 'password_confirm', 'on' => [Module::UI_RESET]],
+            ['password', 'required', 'on' => Module::UI_REGISTER],
+            [['password_new', 'password_confirm'], 'safe', 'on' => Module::UI_RESET],
+            [['password_new', 'password_confirm'], 'required', 'on' => Module::UI_RESET],
+            ['password_confirm', 'compare', 'compareAttribute' => 'password_new', 'on' => Module::UI_RESET],  
         ];
-        $strengthRules = $this->_module->passwordSettings['strengthRules'];
-        $validateStrength = $this->_module->passwordSettings['validateStrength'];
+        if ($m->registrationSettings['captcha'] !== false) {
+            $config = ArrayHelper::getValue($m->registrationSettings['captcha'], 'validator', []);
+            $rules[] = ['captcha', 'captcha'] + $config + ['on' => Module::UI_REGISTER];
+        }
+        $strengthRules = $m->passwordSettings['strengthRules'];
+        $validateStrength = $m->passwordSettings['validateStrength'];
         if (in_array(Module::UI_REGISTER, $validateStrength)) {
-            $rules[] = [['password_raw'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::UI_REGISTER]];
+            $rules[] = ['password', StrengthValidator::className()] + $strengthRules + ['on' => [Module::UI_REGISTER]];
         }
         if (in_array(Module::UI_RESET, $validateStrength)) {
-            $rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + ['on' => [Module::UI_RESET]];
+            $rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + 
+                ['on' => Module::UI_RESET];
         }
         return $rules;
 
@@ -189,11 +202,12 @@ class User extends BaseModel implements IdentityInterface
     public function scenarios()
     {
         return [
-            Module::UI_REGISTER => ['username', 'password_raw', 'email'],
-            Module::UI_RESET => ['password_raw', 'password_new', 'password_confirm'],
+            'default' => ['username', 'email'],
+            Module::UI_REGISTER => ['username', 'password', 'email', 'captcha'],
+            Module::UI_RESET => ['password', 'password_new', 'password_confirm'],
             Module::UI_PROFILE => ['username', 'email'],
             Module::UI_ADMIN => ['username', 'email'],
-            Module::UI_INSTALL => ['username', 'password_raw', 'email', 'status'],
+            Module::UI_INSTALL => ['username', 'password', 'email', 'status'],
         ];
     }
 
@@ -205,28 +219,44 @@ class User extends BaseModel implements IdentityInterface
     public function attributeLabels()
     {
         $m = $this->_module;
-        $status = $m->message('label-status');
+        $status = Yii::t('user', 'Status');
         return [
-            'id' => $m->message('label-id'),
-            'username' => $m->message('label-username'),
-            'email' => $m->message('label-email'),
-            'password_hash' => $m->message('label-password-hash'),
-            'auth_key' => $m->message('label-auth-key'),
-            'activation_key' => $m->message('label-activation-key'),
-            'reset_key' => $m->message('label-reset-key'),
+            'id' => Yii::t('user', 'ID'),
+            'username' => Yii::t('user', 'Username'),
+            'email' => Yii::t('user', 'Email'),
+            'password_hash' => Yii::t('user', 'Password Hash'),
+            'auth_key' => Yii::t('user', 'Authorization Key'),
+            'activation_key' => Yii::t('user', 'Activation Key'),
+            'reset_key' => Yii::t('user', 'Reset Key'),
             'status' => $status,
             'statusText' => $status,
             'statusHtml' => $status,
-            'created_on' => $m->message('label-created-on'),
-            'updated_on' => $m->message('label-updated-on'),
-            'last_login_ip' => $m->message('label-last-login-ip'),
-            'last_login_on' => $m->message('label-last-login-on'),
-            'password_reset_on' => $m->message('label-password-reset-on'),
-            'password_fail_attempts' => $m->message('label-password-fail-attempts'), 
-            'password_raw' => $m->message('label-password'),
-            'password_new' => $m->message('label-password-new'),
-            'password_confirm' => $m->message('label-password-confirm')
+            'created_on' => Yii::t('user', 'Created On'),
+            'updated_on' => Yii::t('user', 'Updated On'),
+            'last_login_ip' => Yii::t('user', 'Last Login IP'),
+            'last_login_on' => Yii::t('user', 'Last Login On'),
+            'password_reset_on' => Yii::t('user', 'Password Reset On'),
+            'password_fail_attempts' => Yii::t('user', 'Password Fail Attempts'), 
+            'password' => Yii::t('user', 'Password'),
+            'password_new' => Yii::t('user', 'New Password'),
+            'password_confirm' => Yii::t('user', 'Confirm Password')
         ];
+    }
+
+    /**
+     * Get user details link
+     *
+     * @return string
+     */
+    public function getUserLink($showId = false)
+    {
+        $label = $showId ? $this->id : $this->username;
+        $m = $this->_module;
+        $url = $m->actionSettings[Module::ACTION_ADMIN_VIEW];
+        return Html::a($label, [$url, 'id' => $this->id], [
+            'data-pjax'=>'0', 
+            'title' => Yii::t('user', 'View user details')
+        ]);
     }
 
     /**
@@ -244,19 +274,9 @@ class User extends BaseModel implements IdentityInterface
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getSocialAuth()
+    public function getSocialProfile()
     {
-        return $this->hasMany(SocialAuth::className(), ['user_id' => 'id']);
-    }
-
-    /**
-     * User ban logs relation
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getUserBanLogs()
-    {
-        return $this->hasMany(UserBanLog::className(), ['id' => 'id']);
+        return $this->hasMany(SocialProfile::className(), ['user_id' => 'id']);
     }
 
     /**
@@ -330,9 +350,41 @@ class User extends BaseModel implements IdentityInterface
      *
      * @return bool
      */
+    public function isAccountSuperuser()
+    {
+        return $this->status === self::STATUS_SUPERUSER;
+    }
+
+    /**
+     * Is account active
+     *
+     * @return bool
+     */
+    public function isAccountBanned()
+    {
+        return $this->status === self::STATUS_BANNED;
+    }
+
+    /**
+     * Is account active
+     *
+     * @return bool
+     */
+    public function isAccountAdmin()
+    {
+        return $this->status === self::STATUS_SUPERUSER || $this->status === self::STATUS_ADMIN;
+    }
+
+    /**
+     * Is account active
+     *
+     * @return bool
+     */
     public function isAccountActive()
     {
-        return ($this->status === self::STATUS_ACTIVE || $this->status === self::STATUS_SUPERUSER);
+        return $this->status === self::STATUS_ACTIVE 
+            || $this->status === self::STATUS_SUPERUSER
+            || $this->status === self::STATUS_ADMIN;
     }
 
     /**
@@ -522,40 +574,6 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
-     * Validates if user is not banned and allowed to login. If ban time is expired, the user is auto activated.
-     * @var bool $flag if set to `true` will auto update the user status to `STATUS_ACTIVE` if ban time expired
-     * @return bool if password provided is valid for current user
-     */
-    public function validateBan($flag = true)
-    {
-        if (!$this->status !== self::STATUS_BANNED) {
-            return true;
-        }
-        $id = $this->getLastBanID();
-        if ($id > 0) {
-            $banLog = UserBanLog::findOne($id);
-            $expiry = $banLog ? $banLog->banned_till : null;
-            if ($flag && strtotime($expiry) > time() && $this->status === self::STATUS_BANNED) {
-                $this->status = self::STATUS_ACTIVE;
-                if ($this->save()) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Gets last ban id for the user
-     * @return integer
-     */
-    public function getLastBanID() {
-        return UserBanLog::find()->select('id')->andWhere(['user_id' => $this->id])->max();
-    }
-    /**
      * Generates password hash from password and sets it to the model
      *
      * @param string $password
@@ -654,9 +672,21 @@ class User extends BaseModel implements IdentityInterface
      *
      * @return string
      */
-    public function getStatusList()
+    public function getAllStatusList()
     {
         return $this->_statuses;
+    }
+
+    /**
+     * Get status list
+     *
+     * @return string
+     */
+    public function getStatusList()
+    {
+        $statuses = $this->_statuses;
+        unset($statuses[self::STATUS_SUPERUSER]);
+        return $statuses;
     }
 
     /**
@@ -677,7 +707,7 @@ class User extends BaseModel implements IdentityInterface
     public function getStatusHtml()
     {
         return '<span class="' . $this->_statusClasses[$this->status] . '">' . $this->statusText . '</span>';
-    }
+    }        
 
     /**
      * Sends an email with a link, for account activation or account recovery/reset
@@ -698,5 +728,15 @@ class User extends BaseModel implements IdentityInterface
                 ->send();
         }
         return null;
+    }
+    
+    /**
+     * Registers new account
+     */
+    public function register()
+    {
+        $this->setPassword($this->password);
+        $this->generateAuthKey();
+        return $this->validate();
     }
 }

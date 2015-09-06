@@ -56,8 +56,6 @@ class LoginForm extends Model
             ['rememberMe', 'boolean'],
             // check if valid password
             ['password', 'validatePassword'],
-            // check if valid user
-            ['username', 'validateUser'],
         ];
         if ($this->_settings['loginType'] === Module::LOGIN_EMAIL) {
             $rules += ['username', 'email'];
@@ -72,35 +70,17 @@ class LoginForm extends Model
      */
     public function attributeLabels()
     {
-      
-        $m = $this->_module;
-        $msgId = 'label-user-or-email';
+        $label = Yii::t('user', 'Username or Email');
         if ($this->_settings['loginType'] === Module::LOGIN_USERNAME) {
-            $msgId = $m->message('label-username');
+            $label = Yii::t('user', 'Username');
         } elseif ($this->_settings['loginType'] === Module::LOGIN_EMAIL) {
-            $msgId = $m->message('label-email');
+            $label = Yii::t('user', 'Email');
         }
         return [
-            'username' => $m->message($msgId),
-            'password' => $m->message('label-password'),
-            'rememberMe' =>  $m->message('label-remember-me'), 
+            'username' => $label,
+            'password' => Yii::t('user', 'Password'),
+            'rememberMe' =>  Yii::t('user', 'Remember Me'),
         ];
-    }
-
-    /**
-     * Validates the user for ban validity.
-     * This method serves as the inline validation for username.
-     */
-    public function validateUser()
-    {
-        if ($this->hasErrors()) {
-            return;
-        }
-        $user = $this->getUser();
-        $outcome = ($user) ? $user->validateBan() : null;
-        if (!$outcome) {
-            $this->addError('username', $this->_module->message('login-banned'));
-        }
     }
 
     /**
@@ -143,7 +123,7 @@ class LoginForm extends Model
      *
      * @return User|null
      */
-    public function getUser()
+    public function getUser($scenario = 'default')
     {
         if ($this->_user === false) {
             if ($this->_settings['loginType'] === Module::LOGIN_USERNAME) {
@@ -155,6 +135,7 @@ class LoginForm extends Model
             }
             $this->_user = $user;
         }
+        $this->_user->scenario = $scenario;
         return $this->_user;
     }
 }

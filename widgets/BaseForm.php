@@ -14,6 +14,7 @@ use comyii\user\Module;
 use kartik\helpers\Html;
 use kartik\form\ActiveForm;
 use kartik\builder\Form;
+use kartik\base\Widget;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -22,8 +23,13 @@ use yii\helpers\ArrayHelper;
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class BaseForm extends \yii\base\Widget
+class BaseForm extends Widget
 {
+    /**
+     * @var string the form title
+     */
+    public $title = '';
+
     /**
      * @var yii\base\Model|yii\db\ActiveRecord the model instance
      */
@@ -32,7 +38,7 @@ class BaseForm extends \yii\base\Widget
     /**
      * @var array the options and HTML attributes for the ActiveForm
      */
-    public $formOptions = ['type' => ActiveForm::TYPE_VERTICAL];
+    public $formOptions = [];
 
     /**
      * @var array the list of attributes for the form
@@ -41,51 +47,40 @@ class BaseForm extends \yii\base\Widget
     public $attributes = [];
 
     /**
-     * @var string the template for rendering the action buttons for the form. The following special
-     * variables will be replaced:
-     * - '{reset}': will be replaced with the reset button
-     * - '{submit}': will be replaced with the submit button
+     * @var array the options and HTML attributes for the footer. The following
+     * special attributes are parsed:
+     * `tag`: string, the HTML tag to render the footer. Defaults to `div`.
      */
-    public $buttons;
-
-    /**
-     * @var array HTML attributes for the form submit button. The following additional options are recognized:
-     * - label: string, the label for submit button. This is not HTML encoded.
-     * - icon: string, the glyphicon name suffix.
-     */
-    public $submitButtonOptions = [];
-
-    /**
-     * @var array HTML attributes for the reset button. The following additional options are recognized:
-     * - label: string, the label for submit button. This is not HTML encoded.
-     * - icon: string, the glyphicon name suffix.
-     */
-    public $resetButtonOptions = [];
-
-    /**
-     * @var array|boolean the HTML attributes for the container enclosing the form action buttons.
-     * If set to false, no container will used to enclose the buttons. The following additional properties
-     * will be recognized:
-     * - tag: string, the HTML tag for rendering the container. Defaults to 'div'.
-     */
-    public $buttonsContainer = [];
-
-    /**
-     * @var array the options and HTML attributes for the kartik\builder\Form
-     */
-    public $options = [];
+    public $footerOptions = ['class' => 'y2u-box-footer'];
     
     /**
-     * @var template to render the widget. The tag `{fields}` will be replaced 
-     * with form fields, while the tag `{buttons}` will be replaced with the
-     * markup of the buttons.
+     * @var string the content to render for the left footer
      */
-    public $template = "{fields}\n{buttons}";
+    public $leftFooter = '';
+    
+    /**
+     * @var string the content to render for the right footer
+     */
+    public $rightFooter = '';
 
     /**
-     * @var string the parsed HTML markup for the buttons
+     * @var array the widget configuration options for `kartik\builder\Form`
      */
-    protected $_buttons;
+    public $options = ['options' => ['class' => 'y2u-padding']];
+    
+    /**
+     * @var string template to render the widget. The tag `{fields}` will be replaced 
+     * with form fields, while the tag `{footer}` will be replaced with the output
+     * of footer template.
+     */
+    public $template;
+
+    /**
+     * @var string template to render the footer. The tag `{left}` will be replaced 
+     * with the `leftFooter` and the tag `{right}` will be replaced with the 
+     * `rightFooter`.
+     */
+    public $footerTemplate;
 
     /**
      * @var ActiveForm the form instance
@@ -100,74 +95,49 @@ class BaseForm extends \yii\base\Widget
     /**
      * @inheritdoc
      */
-    public function init()
+    public function run()
     {
-        parent::init();
+        $this->_module = Yii::$app->getModule('user');
         if (empty($this->options['id'])) {
             $this->options['id'] = $this->getId();
         }
-        $this->initButtonOptions();
-        $this->_form = ActiveForm::begin($this->formOptions);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function run()
-    {
-        $options = ['model' => $this->model, 'form' => $this->_form, 'attributes' => $this->attributes] + $this->options;
-        $fields = Form::widget($options);
-        $buttons = '';
-        if ($this->buttons != null) {
-            $tag = ArrayHelper::remove($this->buttonsContainer, 'tag', 'div');
-            $buttons = Html::tag($tag, $this->_buttons, $this->buttonsContainer);
+        if (!isset($this->formOptions['type'])) {
+            $this->formOptions['type'] = ActiveForm::TYPE_VERTICAL;
         }
+        if (!isset($this->formOptions['fieldConfig'])) {
+            $this->formOptions['fieldConfig'] = ['autoPlaceholder' => true];
+        }
+        if (!isset($this->template)) {
+            $this->template = "<legend>{$this->title}</legend>\n{fields}\n{footer}";    
+        }
+        if (!isset($this->footerTemplate)) {
+            $this->footerTemplate = <<< HTML
+<div class="row">
+    <div class="col-sm-6 text-left">
+        {left}
+    </div>
+    <div class="col-sm-6 text-right">
+        {right}
+    </div>
+</div>
+HTML;
+        }
+        $this->_form = ActiveForm::begin($this->formOptions);
+        $options = ['model' => $this->model, 'form' => $this->_form, 'attributes' => $this->attributes] + $this->options;
         echo strtr($this->template, [
-            '{fields}' => $fields,
-            '{buttons}' => $buttons
+            '{fields}' => Form::widget($options),
+            '{footer}' => $this->renderFooter()
         ]);
         ActiveForm::end();
     }
-
-    /**
-     * Initializes the button options and sets the _buttons
-     * property based on `buttons` template setting.
-     */
-    public function initButtonOptions()
+    
+    public function renderFooter()
     {
-        if (!isset($this->buttons)) {
-            $this->buttons= '{reset} {submit}';
-        }
-        $this->submitButtonOptions += [
-            'label' => Yii::t('user', 'Submit'),
-            'icon' => 'ok',
-            'class' => 'btn btn-primary',
-        ];
-        $this->resetButtonOptions += [
-            'label' => Yii::t('user', 'Reset'),
-            'icon' => 'remove',
-            'class' => 'btn btn-reset',
-        ];
-        $this->_buttons = strtr($this->buttons, [
-            '{submit}' => static::getButton('submit', $this->submitButtonOptions),
-            '{reset}' => static::getButton('reset', $this->resetButtonOptions)
+        $footer = strtr($this->footerTemplate, [
+            '{left}' => $this->leftFooter,
+            '{right}' => $this->rightFooter,
         ]);
-    }
-
-    /**
-     * Gets the HTML markup for the action button
-     *
-     * @param $type string, button type, `reset` or `submit`
-     * @param $options the HTML attributes for the button
-     * @return string
-     */
-    protected static function getButton($type, &$options)
-    {
-        $icon = ArrayHelper::remove($options, 'icon', '');
-        if ($icon != '') {
-            $icon = '<span class="glyphicon glyphicon-' . $icon . '"></span> ';
-        }
-        $label = $icon . ArrayHelper::remove($options, 'label', '');
-        return ($type == 'reset') ? Html::resetButton($label, $options) : Html::submitButton($label, $options);
+        $tag = ArrayHelper::remove($this->footerOptions, 'tag', 'div');
+        return Html::tag($tag, $footer, $this->footerOptions);
     }
 }

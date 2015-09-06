@@ -83,11 +83,13 @@ class BaseController extends \yii\web\Controller
      */
     protected function safeRedirect()
     {
-        if (Yii::$app->user->isGuest) {
+        $user = Yii::$app->user;
+        if ($user->isGuest) {
             $this->validateInstallation();
             return $this->forward(Module::ACTION_LOGIN);
         } else {
-            return $this->forward(Module::ACTION_PROFILE_VIEW);
+            $action = $user->isAdmin || $user->isSuperuser ? Module::ACTION_ADMIN_VIEW : Module::ACTION_PROFILE_VIEW;
+            return $this->forward($action, ['id' => Yii::$app->user->id]);
         }
     }
 

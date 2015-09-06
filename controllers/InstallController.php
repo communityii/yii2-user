@@ -15,7 +15,7 @@ use comyii\user\models\User;
 use comyii\user\models\InstallForm;
 
 /**
- * Install controller for managing the install and setup of admin user for this module.
+ * Install controller for managing the install and setup of the superuser for this module.
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
@@ -25,6 +25,9 @@ class InstallController extends BaseController
     const UI_INIT_SETUP = 'begin_setup';
     public $layout = 'install';
 
+    /**
+     * @inheritdoc
+     */
     public function behaviors()
     {
         return [
@@ -41,11 +44,17 @@ class InstallController extends BaseController
         ];
     }
 
+    /**
+     * Module installation action
+     *
+     * @return mixed
+     */
     public function actionIndex()
     {
         $m = $this->module;
         if (isset($m->installAccessCode) && !$m->hasSuperUser()) {
             $model = new InstallForm(['scenario' => Module::UI_ACCESS]);
+            $session = Yii::$app->session;
             if (!isset($model->action)) {
                 $model->action = self::UI_INIT_SETUP;
             }
@@ -75,13 +84,23 @@ class InstallController extends BaseController
                         $user->generateAuthKey();
                         $user->generateResetKey();                        
                         if (!$user->save()) {
-                            $m->setFlash('error', 'install-error', ['errors' => Module::showErrors($user)]);
+                            $session->setFlash('error', Yii::t(
+                                'user', 
+                                'Error creating the superuser. Fix the following errors:<br>{errors}', 
+                                ['errors' => Module::showErrors($user)]
+                            ));
                             $model->action = Module::UI_INSTALL;
                             $model->scenario = Module::UI_INSTALL;
                         }
                         else {
-                            $m->setFlash('success', 'install-success',  ['username' => $model->username]);
-                            $m->setFlash('warning', 'install-warning');
+                            $session->setFlash('success', Yii::t(
+                                'user', 
+                                'User module successfully installed! You have been automatically logged in as the superuser (username: <b>{username}</b>).',  ['username' => $model->username]
+                            ));
+                            $session->setFlash('warning', Yii::t(
+                                'user', 
+                                'You should now remove the <code>installAccessCode</code> setting from user module configuration for better security.'
+                            ));
                             Yii::$app->user->login($user);
                             $user->setLastLogin();
                             return $this->forward(Module::ACTION_ADMIN_VIEW, ['id'=>$user->id]);

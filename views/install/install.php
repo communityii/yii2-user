@@ -3,15 +3,20 @@
 use comyii\user\Module;
 use kartik\helpers\Html;
 use kartik\form\ActiveForm;
+use comyii\user\widgets\Logo;
 
 /**
  * @var yii\web\View $this
  * @var comyii\user\models\InstallForm $model
  * @var kartik\form\ActiveForm $form
  */
+$m = $this->context->module;
 $model->action = Module::UI_INSTALL;
-$this->params['showModuleLogo'] = true;
+$this->params['install-mode'] = true;
 ?>
+<div class="text-center">
+    <?= Logo::widget(['title' => "communityii\\yii2-user"]) ?>
+</div>
 <p class="text-success text-center"><?= Yii::t('user', '<b>Access code validated!</b> Setup a superuser to finish the install.') ?></p>
 <?php $form = ActiveForm::begin(); ?>
 <div class="y2u-box">
@@ -23,7 +28,7 @@ $this->params['showModuleLogo'] = true;
         </div>
         <?= $form->field($model, 'username') ?>
         <?php
-        if ($this->context->module->passwordSettings['strengthMeter']) {
+        if ($m->passwordSettings['strengthMeter']) {
             echo $form->field($model, 'password')->widget('\kartik\password\PasswordInput');
         }
         else {
@@ -36,8 +41,8 @@ $this->params['showModuleLogo'] = true;
     </div>
     <div class="y2u-box-footer">
         <?= Html::a('&laquo; ' . Yii::t('user', 'Back'), ['install/index'], ['class' => 'btn btn-danger pull-left']) ?>
-        <?= Html::resetButton('<i class="glyphicon glyphicon-remove"></i> ' . Yii::t('user', 'Reset'), ['class' => 'btn btn-default']) ?>
-        <?= Html::submitButton('<i class="glyphicon glyphicon-ok"></i> ' . Yii::t('user', 'Finish'), ['class' => 'btn btn-success']) ?>
+        <?= $m->button(Module::BTN_RESET_FORM) ?>
+        <?= $m->button(Module::BTN_SUBMIT_FORM) ?>
     </div>
 </div>
 <?php ActiveForm::end(); ?>

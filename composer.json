@@ -14,6 +14,7 @@
     ],
     "require": {
         "yiisoft/yii2-authclient": "*",
+        "yiisoft/yii2-swiftmailer": "*",
         "kartik-v/yii2-ipinfo": "*",
         "kartik-v/yii2-widget-alert": "*",
         "kartik-v/yii2-widget-datetimepicker": "*",
@@ -28,5 +29,8 @@
         "psr-4": {
             "comyii\\user\\": ""
         }
+    },
+    "extra": {
+        "bootstrap": "comyii\\user\\ModuleInit",
     }
 }

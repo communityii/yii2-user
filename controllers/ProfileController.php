@@ -3,6 +3,7 @@
 namespace comyii\user\controllers;
 
 use Yii;
+use comyii\user\models\User;
 use comyii\user\models\UserProfile;
 use comyii\user\models\UserProfileSearch;
 use comyii\user\controllers\BaseController;
@@ -42,15 +43,13 @@ class ProfileController extends BaseController
     }
 
     /**
-     * Displays a single UserProfile model.
+     * Displays a single User and UserProfile model.
      * @param string $id
      * @return mixed
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        return $this->render('view', $this->findModel($id));
     }
 
     /**
@@ -104,18 +103,22 @@ class ProfileController extends BaseController
     }
 
     /**
-     * Finds the UserProfile model based on its primary key value.
+     * Finds the User and UserProfile model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param string $id
-     * @return UserProfile the loaded model
+     * @return array of User and UserProfile loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = UserProfile::findOne($id)) !== null) {
-            return $model;
-        } else {
+        $profile = null;
+        $user = User::findOne($id);
+        if ($user === null) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
+        if ($this->getConfig('profileSettings', 'enabled', false)) {
+            $profile = UserProfile::findOne($id);
+        }
+        return ['user' => $user, 'profile' => $profile];
     }
 }

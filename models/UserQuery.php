@@ -22,21 +22,30 @@ use Yii;
  */
 class UserQuery extends \yii\db\ActiveQuery
 {
-    public function superuser()
-    {
-        $this->andWhere(['status' => User::STATUS_SUPERUSER]);
-        return $this;
-    }
-
     public function pending()
     {
         $this->andWhere(['status' => User::STATUS_PENDING]);
         return $this;
     }
 
+    public function superuser()
+    {
+        $this->andWhere(['status' => User::STATUS_SUPERUSER]);
+        return $this;
+    }
+
+    public function admin()
+    {
+        $this->andWhere(['status' => User::STATUS_ADMIN])
+            ->orWhere(['status' => User::STATUS_SUPERUSER]);
+        return $this;
+    }
+
     public function active()
     {
-        $this->andWhere(['status' => User::STATUS_ACTIVE])->orWhere(['status' => User::STATUS_SUPERUSER]);
+        $this->andWhere(['status' => User::STATUS_ACTIVE])
+            ->orWhere(['status' => User::STATUS_SUPERUSER])
+            ->orWhere(['status' => User::STATUS_ADMIN]);
         return $this;
     }
 

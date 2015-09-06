@@ -16,7 +16,7 @@ use Yii;
  *
  * @property User $user
  */
-class SocialAuth extends BaseModel
+class SocialProfile extends BaseModel
 {
     /**
      * @inheritdoc

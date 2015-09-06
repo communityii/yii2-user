@@ -39,4 +39,67 @@ class User extends \yii\web\User
         }
         parent::init();
     }
+    
+    /**
+     * Gets the user name
+     * @return string
+     */
+    public function getUsername()
+    {
+        return $this->identity ? $this->identity->username : false;
+    }
+    
+    /**
+     * Gets the user email
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->identity ? $this->identity->email : false;
+    }
+    
+    /**
+     * Is the user an admin
+     * @return bool
+     */
+    public function getIsSuperuser()
+    {
+        return $this->identity ? $this->identity->isAccountSuperuser() : false;
+    }
+    
+    /**
+     * Is the user an admin
+     * @return bool
+     */
+    public function getIsAdmin()
+    {
+        return $this->identity ? $this->identity->isAccountAdmin() : false;
+    }
+    
+    /**
+     * Is the user account active
+     * @return bool
+     */
+    public function getIsActive()
+    {
+        return $this->identity ? $this->identity->isAccountActive() : false;
+    }
+    
+    /**
+     * Is the user password expired
+     * @return bool
+     */
+    public function getIsPasswordExpired()
+    {
+        return $this->identity ? $this->identity->isPasswordExpired() : false;
+    }
+    
+    /**
+     * Is the user account locked
+     * @return bool
+     */
+    public function getIsLocked()
+    {
+        return $this->identity ? $this->identity->isAccountLocked() : false;
+    }
 }
