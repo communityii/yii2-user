@@ -52,6 +52,7 @@ class InstallController extends BaseController
     public function actionIndex()
     {
         $m = $this->module;
+        $userClass = $this->getConfig('modelSettings', Module::MODEL_USER);
         if (isset($m->installAccessCode) && !$m->hasSuperUser()) {
             $model = new InstallForm(['scenario' => Module::UI_ACCESS]);
             $session = Yii::$app->session;
@@ -73,9 +74,9 @@ class InstallController extends BaseController
                 elseif ($model->action === Module::UI_INSTALL) {
                     $model->access_code = $m->installAccessCode;
                     if ($model->validate()) {
-                        $user = new User([
+                        $user = new $userClass([
                             'username' => $model->username,
-                            'password_raw' => $model->password,
+                            'password' => $model->password,
                             'email' => $model->email,
                             'status' => User::STATUS_SUPERUSER,
                             'scenario' => Module::UI_INSTALL

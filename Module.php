@@ -22,7 +22,7 @@ use comyii\user\models\User;
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class Module extends \yii\base\Module
+class Module extends \kartik\base\Module
 {
 
     // the valid types of login methods
@@ -41,6 +41,7 @@ class Module extends \yii\base\Module
     const UI_LOCKED = 'locked';
     const UI_PROFILE = 'profile';
     const UI_ADMIN = 'admin';
+    const UI_NEWEMAIL = 'newemail';
 
     // the list of account actions
     const ACTION_LOGIN = 1;             // login as new user
@@ -132,6 +133,61 @@ class Module extends \yii\base\Module
      * @var string the default date format
      */
     public $dateFormat = 'php:Y-m-d';
+
+    /**
+     * @var array configuration for superuser data editing accesses. Note that these accesses are
+     * available only via administration interface. You can set the following boolean properties:
+     * - changeUsername: bool, allow username to be changed for superuser. Defaults to `false`.
+     *   If set to `true`, can be changed only by the user who is the superuser.
+     * - changeEmail: bool, allow email to be changed for superuser. Defaults to `false`.
+     *   If set to `true`, can be changed only by the user who is the superuser.
+     * - resetPassword: bool, allow password to be reset for superuser. Defaults to `false`.
+     *   If set to `true`, can be reset only by the user who is the superuser.
+     *
+     * @see `setConfig()` method for the default settings
+     */
+    public $superuserEditSettings = [];
+
+    /**
+     * @var array configuration for admin user data editing accesses. Note that these accesses are
+     * available only via administration interface. You can set the following boolean properties:
+     * - changeUsername: bool, allow username to be changed for admin. Defaults to `true`.
+     *   If set to `true`, can be changed by the superuser OR only by the respective admin user.
+     * - changeEmail: bool, allow email to be changed for admin. Defaults to `true`.
+     *   If set to `true`, can be changed by the superuser OR only by the respective admin user.
+     * - resetPassword: bool, allow password to be reset for admin. Defaults to `true`.
+     *   If set to `true`, can be reset by the superuser OR only by the user who is the admin.
+     *
+     * @see `setConfig()` method for the default settings
+     */
+    public $adminEditSettings = [];
+
+    /**
+     * @var array configuration for normal user data editing. These settings are available
+     * only via user account profile interface for normal users. You can set the following 
+     * boolean properties:
+     * - changeUsername: bool, allow username to be changed for user. Defaults to `true`.
+     *   If set to `true`, can be changed by the respective user OR any admin/superuser via
+     *   admin user interface. If set to `false` change access will be disabled for all users.
+     * - changeEmail: bool, allow email to be changed for user. Defaults to `true`.
+     *   If set to `true`, can be changed by the respective user OR any admin/superuser via
+     *   admin user interface. Note that `email` change by normal users needs to be revalidated 
+     *   by user by following instructions via the system mail sent. If set to `false` change
+     *   access will be disabled for all users.
+     *
+     * @see `setConfig()` method for the default settings
+     */
+    public $userEditSettings = [];
+
+    /**
+     * @var array the settings for the user profile.
+     * - enabled: bool, whether the user profile is enabled for the module. Defaults to `true`.
+     * - uploadSettings: array|bool, the widget settings for FileInput widget to upload the avatar.
+     *   If this is set to `false`, no avatar / image upload will be enabled for the user.
+     * @see `setConfig()` method for the default settings
+     */
+    public $profileSettings = [];
+
 
     /**
      * @var array the model settings for the module. The keys will be one of the `Module::MODEL_` constants
@@ -241,15 +297,6 @@ class Module extends \yii\base\Module
      */
     public $socialAuthSettings = [];
 
-    /**
-     * @var array the settings for the user profile.
-     * - enabled: bool, whether the user profile is enabled for the module. Defaults to `true`.
-     * - uploadSettings: array|bool, the widget settings for FileInput widget to upload the avatar.
-     *   If this is set to `false`, no avatar / image upload will be enabled for the user.
-     * @see `setConfig()` method for the default settings
-     */
-    public $profileSettings = [];
-
 
     /**
      * @var array the global widget settings for each form (also available as a widget).
@@ -276,27 +323,13 @@ class Module extends \yii\base\Module
     ];
 
     /**
-     * @var array the the internalization configuration for
-     * this module
-     */
-    public $i18n;
-
-    /**
      * Initialize the module
      */
     public function init()
     {
+        $this->_msgCat = 'user';
         parent::init();
-        if (empty($this->i18n)) {
-            $this->i18n = [
-                'class' => 'yii\i18n\PhpMessageSource',
-                'basePath' => '@vendor/communityii/user/messages',
-                'forceTranslation' => true
-            ];
-        }
-        Yii::$app->i18n->translations['user'] = $this->i18n;
         $this->setConfig();
-        Yii::setAlias('@user', dirname(__FILE__));
     }
 
     /**
@@ -369,6 +402,20 @@ class Module extends \yii\base\Module
             self::ACTION_ADMIN_EDIT => 'admin/update',
             self::ACTION_ADMIN_RESET => 'admin/reset',
         ];
+        $this->superuserEditSettings += [
+            'changeUsername' => false,
+            'changeEmail' => false,
+            'resetPassword' => false,
+        ];
+        $this->adminEditSettings += [
+            'changeUsername' => true,
+            'changeEmail' => true,
+            'resetPassword' => true,
+        ];
+        $this->userEditSettings += [
+            'changeUsername' => true,
+            'changeEmail' => true
+        ];
         $this->loginSettings = array_replace_recursive([
             'loginType' => self::LOGIN_BOTH,
             'rememberMeDuration' => 2592000
@@ -409,7 +456,8 @@ HTML;
                     'captchaAction' => $this->actionSettings[self::ACTION_CAPTCHA],
                     'template' => $captchaTemplate,
                     'imageOptions' => [
-                        'title' => Yii::t('user', 'Click image to refresh and get a new code')
+                        'title' => Yii::t('user', 'Click image to refresh and get a new code'),
+                        'style' => 'height:40px'
                     ],
                     'options' => [
                         'class' => 'form-control',
@@ -504,7 +552,50 @@ HTML;
         Html::addCssClass($options, explode(' ', $prefix . $id));
         return Html::tag('i', '', $options);
     }
-    
+
+    /**
+     * Gets the admin configuration ability for a user model record
+     * @param User $model the user model
+     * @return array|bool
+     */
+    public function getEditSettingsAdmin($model) {
+        if ($model === null) {
+            return false;
+        }
+        $user = Yii::$app->user;
+        if ($model->isAccountSuperuser()) {
+            if (!$user->isSuperuser || $model->id != $user->id) {
+                return false;
+            }
+            return $this->superuserEditSettings;
+        } elseif ($model->isAccountAdmin()) {
+            $allowed = $user->isAdmin && $model->id == $user->id || $user->isSuperuser;
+            if (!$allowed) {
+                return false;
+            }
+            return $this->adminEditSettings;
+        } elseif ($user->isSuperuser || $user->isAdmin) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Gets the user configuration ability for a user model record
+     * @param User $model the user model
+     * @return array|bool
+     */
+    public function getEditSettingsUser($model) {
+        if ($model === null) {
+            return false;
+        }
+        $user = Yii::$app->user;
+        if ($model->id != $user->id) {
+            return false;
+        }
+        return $this->userEditSettings;
+    }
+        
     /**
      * Generates an action button
      * @param string $key the button identification key
@@ -528,6 +619,9 @@ HTML;
         }
         $label = $icon . $label;
         $options = array_replace_recursive($options, $config);
+        if (!empty($options['disabled'])) {
+            $action = null;
+        }
         if (!empty($action)) {
             $action = ArrayHelper::getValue($this->actionSettings, $action, $action);
             $action = Url::to([$action] + $params);

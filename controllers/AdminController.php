@@ -35,6 +35,7 @@ class AdminController extends BaseController
             ]
         ];
     }
+     
     /**
      * Lists all User models.
      * @return mixed
@@ -62,10 +63,10 @@ class AdminController extends BaseController
         $post = Yii::$app->request->post();
         if ($model->load($post)) {
             if ($model->save()) {
-                $this->module->setFlash('success', 'user-details-saved', [
+                Yii::$app->session->setFlash('success', Yii::t('user', 'The user details were saved successfully', [
                     'id' => $model->id,
                     'user' => $model->username,
-                ]);
+                ]));
             }
         }
         return $this->render('view', [

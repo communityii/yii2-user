@@ -145,7 +145,7 @@ class InstallForm extends Model
     public function attributeHints() {
         $m = $this->_module;
         return [
-            'access_code' => Yii::t('user', 'Enter the installation access code as setup in your module configuration.',
+            'access_code' => Yii::t('user', 'Enter the installation access code as setup in your module configuration.'),
             'username' => Yii::t('user', 'Select an username for the superuser'),
             'password' => Yii::t('user', 'Select a password for the superuser'),
             'password_confirm' => Yii::t('user', 'Reconfirm the superuser password'),

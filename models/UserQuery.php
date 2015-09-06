@@ -28,36 +28,27 @@ class UserQuery extends \yii\db\ActiveQuery
         return $this;
     }
 
+    public function inactive()
+    {
+        $this->andWhere(['status' => User::STATUS_INACTIVE]);
+        return $this;
+    }
+
     public function superuser()
     {
         $this->andWhere(['status' => User::STATUS_SUPERUSER]);
         return $this;
     }
 
-    public function admin()
-    {
-        $this->andWhere(['status' => User::STATUS_ADMIN])
-            ->orWhere(['status' => User::STATUS_SUPERUSER]);
-        return $this;
-    }
-
     public function active()
     {
-        $this->andWhere(['status' => User::STATUS_ACTIVE])
-            ->orWhere(['status' => User::STATUS_SUPERUSER])
-            ->orWhere(['status' => User::STATUS_ADMIN]);
+        $this->andWhere(['in', 'status', [User::STATUS_ACTIVE, User::STATUS_SUPERUSER, User::STATUS_ADMIN]]);
         return $this;
     }
-
-    public function banned()
+    
+    public function admin()
     {
-        $this->andWhere(['status' => User::STATUS_BANNED]);
-        return $this;
-    }
-
-    public function inactive()
-    {
-        $this->andWhere(['status' => User::STATUS_INACTIVE]);
+        $this->andWhere(['in', 'status', [User::STATUS_ADMIN, User::STATUS_SUPERUSER]]);
         return $this;
     }
 }

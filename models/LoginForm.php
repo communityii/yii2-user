@@ -12,6 +12,7 @@ use Yii;
 use yii\base\Model;
 use yii\helpers\ArrayHelper;
 use comyii\user\Module;
+use comyii\user\models\User;
 
 /**
  * Model for the login form
@@ -28,8 +29,6 @@ class LoginForm extends Model
     public $username;
     public $password;
     public $rememberMe = true;
-
-    private $_user = false;
     private $_settings = [];
 
     /**
@@ -98,7 +97,7 @@ class LoginForm extends Model
         $user = $this->getUser();
         $outcome = ($user) ? $user->validatePassword($this->password) : null;
         if (!$user || !$outcome) {
-            $this->addError($attribute, $this->_module->message('login-invalid'));
+            $this->addError($attribute, Yii::t('user', 'Invalid login credentials.'));
         }
         if ($outcome !== null) {
             $user->checkFailedLogin($outcome);
@@ -114,8 +113,7 @@ class LoginForm extends Model
      */
     public function login($user)
     {
-        $user->setScenario('default');
-        return Yii::$app->user->login($user, $this->rememberMe ? $this->_settings['rememberMeDuration'] : 0);
+        return Yii::$app->getUser()->login($user, $this->rememberMe ? $this->_settings['rememberMeDuration'] : 0);
     }
 
     /**
@@ -123,19 +121,17 @@ class LoginForm extends Model
      *
      * @return User|null
      */
-    public function getUser($scenario = 'default')
+    public function getUser()
     {
-        if ($this->_user === false) {
-            if ($this->_settings['loginType'] === Module::LOGIN_USERNAME) {
-                $user = User::findByUsername($this->username);
-            } elseif ($this->_settings['loginType'] === Module::LOGIN_EMAIL) {
-                $user = User::findByEmail($this->username);
-            } else {
-                $user = User::findByUserOrEmail($this->username);
-            }
-            $this->_user = $user;
+        $class = $this->_module->modelSettings[Module::MODEL_USER];
+        $loginType = $this->_settings['loginType'];
+        if ($loginType === Module::LOGIN_USERNAME) {
+            $user = $class::findByUsername($this->username);
+        } elseif ($loginType === Module::LOGIN_EMAIL) {
+            $user = $class::findByEmail($this->username);
+        } else {
+            $user = $class::findByUserOrEmail($this->username);
         }
-        $this->_user->scenario = $scenario;
-        return $this->_user;
+        return $user;
     }
 }

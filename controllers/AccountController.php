@@ -17,6 +17,7 @@ use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\authclient\AuthAction;
 use comyii\user\Module;
+use comyii\user\models\User;
 
 /**
  * Account controller for authentication of various user actions.
@@ -194,7 +195,6 @@ class AccountController extends BaseController
         $this->layout = $this->getConfig('layoutSettings', Module::ACTION_LOGIN);
         $class = $this->getConfig('modelSettings', Module::MODEL_LOGIN);
         $model = new $class;
-
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $user = $model->getUser();
             $link = Yii::t('user', 'Click {link} to reset your password.', [
@@ -210,6 +210,7 @@ class AccountController extends BaseController
             } elseif ($user->isAccountLocked()) {
                 return $this->lockAccount($user, $lockedMsg);
             } elseif ($model->login($user)) {
+                $user->scenario = 'default';
                 $user->setLastLogin();
                 return $this->safeRedirect();
             }
@@ -256,25 +257,21 @@ class AccountController extends BaseController
         $this->layout = $this->getConfig('layoutSettings', Module::ACTION_REGISTER);
         $class = $this->getConfig('modelSettings', Module::MODEL_USER);
         $model = new $class(['scenario' => Module::UI_REGISTER]);
-        if ($model->load(Yii::$app->request->post()) && $model->register()) {
-            if ($config['autoActivate']) {
-                $model->status = User::STATUS_ACTIVE;
-                if ($model->save() && Yii::$app->user->login($model)) {
+        if ($model->load(Yii::$app->request->post())) {
+            $model->setPassword($model->password);
+            $model->generateAuthKey();
+            $model->status = User::STATUS_PENDING;
+            if ($model->save()) {
+                $model->scenario = 'default';
+                if ($config['autoActivate'] && Yii::$app->user->login($model)) {
+                    $model->status = User::STATUS_ACTIVE;
+                    $model->setLastLogin();
                     $session->setFlash('success', Yii::t(
                         'user',
-                        'The user <b>{user}</b> was registered successfully. You have been logged in.', 
+                        'The user <b>{user}</b> was registered successfully. You have been logged in.<pre>{log}</pre>', 
                         ['user' => $model->username]
                     ));
-                } else {
-                    $session->setFlash('error', Yii::t(
-                        'user',
-                        'Could not register user <b>{user}</b>. Please retry again later.', 
-                        ['user' => $model->username]
-                    ));
-                }
-            } else {
-                $model->status = User::STATUS_PENDING;
-                if ($model->save() && $user->sendEmail('activation')) {
+                } elseif ($model->sendEmail('activation')) {
                     $session->setFlash('success', Yii::t(
                         'user',
                         'Instructions for activating your account has been sent to your email <b>{email}</b>.', 
@@ -287,8 +284,8 @@ class AccountController extends BaseController
                         ['email' => $model->email]
                     ));
                 }
+                return $this->goHome();
             }
-            return $this->goHome();
         }
         return $this->render(Module::UI_REGISTER, [
             'model' => $model,

@@ -1,9 +1,9 @@
 <?php
 
 use comyii\user\Module;
+use comyii\user\widgets\Logo;
 use kartik\helpers\Html;
 use kartik\form\ActiveForm;
-use comyii\user\widgets\Logo;
 
 /**
  * @var yii\web\View $this

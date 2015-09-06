@@ -30,16 +30,18 @@ class m140402_143411_create_user_module extends Migration
             'id' => $this->bigPrimaryKey(),
             'username' => $this->string(30)->notNull()->unique(),
             'email' => $this->string(255)->notNull()->unique(),
+            'email_new' => $this->string(255),
             'password_hash' => $this->string(128)->notNull(),
             'auth_key' => $this->string(128)->notNull(),
             'activation_key' => $this->string(128),
             'reset_key' => $this->string(128),
+            'email_change_key' => $this->string(128),
             'status' => $this->smallInteger()->notNull()->defaultValue(0),
             'password_fail_attempts' => $this->smallInteger()->defaultValue(0),
-            'password_reset_on' => $timestamp,
+            'password_reset_on' => $this->timestamp(),
             'created_on' => $timestamp,
             'updated_on' => $timestamp,
-            'last_login_on' => $timestamp,
+            'last_login_on' => $this->timestamp(),
             'last_login_ip' => $this->string(50)
         ], $tableOptions);
         $this->createIndex('user_status_idx', '{{%user}}', 'status');

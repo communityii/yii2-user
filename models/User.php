@@ -25,10 +25,12 @@ use comyii\user\Module;
  * @property string $id
  * @property string $username
  * @property string $email
+ * @property string $email_new
  * @property string $password_hash
  * @property string $auth_key
  * @property string $activation_key
  * @property string $reset_key
+ * @property string $email_change_key
  * @property integer $status
  * @property string $created_on
  * @property string $updated_on
@@ -201,14 +203,44 @@ class User extends BaseModel implements IdentityInterface
      */
     public function scenarios()
     {
-        return [
-            'default' => ['username', 'email'],
-            Module::UI_REGISTER => ['username', 'password', 'email', 'captcha'],
+        $scenarios = [
+            'default' => ['username', 'password', 'email', 'status', 'last_login_on', 'last_login_ip'],
+            Module::UI_REGISTER => ['username', 'password', 'email', 'captcha', 'status'],
             Module::UI_RESET => ['password', 'password_new', 'password_confirm'],
-            Module::UI_PROFILE => ['username', 'email'],
-            Module::UI_ADMIN => ['username', 'email'],
             Module::UI_INSTALL => ['username', 'password', 'email', 'status'],
         ];
+        $m = $this->_module;
+        $settings = [];
+        // for admin user and superuser
+        $editSettings = $m->getEditSettingsAdmin($this);
+        if (is_array($editSettings)) {
+            if ($editSettings['changeUsername']) {
+                $settings[] = 'username';
+            }
+            if ($editSettings['changeEmail']) {
+                $settings[] = 'email';
+            }
+        } elseif ($editSettings === true) {
+            $settings = ['username', 'email'];
+        }
+        if (!empty($settings)) {
+            $scenarios[Module::UI_ADMIN] = ['status'] + $settings;
+        }
+        // for normal user
+        $settings = [];
+        $editSettings = $m->getEditSettingsUser($this);
+        if (is_array($editSettings)) {
+            if ($editSettings['changeUsername']) {
+                $settings[] = 'username';
+            }
+            if ($editSettings['changeEmail']) {
+                $settings[] = 'email';
+            }
+        }
+        if (!empty($settings)) {
+            $scenarios[Module::UI_PROFILE] = $settings;
+        }
+        return $scenarios;
     }
 
     /**
@@ -328,6 +360,9 @@ class User extends BaseModel implements IdentityInterface
             $this->status = self::STATUS_INACTIVE;
             $this->removeActivationKey();
             $this->generateResetKey();
+        } elseif ($this->scenario == Module::UI_NEWEMAIL) {
+            $this->removeEmailChangeKey();
+            $this->generateResetKey();
         }
     }
 
@@ -431,7 +466,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findIdentity($id)
     {
-        return static::find(['id' => $id])->active()->one();
+        return static::find()->where(['id' => $id])->active()->one();
     }
 
     /**
@@ -451,7 +486,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByUsername($username)
     {
-        return static::find(['username' => $username])->active()->one();
+        return static::find()->where(['username' => $username])->active()->one();
     }
 
     /**
@@ -462,7 +497,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByEmail($email)
     {
-        return static::find(['email' => $email])->active()->one();
+        return static::find()->where(['email' => $email])->active()->one();
     }
 
     /**
@@ -473,7 +508,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public static function findByUserOrEmail($input)
     {
-        return static::find()->andWhere(['username' => $input])->orWhere(['email' => $input])->one();
+        return static::find()->where(['username' => $input])->orWhere(['email' => $input])->active()->one();
     }
 
     /**
@@ -489,7 +524,7 @@ class User extends BaseModel implements IdentityInterface
             return null;
         }
 
-        return static::find(['reset_key' => $key])->active()->one;
+        return static::find()->where(['reset_key' => $key])->active()->one;
     }
 
     /**
@@ -608,6 +643,14 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
+     * Generates new email change key
+     */
+    public function generateEmailChangeKey()
+    {
+        $this->email_change_key = self::generateKey();
+    }
+
+    /**
      * Removes "remember me" authorization key
      */
     public function removeAuthKey()
@@ -629,6 +672,14 @@ class User extends BaseModel implements IdentityInterface
     public function removeActivationKey()
     {
         $this->activation_key = null;
+    }
+
+    /**
+     * Removes email change key
+     */
+    public function removeEmailChangeKey()
+    {
+        $this->email_change_key = null;
     }
 
     /**
@@ -729,14 +780,5 @@ class User extends BaseModel implements IdentityInterface
         }
         return null;
     }
-    
-    /**
-     * Registers new account
-     */
-    public function register()
-    {
-        $this->setPassword($this->password);
-        $this->generateAuthKey();
-        return $this->validate();
-    }
+        
 }

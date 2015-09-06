@@ -46,12 +46,12 @@ class SocialProfile extends BaseModel
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('app', 'ID'),
-            'source' => Yii::t('app', 'Source'),
-            'source_id' => Yii::t('app', 'Source ID'),
-            'user_id' => Yii::t('app', 'User ID'),
-            'created_on' => Yii::t('app', 'Created On'),
-            'updated_on' => Yii::t('app', 'Updated On'),
+            'id' => Yii::t('user', 'ID'),
+            'source' => Yii::t('user', 'Source'),
+            'source_id' => Yii::t('user', 'Source ID'),
+            'user_id' => Yii::t('user', 'User ID'),
+            'created_on' => Yii::t('user', 'Created On'),
+            'updated_on' => Yii::t('user', 'Updated On'),
         ];
     }
 

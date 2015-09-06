@@ -38,6 +38,7 @@ class BaseModel extends ActiveRecord
      */
     public function behaviors()
     {
+        $m = Yii::$app->getModule('user');
         return [
             'timestamp' => [
                 'class' => 'yii\behaviors\TimestampBehavior',
@@ -45,7 +46,7 @@ class BaseModel extends ActiveRecord
                     ActiveRecord::EVENT_BEFORE_INSERT => ['created_on', 'updated_on'],
                     ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_on'],
                 ],
-                'value' => $this->_module->now,
+                'value' => $m->now,
             ],
         ];
     }

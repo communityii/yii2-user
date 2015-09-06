@@ -3,7 +3,6 @@
 use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 use kartik\detail\DetailView;
-use kartik\ipinfo\IpInfo;
 use comyii\user\Module;
 use comyii\user\models\User;
 
@@ -18,6 +17,7 @@ $this->title =  Yii::t('user', 'User Details') . ' (' . $model->username . ')';
 $this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'Manage Users'), 'url' => $url];
 $this->params['breadcrumbs'][] = $model->username;
 $list = Html::a($m->icon('list'), $url, ['class'=>'kv-action-btn', 'data-toggle'=>'tooltip', 'title' => Yii::t('user', 'View users listing')]);
+$editSettings = $m->getEditSettingsAdmin($model);
 ?>
 <?= DetailView::widget([
     'model' => $model,
@@ -46,6 +46,7 @@ $list = Html::a($m->icon('list'), $url, ['class'=>'kv-action-btn', 'data-toggle'
                 ], 
                 [
                     'attribute' => 'username',
+                    'displayOnly' => is_array($editSettings) ? !$editSettings['changeUsername'] : true,
                     'valueColOptions' => ['style' => 'width: 30%']
                 ],
             ]
@@ -61,12 +62,18 @@ $list = Html::a($m->icon('list'), $url, ['class'=>'kv-action-btn', 'data-toggle'
                     'valueColOptions' => ['style' => 'width: 30%'],
                     'widgetOptions'=>[
                         'data' => $model->getStatusList(),
-                        'pluginOptions' => ['width' => '100%']
+                        'pluginOptions' => ['width' => '100%'],
+                        'options' => [
+                            'options' => [
+                                User::STATUS_PENDING => ['disabled' => true]
+                            ]
+                        ]
                     ]
                 ],
                 [
                     'attribute' => 'email',
                     'format' => 'email',
+                    'displayOnly' => is_array($editSettings) ? !$editSettings['changeEmail'] : true,
                     'valueColOptions' => ['style' => 'width: 30%']
                 ],    
             ],
@@ -98,8 +105,6 @@ $list = Html::a($m->icon('list'), $url, ['class'=>'kv-action-btn', 'data-toggle'
             'columns' => [
                 [
                     'attribute' => 'last_login_ip', 
-                    'format' => 'raw',
-                    'value' => '<kbd>' . $model->last_login_ip . '</kbd> ' . IpInfo::widget(['ip'=>$model->last_login_ip]),
                     'valueColOptions' => ['style' => 'width: 30%'], 
                     'displayOnly' => true
                 ],
@@ -116,7 +121,7 @@ $list = Html::a($m->icon('list'), $url, ['class'=>'kv-action-btn', 'data-toggle'
                 [
                     'attribute'=> 'last_login_on', 
                     'format'=>['datetime', $m->datetimeFormat], 
-                    'value' => strtotime($model->last_login_on) > 0 ? $model->last_login_on : null,
+                    'value' => strtotime($model->last_login_on) ? $model->last_login_on : null,
                     'valueColOptions' => ['style' => 'width: 30%'], 'displayOnly' => true
                 ],
                 [
@@ -131,7 +136,7 @@ $list = Html::a($m->icon('list'), $url, ['class'=>'kv-action-btn', 'data-toggle'
             'columns' => [
                 [
                     'attribute'=> 'password_reset_on',
-                    'value' => strtotime($model->password_reset_on) > 0 ? $model->password_reset_on : null,
+                    'value' => strtotime($model->password_reset_on) ? $model->password_reset_on : null,
                     'format'=>['datetime', $m->datetimeFormat], 
                     'valueColOptions' => ['style' => 'width: 30%'],
                     'displayOnly' => true
@@ -140,7 +145,9 @@ $list = Html::a($m->icon('list'), $url, ['class'=>'kv-action-btn', 'data-toggle'
                     'label' => Yii::t('user', 'Password Actions'),
                     'format' => 'raw',
                     'displayOnly' => true,
-                    'value' => $m->button(Module::BTN_ADMIN_RESET, ['id' => $model->id]),
+                    'value' => $m->button(Module::BTN_ADMIN_RESET, ['id' => $model->id], [
+                        'disabled' => is_array($editSettings) ? !$editSettings['resetPassword'] : true
+                    ]),
                     'valueColOptions' => ['style' => 'width:30%']
                 ],
             ]

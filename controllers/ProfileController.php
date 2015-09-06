@@ -7,7 +7,9 @@ use comyii\user\models\User;
 use comyii\user\models\UserProfile;
 use comyii\user\models\UserProfileSearch;
 use comyii\user\controllers\BaseController;
+use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 
 /**
@@ -18,6 +20,16 @@ class ProfileController extends BaseController
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'actions' => ['view', 'index', 'update', 'create'],
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -114,11 +126,15 @@ class ProfileController extends BaseController
         $profile = null;
         $user = User::findOne($id);
         if ($user === null) {
-            throw new NotFoundHttpException('The requested page does not exist.');
+            throw new NotFoundHttpException(Yii::t('user', 'The requested page does not exist.'));
         }
-        if ($this->getConfig('profileSettings', 'enabled', false)) {
-            $profile = UserProfile::findOne($id);
+        $currUser = Yii::$app->user;
+        if ($currUser->isSuperuser || $currUser->isAdmin || $currUser->id == $id) { 
+            if ($this->getConfig('profileSettings', 'enabled', false)) {
+                $profile = UserProfile::findOne($id);
+            }
+            return ['user' => $user, 'profile' => $profile];
         }
-        return ['user' => $user, 'profile' => $profile];
+        throw new ForbiddenHttpException(Yii::t('user', 'You are not allowed access to the operation.'));
     }
 }

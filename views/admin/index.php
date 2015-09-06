@@ -6,7 +6,6 @@ use yii\helpers\Json;
 use yii\web\View;
 use kartik\grid\GridView;
 use kartik\select2\Select2;
-use kartik\ipinfo\IpInfo;
 use comyii\user\models\User;
 use comyii\user\assets\AdminAsset;
 
@@ -90,15 +89,15 @@ $batch = Yii::t('user', 'Batch update...');
             }
         ],
         'email:email',
-        [
-            'attribute'=>'last_login_ip', 'format'=>'raw', 'value' => function($model) {
-                $ip = $model->last_login_ip;
-                return $ip ? "<kbd>{$ip}</kbd> ".IpInfo::widget(['ip' =>$ip]) : null;
-            },
-            'width' => '120px'
-        ],
         'created_on:datetime',
-        'last_login_on:datetime',
+        [
+            'attribute' => 'last_login_on',
+            'format' => 'datetime',
+            'value' => function($model) {
+                return strtotime($model->last_login_on) ? $model->last_login_on : null;
+            }
+        ],
+        'last_login_ip',
         [
             'attribute' => 'status', 
             'format' => 'raw', 
