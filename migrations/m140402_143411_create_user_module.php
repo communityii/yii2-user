@@ -71,7 +71,7 @@ class m140402_143411_create_user_module extends Migration
             'display_name' => $this->string(120),
             'first_name' => $this->string(60),
             'last_name' => $this->string(60),
-            'avatar_url' => $this->text(),
+            'avatar' => $this->string(150),
             'created_on' => $timestamp,
             'updated_on' => $timestamp,
         ], $tableOptions);

@@ -95,9 +95,9 @@ class LoginForm extends Model
             return;
         }
         $user = $this->getUser();
-        $outcome = ($user) ? $user->validatePassword($this->password) : null;
+        $outcome = ($user) ? $user->validatePassword($this->$attribute) : null;
         if (!$user || !$outcome) {
-            $this->addError($attribute, Yii::t('user', 'Invalid login credentials.'));
+            $this->addError($attribute, Yii::t('user', 'Invalid login credentials'));
         }
         if ($outcome !== null) {
             $user->checkFailedLogin($outcome);

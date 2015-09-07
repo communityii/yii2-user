@@ -37,6 +37,7 @@ class Module extends \kartik\base\Module
     const UI_REGISTER = 'register';
     const UI_ACTIVATE = 'activate';
     const UI_RESET = 'reset';
+    const UI_CHANGEPASS = 'password';
     const UI_RECOVERY = 'recovery';
     const UI_LOCKED = 'locked';
     const UI_PROFILE = 'profile';
@@ -50,15 +51,16 @@ class Module extends \kartik\base\Module
     const ACTION_ACTIVATE = 4;          // account activation
     const ACTION_RECOVERY = 5;          // account password recovery request
     const ACTION_RESET = 6;             // account password reset
-    const ACTION_CHANGE = 7;            // account password change
-    const ACTION_CAPTCHA = 8;           // account captcha for registration
-    const ACTION_SOCIAL_AUTH = 20;      // social auth & login
-    const ACTION_SOCIAL_VIEW = 21;      // social profile view
+    const ACTION_CAPTCHA = 7;           // account captcha for registration
+    const ACTION_SOCIAL_AUTH = 15;      // social auth & login
 
     // the list of profile actions
-    const ACTION_PROFILE_VIEW = 50;     // profile view
-    const ACTION_PROFILE_EDIT = 51;     // profile update
-    const ACTION_PROFILE_UPLOAD = 52;   // profile image upload
+    const ACTION_PROFILE_INDEX = 50;     // profile index
+    const ACTION_PROFILE_MANAGE = 51;     // profile view
+    const ACTION_PROFILE_EDIT = 52;     // profile update
+    const ACTION_ACCOUNT_PASSWORD = 53; // profile password change
+    const ACTION_AVATAR_UPLOAD = 54;    // profile image upload
+    const ACTION_AVATAR_DELETE = 55;    // profile image delete
 
     // the list of admin actions
     const ACTION_ADMIN_LIST = 100;      // user listing
@@ -72,6 +74,7 @@ class Module extends \kartik\base\Module
     const BTN_BACK = 'back';                        // back to previous page
     const BTN_RESET_FORM = 'reset-form';            // reset form button
     const BTN_SUBMIT_FORM = 'submit-form';          // submit button
+    const BTN_SAVE = 'save';                        // save submit button
     const BTN_FORGOT_PASSWORD = 'forgot-password';  // forgot password link
     const BTN_RESET_PASSWORD = 'reset-password';    // reset password action button
     const BTN_ADMIN_RESET = 'admin-reset';          // reset password for any user by admin
@@ -81,7 +84,7 @@ class Module extends \kartik\base\Module
     const BTN_NEW_USER = 'new-user';                // new user registration link
     const BTN_REGISTER = 'register';                // registration submit button
     const BTN_SOCIAL_VIEW = 'social-view';          // user social profile view
-    const BTN_PROFILE_VIEW = 'profile-view';        // user profile view button
+    const BTN_PROFILE_MANAGE = 'profile-view';        // user profile view button
     const BTN_PROFILE_EDIT = 'profile-edit';        // user profile edit button
     const BTN_USER_CREATE = 'user-create';          // user create button
     const BTN_USER_REFRESH = 'user-refresh';        // user list refresh button
@@ -180,14 +183,22 @@ class Module extends \kartik\base\Module
     public $userEditSettings = [];
 
     /**
-     * @var array the settings for the user profile.
+     * @var array the settings for the user profile. The following settings can be setup:
+     *
      * - enabled: bool, whether the user profile is enabled for the module. Defaults to `true`.
-     * - uploadSettings: array|bool, the widget settings for FileInput widget to upload the avatar.
+     * - basePath: string, the default file path where uploads will be stored. You can use Yii path
+     *   aliases for setting this. Defaults to '@frontend/../uploads'.
+     * - baseUrl: string, the absolute baseUrl pointing to the uploads path. Defaults to '/uploads'. 
+     *   You must set the full absolute url here to enable avatar URL to be parsed seamlessly across
+     *   both frontend and backend apps in yii2-app-advanced.
+     * - defaultAvatar: string, the filename for the default avatar located in the above path which will
+     *   be displayed when no profile image file is found. Defaults to `avatar.png`.
+     * - widget: array|bool, the widget settings for FileInput widget to upload the avatar.
      *   If this is set to `false`, no avatar / image upload will be enabled for the user.
+     *
      * @see `setConfig()` method for the default settings
      */
     public $profileSettings = [];
-
 
     /**
      * @var array the model settings for the module. The keys will be one of the `Module::MODEL_` constants
@@ -228,9 +239,12 @@ class Module extends \kartik\base\Module
 
     /**
      * @var array the settings for the password in the module. The following options can be set"
-     * - validateStrength: array|boolean, the list of forms where password strength will be validated. If
-     *   set to `false` or an empty array, no strength will be validated. The strength will be validated
-     *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::UI_REGISTER, Module::UI_RESET]`.
+     * - validateStrengthCurr: array|boolean, the list of forms where password strength will be validated for current password. 
+     *   If set to `false` or an empty array, no strength will be validated. The strength will be validated
+     *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::UI_INSTALL, Module::UI_RESET]`.
+     * - validateStrengthNew: array|boolean, the list of forms where password strength will be validated for new password. 
+     *   If set to `false` or an empty array, no strength will be validated. The strength will be validated
+     *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::UI_RESET, Module::UI_CHANGEPASS]`.
      * - strengthRules: array, the strength validation rules as required by `\kartik\password\StrengthValidator`
      * - strengthMeter: array|boolean, the list of forms where password strength meter will be displayed.
      *   If set to `false` or an empty array, no strength meter will be displayed.  Defaults to
@@ -295,7 +309,7 @@ class Module extends \kartik\base\Module
      *   base user table.
      * @see `setConfig()` method for the default settings
      */
-    public $socialAuthSettings = [];
+    public $socialSettings = [];
 
 
     /**
@@ -317,9 +331,13 @@ class Module extends \kartik\base\Module
      * @var array the list of url rules
      */
     public $urlRules = [
-        '<id:\d+>' => 'profile/view',
-        '<action>' => 'account/<action>',
-        '<controller>/<action>' => '<controller>/<action>'
+        'profile' => 'profile/index',
+        'update' => 'profile/update',
+        'profile/view/<id:\d+>' => 'profile/view',
+        'avatar-delete/<user:>' => 'profile/avatar-delete/<user:>',
+        'password' => 'account/password',
+        'admin/<id:\d+>' => 'admin/view',
+        'admin' => 'admin/index'
     ];
 
     /**
@@ -365,16 +383,20 @@ class Module extends \kartik\base\Module
             self::ACTION_REGISTER => 'account/register',
             self::ACTION_ACTIVATE => 'account/activate',
             self::ACTION_RESET => 'account/reset',
-            self::ACTION_CHANGE => 'account/change',
             self::ACTION_RECOVERY => 'account/recovery',
             self::ACTION_CAPTCHA => 'account/captcha',
-            // the list of social actions
             self::ACTION_SOCIAL_AUTH => 'account/auth',
-            self::ACTION_SOCIAL_VIEW => 'account/social',
+
             // the list of profile actions
-            self::ACTION_PROFILE_VIEW => 'profile/view',
+            self::ACTION_PROFILE_INDEX => 'profile/index',
             self::ACTION_PROFILE_EDIT => 'profile/update',
-            self::ACTION_PROFILE_UPLOAD => 'profile/upload',
+            self::ACTION_ACCOUNT_PASSWORD => 'account/password',
+            self::ACTION_PROFILE_MANAGE => 'profile/manage',
+            
+            // the list of avatar actions
+            self::ACTION_AVATAR_UPLOAD => 'profile/avatar-upload',
+            self::ACTION_AVATAR_DELETE => 'profile/avatar-delete',
+
             // the list of admin actions
             self::ACTION_ADMIN_LIST => 'admin/index',
             self::ACTION_ADMIN_VIEW => 'admin/view',
@@ -388,14 +410,14 @@ class Module extends \kartik\base\Module
             self::ACTION_REGISTER => 'install',
             self::ACTION_ACTIVATE => 'install',
             self::ACTION_RESET => 'install',
-            self::ACTION_CHANGE => 'install',
             self::ACTION_RECOVERY => 'install',
             // the list of social actions
             self::ACTION_SOCIAL_AUTH => 'social/login',
             // the list of profile actions
-            self::ACTION_PROFILE_VIEW => 'profile/view',
+            self::ACTION_PROFILE_MANAGE => 'profile/view',
             self::ACTION_PROFILE_EDIT => 'profile/update',
-            self::ACTION_PROFILE_UPLOAD => 'profile/upload',
+            self::ACTION_ACCOUNT_PASSWORD => 'account/password',
+            
             // the list of admin actions
             self::ACTION_ADMIN_LIST => 'admin/index',
             self::ACTION_ADMIN_VIEW => 'admin/view',
@@ -421,7 +443,8 @@ class Module extends \kartik\base\Module
             'rememberMeDuration' => 2592000
         ], $this->loginSettings);
         $this->passwordSettings = array_replace_recursive([
-            'validateStrength' => [self::UI_INSTALL, self::UI_REGISTER, Module::UI_RESET],
+            'validateStrengthCurr' => [self::UI_INSTALL, self::UI_REGISTER],
+            'validateStrengthNew' => [Module::UI_RESET, Module::UI_CHANGEPASS],
             'strengthRules' => [
                 'min' => 8,
                 'upper' => 1,
@@ -431,7 +454,7 @@ class Module extends \kartik\base\Module
                 'hasUser' => true,
                 'hasEmail' => true
             ],
-            'strengthMeter' => [self::UI_INSTALL, self::UI_REGISTER, Module::UI_RESET],
+            'strengthMeter' => [self::UI_INSTALL, self::UI_REGISTER, Module::UI_RESET, Module::UI_CHANGEPASS],
             'activationKeyExpiry' => 172800,
             'resetKeyExpiry' => 172800,
             'passwordExpiry' => false,
@@ -492,19 +515,38 @@ HTML;
             ],
             'mailDelivery' => self::ENQUEUE_AND_MAIL
         ],  $this->notificationSettings);
-        $this->socialAuthSettings = array_replace_recursive([
+        $this->socialSettings = array_replace_recursive([
             'enabled' => true,
             'refreshAttributes' => [
                 'display_name',
                 'email'
             ],
-        ], $this->socialAuthSettings);
+        ], $this->socialSettings);
         $this->profileSettings = array_replace_recursive([
             'enabled' => true,
-            'uploadSettings' => [
+            'basePath' => '@frontend/../uploads',
+            'baseUrl' => '/uploads',
+            'defaultAvatar' => 'avatar.png',
+            'widget' => [
+                'options' => ['accept' => 'image/*'],
                 'pluginOptions' => [
-                    'allowedFileExtensions' => ['.jpg, .gif, .png'],
-                    'maxFileSize' => 2097152
+                    'elErrorContainer' => '#user-avatar-errors',
+                    'allowedFileExtensions' => ['jpg', 'gif', 'png'],
+                    'maxFileSize' => 200,
+                    'showCaption' => false,
+                    'overwriteInitial' => true,
+                    'browseLabel' => '',
+                    'removeLabel' => '',
+                    'removeIcon' => '<i class="glyphicon glyphicon-ban-circle"></i>',
+                    'browseIcon' => '<i class="glyphicon glyphicon-folder-open"></i>',
+                    'showClose' => false,
+                    'showUpload' => false,
+                    'removeTitle' => Yii::t('user', 'Cancel or reset changes'),
+                    'previewClass' => 'user-avatar',
+                    'msgErrorClass' => 'alert alert-block alert-danger',
+                    'previewSettings' => [
+                        'image' => ['width' => 'auto', 'height' => '180px'],
+                    ]
                 ]
             ]
         ], $this->profileSettings);
@@ -682,6 +724,12 @@ HTML;
                 'icon' => 'save',
                 'options' => ['class' => 'btn btn-primary'],
             ],
+            self::BTN_SAVE => [
+                'type' => 'submit',
+                'label' => Yii::t('user', 'Save'),
+                'icon' => 'save',
+                'options' => ['class' => 'btn btn-primary'],
+            ],
             self::BTN_FORGOT_PASSWORD => [
                 'label' => Yii::t('user', 'Forgot Password?'),
                 'icon' => 'info-sign',
@@ -739,22 +787,13 @@ HTML;
                 'icon' => 'edit',
                 'options' => ['class' => 'btn btn-primary'],
             ],
-            self::BTN_SOCIAL_VIEW => [
-                'label' => Yii::t('user', 'View'),
+            self::BTN_PROFILE_MANAGE => [
+                'label' => Yii::t('user', 'Manage User Profile'),
                 'icon' => 'eye-open',
-                'action' => self::ACTION_SOCIAL_VIEW,
+                'action' => self::ACTION_PROFILE_MANAGE,
                 'options' => [
                     'class' => 'btn btn-sm btn-default',
-                    'title' => Yii::t('user', 'View social profile'),
-                ],
-            ],
-            self::BTN_PROFILE_VIEW => [
-                'label' => Yii::t('user', 'View'),
-                'icon' => 'eye-open',
-                'action' => self::ACTION_PROFILE_VIEW,
-                'options' => [
-                    'class' => 'btn btn-sm btn-default',
-                    'title' => Yii::t('user', 'View user profile'),
+                    'title' => Yii::t('user', 'View / manage user profile'),
                 ],
             ],
             self::BTN_PROFILE_EDIT => [

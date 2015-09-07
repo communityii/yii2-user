@@ -175,24 +175,50 @@ class User extends BaseModel implements IdentityInterface
             ['status', 'in', 'range' => array_keys($this->_statuses)],
 
             ['password', 'required', 'on' => Module::UI_REGISTER],
-            [['password_new', 'password_confirm'], 'safe', 'on' => Module::UI_RESET],
-            [['password_new', 'password_confirm'], 'required', 'on' => Module::UI_RESET],
-            ['password_confirm', 'compare', 'compareAttribute' => 'password_new', 'on' => Module::UI_RESET],  
+            [['password_new', 'password_confirm'], 'required', 'on' => [Module::UI_RESET, Module::UI_CHANGEPASS]],
+            ['password_confirm', 'compare', 'compareAttribute' => 'password_new', 'on' => [Module::UI_RESET, Module::UI_CHANGEPASS]], 
+            
+            ['password', 'required', 'on' => Module::UI_CHANGEPASS],
+            ['password', 'isValidPassword', 'on' => Module::UI_CHANGEPASS],  
+            [   
+                'password_new', 
+                'compare', 
+                'compareAttribute' => 'password', 
+                'operator'=>'!=', 
+                'on' => Module::UI_CHANGEPASS, 
+                'message' => Yii::t('user', 'Your new password cannot be same as your existing password')
+            ], 
         ];
         if ($m->registrationSettings['captcha'] !== false) {
             $config = ArrayHelper::getValue($m->registrationSettings['captcha'], 'validator', []);
             $rules[] = ['captcha', 'captcha'] + $config + ['on' => Module::UI_REGISTER];
         }
         $strengthRules = $m->passwordSettings['strengthRules'];
-        $validateStrength = $m->passwordSettings['validateStrength'];
-        if (in_array(Module::UI_REGISTER, $validateStrength)) {
-            $rules[] = ['password', StrengthValidator::className()] + $strengthRules + ['on' => [Module::UI_REGISTER]];
+        if (($scenarios = $m->passwordSettings['validateStrengthCurr'])) {
+            $rules[] = ['password', StrengthValidator::className()] + $strengthRules + ['on' => $scenarios];
         }
-        if (in_array(Module::UI_RESET, $validateStrength)) {
-            $rules[] = [['password_new', 'password_confirm'], StrengthValidator::className()] + $strengthRules + 
-                ['on' => Module::UI_RESET];
+        if (($scenarios = $m->passwordSettings['validateStrengthNew'])) {
+            $rules[] = ['password_new', StrengthValidator::className()] + $strengthRules + ['on' => $scenarios];
         }
         return $rules;
+
+    }
+
+    /**
+     * Validates the current password before change
+     * This method serves as the inline validation for password.
+     *
+     * @param string $attribute the attribute currently being validated
+     * @param array $params the additional name-value pairs given in the rule
+     */
+    public function isValidPassword($attribute, $params)
+    {
+        if ($this->hasErrors()) {
+            return;
+        }
+        if (!$this->validatePassword($this->$attribute)) {
+            $this->addError($attribute, Yii::t('user', 'Invalid password entered'));
+        }
 
     }
 
@@ -203,12 +229,11 @@ class User extends BaseModel implements IdentityInterface
      */
     public function scenarios()
     {
-        $scenarios = [
-            'default' => ['username', 'password', 'email', 'status', 'last_login_on', 'last_login_ip'],
-            Module::UI_REGISTER => ['username', 'password', 'email', 'captcha', 'status'],
-            Module::UI_RESET => ['password', 'password_new', 'password_confirm'],
-            Module::UI_INSTALL => ['username', 'password', 'email', 'status'],
-        ];
+        $scenarios = parent::scenarios();
+        $scenarios[Module::UI_REGISTER] = ['username', 'password', 'email', 'captcha', 'status'];
+        $scenarios[Module::UI_RESET] = ['password_new', 'password_confirm'];
+        $scenarios[Module::UI_CHANGEPASS] = ['password', 'password_new', 'password_confirm'];
+        $scenarios[Module::UI_INSTALL] = ['username', 'password', 'email', 'status'];
         $m = $this->_module;
         $settings = [];
         // for admin user and superuser
@@ -264,12 +289,12 @@ class User extends BaseModel implements IdentityInterface
             'statusText' => $status,
             'statusHtml' => $status,
             'created_on' => Yii::t('user', 'Created On'),
-            'updated_on' => Yii::t('user', 'Updated On'),
+            'updated_on' => $this->scenario == Module::UI_CHANGEPASS ? Yii::t('user', 'Last Updated On') : Yii::t('user', 'Updated On'),
             'last_login_ip' => Yii::t('user', 'Last Login IP'),
             'last_login_on' => Yii::t('user', 'Last Login On'),
             'password_reset_on' => Yii::t('user', 'Password Reset On'),
             'password_fail_attempts' => Yii::t('user', 'Password Fail Attempts'), 
-            'password' => Yii::t('user', 'Password'),
+            'password' => $this->scenario == Module::UI_CHANGEPASS ? Yii::t('user', 'Current Password') : Yii::t('user', 'Password'),
             'password_new' => Yii::t('user', 'New Password'),
             'password_confirm' => Yii::t('user', 'Confirm Password')
         ];

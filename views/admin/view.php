@@ -13,7 +13,7 @@ use comyii\user\models\User;
 
 $m = $this->context->module;
 $url = [$m->actionSettings[Module::ACTION_ADMIN_LIST]];
-$this->title =  Yii::t('user', 'User Details') . ' (' . $model->username . ')';
+$this->title =  Yii::t('user', 'Manage User') . ' (' . $model->username . ')';
 $this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'Manage Users'), 'url' => $url];
 $this->params['breadcrumbs'][] = $model->username;
 $list = Html::a($m->icon('list'), $url, ['class'=>'kv-action-btn', 'data-toggle'=>'tooltip', 'title' => Yii::t('user', 'View users listing')]);
@@ -46,7 +46,7 @@ $editSettings = $m->getEditSettingsAdmin($model);
                 ], 
                 [
                     'attribute' => 'username',
-                    'displayOnly' => is_array($editSettings) ? !$editSettings['changeUsername'] : true,
+                    'displayOnly' => is_array($editSettings) ? !$editSettings['changeUsername'] : !$editSettings,
                     'valueColOptions' => ['style' => 'width: 30%']
                 ],
             ]
@@ -73,28 +73,16 @@ $editSettings = $m->getEditSettingsAdmin($model);
                 [
                     'attribute' => 'email',
                     'format' => 'email',
-                    'displayOnly' => is_array($editSettings) ? !$editSettings['changeEmail'] : true,
+                    'displayOnly' => is_array($editSettings) ? !$editSettings['changeEmail'] : !$editSettings,
                     'valueColOptions' => ['style' => 'width: 30%']
                 ],    
             ],
         ],
         [
-            'columns' => [
-                [
-                    'label' => Yii::t('user', 'User Profile'),
-                    'value' => $m->button(Module::BTN_PROFILE_VIEW, ['id' => $model->id]),
-                    'displayOnly' => true,
-                    'format' => 'raw',
-                    'valueColOptions' => ['style' => 'width: 30%']
-                ],
-                [
-                    'label' => Yii::t('user', 'Social Profile'),
-                    'value' => $m->button(Module::BTN_SOCIAL_VIEW, ['id' => $model->id]),
-                    'displayOnly' => true,
-                    'format' => 'raw',
-                    'valueColOptions' => ['style' => 'width: 30%']
-                ],
-            ],
+            'label' => Yii::t('user', 'User Details'),
+            'value' => $m->button(Module::BTN_PROFILE_MANAGE, ['id' => $model->id]),
+            'displayOnly' => true,
+            'format' => 'raw'
         ],
         [
             'group'=>true,

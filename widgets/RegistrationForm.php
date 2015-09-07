@@ -61,7 +61,7 @@ class RegistrationForm extends LoginForm
         $m = Yii::$app->getModule('user');
         $captcha = '';
         $password = ['type' => Form::INPUT_PASSWORD];
-        if ($m->passwordSettings['strengthMeter']) {
+        if (in_array(Module::UI_REGISTER, $m->passwordSettings['strengthMeter'])) {
             $password = [
                 'type' => Form::INPUT_WIDGET, 
                 'widgetClass' => PasswordInput::classname(),

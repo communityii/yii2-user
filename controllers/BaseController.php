@@ -88,8 +88,14 @@ class BaseController extends \yii\web\Controller
             $this->validateInstallation();
             return $this->forward(Module::ACTION_LOGIN);
         } else {
-            $action = $user->isAdmin || $user->isSuperuser ? Module::ACTION_ADMIN_VIEW : Module::ACTION_PROFILE_VIEW;
-            return $this->forward($action, ['id' => $user->id]);
+            if (!empty($user->returnUrl)) {
+                return $this->redirect($user->returnUrl);
+            }
+            if ($user->isAdmin || $user->isSuperuser) {
+                return $this->forward(Module::ACTION_ADMIN_VIEW, ['id' => $user->id]);
+            } else {
+                return $this->forward(Module::ACTION_PROFILE_INDEX);
+            }
         }
     }
 

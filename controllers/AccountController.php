@@ -52,7 +52,7 @@ class AccountController extends BaseController
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    //'logout' => ['post'],
+                    'logout' => ['post'],
                 ],
             ],
         ];
@@ -187,7 +187,7 @@ class AccountController extends BaseController
             return $this->goBack();
         }
         $url = $this->getConfig('loginSettings', 'loginRedirectUrl');
-        $hasSocialAuth = $this->getConfig('socialAuthSettings', 'enabled', false);
+        $hasSocialAuth = $this->getConfig('socialSettings', 'enabled', false);
         $authAction = $this->getConfig('actionSettings', Module::ACTION_SOCIAL_AUTH);
         if ($hasSocialAuth && empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
             throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
@@ -249,7 +249,7 @@ class AccountController extends BaseController
             return $this->goBack();
         }
         $session = Yii::$app->session;
-        $hasSocialAuth = $this->getConfig('socialAuthSettings', 'enabled', false);
+        $hasSocialAuth = $this->getConfig('socialSettings', 'enabled', false);
         $authAction = $this->getConfig('actionSettings', Module::ACTION_SOCIAL_AUTH);
         if ($hasSocialAuth && empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
             throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
@@ -268,7 +268,7 @@ class AccountController extends BaseController
                     $model->setLastLogin();
                     $session->setFlash('success', Yii::t(
                         'user',
-                        'The user <b>{user}</b> was registered successfully. You have been logged in.<pre>{log}</pre>', 
+                        'The user <b>{user}</b> was registered successfully. You have been logged in.', 
                         ['user' => $model->username]
                     ));
                 } elseif ($model->sendEmail('activation')) {
@@ -322,6 +322,27 @@ class AccountController extends BaseController
             }
         }
         return $this->render('recovery', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Change password.
+     *
+     * @return mixed
+     */
+    public function actionPassword()
+    {
+        $model = Yii::$app->user->identity;
+        $model->scenario = Module::UI_CHANGEPASS;
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            $model->setPassword($model->password_new);
+            $model->save(false);
+            Yii::$app->session->setFlash('success', Yii::t('user', 'The password was changed successfully.'));
+            $action = $this->getConfig('actionSettings', Module::ACTION_PROFILE_INDEX);
+            return $this->redirect([$action]);
+        }
+        return $this->render('password', [
             'model' => $model,
         ]);
     }
