@@ -31,6 +31,6 @@
         }
     },
     "extra": {
-        "bootstrap": "comyii\\user\\ModuleInit",
+        "bootstrap": "comyii\\user\\ModuleInit"
     }
 }
