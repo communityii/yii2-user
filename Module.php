@@ -223,7 +223,14 @@ class Module extends \kartik\base\Module
      * of the `Module::ACTION_` constants and the value will be the view layout location. 
      * @see `setConfig()` method for the default settings
      */
-    public $layoutSettings = [];
+    public $layoutSettings = [
+        self::ACTION_LOGIN => 'install',
+        self::ACTION_LOGOUT => 'install',
+        self::ACTION_REGISTER => 'install',
+        self::ACTION_ACTIVATE => 'install',
+        self::ACTION_RESET => 'install',
+        self::ACTION_RECOVERY => 'install'
+    ];
 
     /**
      * @var array the view to use for each action in the module. The keys will be one 
@@ -410,27 +417,6 @@ class Module extends \kartik\base\Module
             // the list of admin actions
             self::ACTION_ADMIN_LIST => 'admin/index',
             self::ACTION_ADMIN_MANAGE => 'admin/manage',
-            self::ACTION_ADMIN_EDIT => 'admin/update',
-            self::ACTION_ADMIN_RESET => 'admin/reset',
-        ];
-        $this->layoutSettings += [
-            // layouts for the various account actions
-            self::ACTION_LOGIN => 'install',
-            self::ACTION_LOGOUT => 'install',
-            self::ACTION_REGISTER => 'install',
-            self::ACTION_ACTIVATE => 'install',
-            self::ACTION_RESET => 'install',
-            self::ACTION_RECOVERY => 'install',
-            // the list of social actions
-            self::ACTION_SOCIAL_AUTH => 'social/login',
-            // the list of profile actions
-            self::ACTION_PROFILE_VIEW => 'profile/view',
-            self::ACTION_PROFILE_EDIT => 'profile/update',
-            self::ACTION_ACCOUNT_PASSWORD => 'account/password',
-            
-            // the list of admin actions
-            self::ACTION_ADMIN_LIST => 'admin/index',
-            self::ACTION_ADMIN_MANAGE => 'admin/view',
             self::ACTION_ADMIN_EDIT => 'admin/update',
             self::ACTION_ADMIN_RESET => 'admin/reset',
         ];
