@@ -19,6 +19,7 @@ $profileSettings = $m->profileSettings;
 $socialSettings = $m->socialSettings;
 $hasSocial = $socialSettings['enabled'];
 $hasProfile = $profileSettings['enabled'];
+$editSettings = $m->getEditSettingsUser($model);
 $socialDetails = '';
 
 // basic attributes from User model
@@ -30,17 +31,20 @@ $accountAttribs = [
     ],
     'username',
     'email:email',
-    [
-        'attribute' => 'created_on',
-        'label' => Yii::t('user', 'Registered On'),
-        'format' => 'datetime',
-        'labelColOptions' => ['style' => 'width:' . ($hasSocial || $hasProfile ? '40' : '20') . '%;text-align:right']
-    ],
-    [
-        'attribute' => 'last_login_on',
-        'format' => 'datetime',
-        'value' => strtotime($model->last_login_on) ? $model->last_login_on : null,
-    ]
+];
+if ($editSettings['changeEmail'] && !empty($model->email_new)) {
+    $accountAttribs[] = 'email_new:email';
+}
+$accountAttribs[] = [
+    'attribute' => 'created_on',
+    'label' => Yii::t('user', 'Registered On'),
+    'format' => 'datetime',
+    'labelColOptions' => ['style' => 'width:' . ($hasSocial || $hasProfile ? '40' : '20') . '%;text-align:right']
+];
+$accountAttribs[] = [
+    'attribute' => 'last_login_on',
+    'format' => 'datetime',
+    'value' => strtotime($model->last_login_on) ? $model->last_login_on : null,
 ];
 
 // basic attributes from SocialProfile model

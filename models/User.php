@@ -59,6 +59,8 @@ class User extends BaseModel implements IdentityInterface
     const STATUS_ACTIVE = 1;
     const STATUS_INACTIVE = 2;
     const STATUS_ADMIN = 3;
+    const STATUS_LOCKED = 4;
+    const STATUS_EXPIRED = 5;
 
     /**
      * @var string the write only password
@@ -265,7 +267,7 @@ class User extends BaseModel implements IdentityInterface
             'id' => Yii::t('user', 'ID'),
             'username' => Yii::t('user', 'Username'),
             'email' => Yii::t('user', 'Email'),
-            'email_new' => Yii::t('user', 'Email Change Requested'),
+            'email_new' => Yii::t('user', 'New Email Requested'),
             'password_hash' => Yii::t('user', 'Password Hash'),
             'auth_key' => Yii::t('user', 'Authorization Key'),
             'activation_key' => Yii::t('user', 'Activation Key'),
@@ -712,7 +714,7 @@ class User extends BaseModel implements IdentityInterface
         if ($emailOld != $this->email) {
             $this->email_new = $this->email;
             $this->email = $emailOld;
-            if (!static::isKeyValid($this->email_change_key, $this->emailChangeExpiry)) {
+            if (!static::isKeyValid($this->email_change_key, $this->emailChangeKeyExpiry)) {
                 $this->generateEmailChangeKey();
             }
             return true;

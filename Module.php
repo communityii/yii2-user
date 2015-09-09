@@ -28,6 +28,7 @@ class Module extends \kartik\base\Module
     // time shortcuts
     const DAYS_2 = 172800;
     const DAYS_30 = 2592000;
+    const DAYS_90 = 7776000;
     
     // the valid types of login methods
     const LOGIN_USERNAME = 1;
@@ -78,21 +79,12 @@ class Module extends \kartik\base\Module
     const BTN_BACK = 'back';                        // back to previous page
     const BTN_RESET_FORM = 'reset-form';            // reset form button
     const BTN_SUBMIT_FORM = 'submit-form';          // submit button
-    const BTN_SAVE = 'save';                        // save submit button
     const BTN_FORGOT_PASSWORD = 'forgot-password';  // forgot password link
-    const BTN_RESET_PASSWORD = 'reset-password';    // reset password action button
-    const BTN_CHANGE_PASSWORD = 'change-password';  // change password action button
-    const BTN_ADMIN_RESET = 'admin-reset';          // reset password for any user by admin
-    const BTN_ALREADY_REGISTERED = 'already-reg';   // forgot password link
+    const BTN_ALREADY_REGISTERED = 'already-reg';   // already registered link
     const BTN_LOGIN = 'login';                      // login submit button
     const BTN_LOGOUT = 'logout';                    // logout link
     const BTN_NEW_USER = 'new-user';                // new user registration link
     const BTN_REGISTER = 'register';                // registration submit button
-    const BTN_SOCIAL_VIEW = 'social-view';          // user social profile view
-    const BTN_PROFILE_VIEW = 'profile-view';        // user profile view button
-    const BTN_PROFILE_EDIT = 'profile-edit';        // user profile edit button
-    const BTN_USER_CREATE = 'user-create';          // user create button
-    const BTN_USER_REFRESH = 'user-refresh';        // user list refresh button
 
     // the list of model classes
     const MODEL_LOGIN = 'LoginForm';                  // login form model
@@ -147,6 +139,8 @@ class Module extends \kartik\base\Module
      *   If set to `true`, can be changed only by the user who is the superuser.
      * - resetPassword: bool, allow password to be reset for superuser. Defaults to `false`.
      *   If set to `true`, can be reset only by the user who is the superuser.
+     * - showHiddenInfo: bool, whether to show hidden information of password hash and keys 
+     *   generated . Defaults to `true`.
      *
      * @see `setConfig()` method for the default settings
      */
@@ -162,6 +156,8 @@ class Module extends \kartik\base\Module
      *   If set to `true`, can be changed by the superuser OR only by the respective admin user.
      * - resetPassword: bool, allow password to be reset for admin. Defaults to `true`.
      *   If set to `true`, can be reset by the superuser OR only by the user who is the admin.
+     * - showHiddenInfo: bool, whether to show hidden information of password hash and keys 
+     *   generated . Defaults to `false`.
      *
      * @see `setConfig()` method for the default settings
      */
@@ -195,7 +191,7 @@ class Module extends \kartik\base\Module
      *   both frontend and backend apps in yii2-app-advanced.
      * - defaultAvatar: string, the filename for the default avatar located in the above path which will
      *   be displayed when no profile image file is found. Defaults to `avatar.png`.
-     * - widget: array|bool, the widget settings for FileInput widget to upload the avatar.
+     * - widgetAvatar: array|bool, the widget settings for FileInput widget to upload the avatar.
      *   If this is set to `false`, no avatar / image upload will be enabled for the user.
      *
      * @see `setConfig()` method for the default settings
@@ -270,9 +266,9 @@ class Module extends \kartik\base\Module
      * - resetKeyExpiry: integer|bool, the time in seconds after which the password reset key/token will expire.
      *   Defaults to 3600*24*2 seconds (2 days). If set to `0` or `false`, the key never expires.
      * - passwordExpiry: integer|bool, the timeout in seconds after which user is required to reset his password
-     *   after logging in. Defaults to `false`. If set to `0` or `false`, the password never expires.
+     *   after logging in. Defaults to 90 days. If set to `0` or `false`, the password never expires.
      * - wrongAttempts: integer|bool, the number of consecutive wrong password type attempts, at login, after which
-     *   the account is inactivated and needs to be reset. Defaults to `false`. If set to `0` or `false`, the account
+     *   the account is inactivated and needs to be reset. Defaults to `5`. If set to `0` or `false`, the account
      *   is never inactivated after any wrong password attempts.
      * - enableRecovery: bool, whether password recovery is permitted. If set to `true`, users will be given an option
      *   to reset/recover a lost password. Defaults to `true`.
@@ -418,6 +414,7 @@ class Module extends \kartik\base\Module
             self::ACTION_ADMIN_LIST => 'admin/index',
             self::ACTION_ADMIN_MANAGE => 'admin/manage',
             self::ACTION_ADMIN_EDIT => 'admin/update',
+            self::ACTION_ADMIN_CREATE => 'admin/create',
             self::ACTION_ADMIN_RESET => 'admin/reset',
         ];
         $this->profileSettings = array_replace_recursive([
@@ -426,7 +423,7 @@ class Module extends \kartik\base\Module
             'basePath' => '@frontend/../uploads',
             'baseUrl' => '/uploads',
             'defaultAvatar' => 'avatar.png',
-            'widget' => [
+            'widgetAvatar' => [
                 'options' => ['accept' => 'image/*'],
                 'pluginOptions' => [
                     'elErrorContainer' => '#user-avatar-errors',
@@ -457,14 +454,18 @@ class Module extends \kartik\base\Module
             ],
         ], $this->socialSettings);
         $this->superuserEditSettings += [
+            'createUser' => true,
             'changeUsername' => false,
             'changeEmail' => false,
             'resetPassword' => false,
+            'showHiddenInfo' => true
         ];
         $this->adminEditSettings += [
+            'createUser' => true,
             'changeUsername' => true,
             'changeEmail' => true,
             'resetPassword' => true,
+            'showHiddenInfo' => false
         ];
         $this->userEditSettings += [
             'changeUsername' => true,
@@ -489,8 +490,8 @@ class Module extends \kartik\base\Module
             'strengthMeter' => [self::SCN_INSTALL, self::SCN_REGISTER, Module::SCN_RESET, Module::SCN_CHANGEPASS],
             'activationKeyExpiry' => self::DAYS_2,
             'resetKeyExpiry' => self::DAYS_2,
-            'passwordExpiry' => false,
-            'wrongAttempts' => false,
+            'passwordExpiry' => self::DAYS_90,
+            'wrongAttempts' => 5,
             'enableRecovery' => true
         ], $this->passwordSettings);
         $captchaTemplate = <<< HTML
@@ -600,6 +601,18 @@ HTML;
         }
         return false;
     }
+    
+    /**
+     * Checks superuser and admin settings and returns if valid
+     * @return bool
+     */
+    public function checkSettings($settings, $key) {
+        if ($key == 'createUser') {
+            $settings = Yii::$app->user->isSuperuser ? $this->superuserEditSettings : $this->adminEditSettings;
+            return ArrayHelper::getValue($settings, $key, false);
+        }
+        return $settings === true || (is_array($settings) && ArrayHelper::getValue($settings, $key, false));
+    }
 
     /**
      * Gets the user configuration ability for a user model record
@@ -620,7 +633,8 @@ HTML;
     /**
      * Generates an action button
      * @param string $key the button identification key
-     * @param array $params the parameters to pass to the button action
+     * @param array $params the parameters to pass to the button action. You can
+     * include a label or icon here
      * @param array $config the button configuration options to override
      */
     public function button($key, $params = [], $config = [])
@@ -630,6 +644,8 @@ HTML;
             return '';
         }
         $iconPrefix = $this->iconPrefix;
+        $labelNew = ArrayHelper::remove($params, 'label', '');
+        $iconNew = ArrayHelper::remove($params, 'icon', '');
         $label = $icon = $action = $type = '';
         $options = [];
         $iconOptions = ['style'=>'margin-right:5px'];
@@ -637,6 +653,12 @@ HTML;
         if (!empty($icon)) {
             Html::addCssClass($iconOptions, explode(' ', $iconPrefix . $icon));
             $icon = Html::tag('i', '', $iconOptions);
+        }
+        if (!empty($iconNew)) {
+            $icon = $iconNew;
+        }
+        if (!empty($labelNew)) {
+            $label = $labelNew;
         }
         $label = $icon . $label;
         $options = array_replace_recursive($options, $config);
@@ -703,12 +725,6 @@ HTML;
                 'icon' => 'save',
                 'options' => ['class' => 'btn btn-primary'],
             ],
-            self::BTN_SAVE => [
-                'type' => 'submit',
-                'label' => Yii::t('user', 'Save'),
-                'icon' => 'save',
-                'options' => ['class' => 'btn btn-primary'],
-            ],
             self::BTN_FORGOT_PASSWORD => [
                 'label' => Yii::t('user', 'Forgot Password?'),
                 'icon' => 'info-sign',
@@ -717,24 +733,6 @@ HTML;
                     'class' => 'btn btn-link y2u-link',
                     'title' => Yii::t('user', 'Recover your lost password')
                 ],
-            ],
-            self::BTN_RESET_PASSWORD => [
-                'label' => Yii::t('user', 'Reset Password'),
-                'icon' => 'lock',
-                'action' => self::ACTION_RECOVERY,
-                'options' => ['class' => 'btn btn-default'],
-            ],
-            self::BTN_CHANGE_PASSWORD => [
-                'label' => Yii::t('user', 'Change Password'),
-                'icon' => 'lock',
-                'action' => self::ACTION_ACCOUNT_PASSWORD,
-                'options' => ['class' => 'btn btn-sm btn-default'],
-            ],
-            self::BTN_ADMIN_RESET => [
-                'label' => Yii::t('user', 'Reset Password'),
-                'icon' => 'lock',
-                'action' => self::ACTION_ADMIN_RESET,
-                'options' => ['class' => 'btn btn-sm btn-default'],
             ],
             self::BTN_ALREADY_REGISTERED => [
                 'label' => Yii::t('user', 'Already registered?'),
@@ -771,40 +769,6 @@ HTML;
                 'label' => Yii::t('user', 'Register'),
                 'icon' => 'edit',
                 'options' => ['class' => 'btn btn-primary'],
-            ],
-            self::BTN_PROFILE_VIEW => [
-                'label' => Yii::t('user', 'View User Profile'),
-                'icon' => 'eye-open',
-                'action' => self::ACTION_PROFILE_VIEW,
-                'options' => [
-                    'class' => 'btn btn-sm btn-default',
-                    'title' => Yii::t('user', 'View / manage user profile'),
-                ],
-            ],
-            self::BTN_PROFILE_EDIT => [
-                'label' => Yii::t('user', 'Edit'),
-                'icon' => 'pencil',
-                'action' => self::ACTION_PROFILE_EDIT,
-                'options' => [
-                    'class' => 'btn btn-primary',
-                    'title' => Yii::t('user', 'Edit user profile'),
-                ],
-            ],
-            self::BTN_USER_CREATE => [
-                'icon' => 'plus',
-                'action' => self::ACTION_ADMIN_CREATE,
-                'options' => [
-                    'class' => 'btn btn-success',
-                    'title' => Yii::t('user', 'Add new user'),
-                ],
-            ],
-            self::BTN_USER_REFRESH => [
-                'icon' => 'refresh',
-                'action' => self::ACTION_ADMIN_LIST,
-                'options' => [
-                    'class' => 'btn btn-default',
-                    'title' => Yii::t('user', 'Refresh user list'),
-                ],
             ],
         ];
     }

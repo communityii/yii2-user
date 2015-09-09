@@ -9,6 +9,7 @@ use kartik\select2\Select2;
 use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\assets\AdminAsset;
+use comyii\user\widgets\AdminMenu;
 
 /**
  * @var yii\web\View $this
@@ -23,59 +24,51 @@ $class = $m->modelSettings[Module::MODEL_USER];
 $user = new $class;
 $allStatuses = $user->allStatusList;
 $statuses = $user->statusList;
-unset($statuses[User::STATUS_PENDING]);
 unset($user);
 $config = Json::encode([
     'confirmMsg' => Yii::t('user', 'Batch update statuses for all selected users?'),
-    'alert1' => Yii::t('user', 'You must select users (via checkbox) for batch update.'),
-    'alert2' => Yii::t('user', 'No status selected for batch update.'),
+    'alert1' => Yii::t('user', 'No users have been selected for batch update of status.'),
+    'alert2' => Yii::t('user', 'You have not chosen a status for update.'),
+    'elOut' => '#batch-status-out',
     'url' => Url::to(['batch-update'])
 ]);
 $this->registerJs("var kvBatchUpdateConfig = {$config};", View::POS_HEAD);
 AdminAsset::register($this);
 ?>
+<div class="page-header">
+    <div class="pull-right"><?= AdminMenu::widget(['ui' => 'list', 'user' => null]) ?></div>
+    <h1><?= $this->title ?></h1>
+</div>
+<div id="batch-status-out"></div>
+<div style="width:200px;float:right;margin:-10px auto;">
+<?= Select2::widget([
+    'name' => 'batch-status',
+    'value' => '',
+    'data' => $statuses,
+    'addon' => [
+        'append' => [
+            'content' => Html::button(Html::icon('saved'),[
+                'class' => 'btn btn-default',
+                'id' => 'btn-batch-update',
+                'title' => Yii::t('user', 'Go!')
+            ]),
+            'asButton' => true
+        ],
+    ],
+    'options' => [
+        'id' => 'batch-status',
+        'placeholder' => Yii::t('user', 'Batch update...')
+    ]
+]) ?>
+</div>
+<div class="clearfix"></div>
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'filterModel' => $searchModel,
     'pjax' => true,
-    'panel' => [
-        'type'=>'primary',
-        'heading' => $m->icon('list') . ' ' . $this->title,
-    ],
+    'panel' => false,
     'export' => false,
     'options' => ['id' => 'user-grid'],
-    'toolbar' => [
-        [
-            'content' => Html::a($m->icon('plus'), ['create'], [
-                'class' => 'btn btn-success', 'title' => Yii::t('user', 'Create User'),
-            ]) . Html::a($m->icon('refresh'), ['index'], [
-                'data-pjax' => 0, 
-                'class' => 'btn btn-default', 
-                'title' => Yii::t('user', 'Refresh User List')
-            ])      
-        ],
-        [
-            'content' => '<div style="width:200px">' . Select2::widget([
-                'name' => 'batch-status',
-                'value' => '',
-                'data' => $statuses,
-                'addon' => [
-                    'append' => [
-                        'content' => Html::button(Html::icon('saved'),[
-                            'class' => 'btn btn-default',
-                            'id' => 'btn-batch-update',
-                            'title' => Yii::t('user', 'Go!')
-                        ]),
-                        'asButton' => true
-                    ],
-                ],
-                'options' => [
-                    'id' => 'batch-status',
-                    'placeholder' => Yii::t('user', 'Batch update...')
-                ]
-            ])  . '</div>'
-        ]
-    ],
     'columns' => [
         [
             'attribute'=>'id', 

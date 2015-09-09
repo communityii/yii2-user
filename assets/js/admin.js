@@ -1,15 +1,20 @@
 var kvStatusBatchUpdate = function() {
-    var $btn = $('#btn-batch-update'), config = kvBatchUpdateConfig;
+    var $btn = $('#btn-batch-update'), config = kvBatchUpdateConfig, $el = $(config.elOut),
+        close = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">\n' +
+        '<span aria-hidden="true">&times;</span>\n' + '</button>',
+        notify = function(type, content) {
+            $el.html('<div class="alert alert-' + type + ' fade in">' + close + content + '</div>');
+        };
     
     $btn.off('click').on('click', function() {
         var keys = $('#user-grid').yiiGridView('getSelectedRows'), 
             $el = $('#batch-status'), status = $el.val();
         if (!status) {
-            alert(config.alert2);
+            notify('danger', config.alert2);
             return;
         }
         if (!keys.length) {
-            alert(config.alert1);
+            notify('danger', config.alert1);
             return;
         }
         if (confirm(config.confirmMsg)) {
@@ -21,17 +26,14 @@ var kvStatusBatchUpdate = function() {
                     keys: keys,
                     status: status
                 },
-                success: function() {
+                success: function(data) {
                     $('#user-grid').yiiGridView('applyFilter');
+                    setTimeout(function() {
+                        notify('success', data.message);
+                    }, 1000);
                 }
             });
         }
     });
 };
-$('#user-grid-pjax').on('pjax:complete', function() {
-    var $el = $('#batch-status'), data = window[$el.attr('data-krajee-select2')] || {};
-    $el.on('select2:opening', initS2Open).on('select2:unselecting', initS2Unselect);
-    $.when($el.select2(data)).done(initS2Loading('batch-status', '.select2-container--krajee', '', true));
-    kvStatusBatchUpdate();
-});
 kvStatusBatchUpdate();

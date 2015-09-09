@@ -104,7 +104,14 @@ class AdminController extends BaseController
             ['status' => $status], 
             ['and', ['id' => $keys], 'status <> ' . User::STATUS_SUPERUSER]
         )->execute();
-        return $keys;
+        return [
+            'keys' => $keys, 
+            'message' => Yii::t(
+                'user', 
+                'The status was updated successfully for {n, plural, one{one user} other{# users}}.', 
+                ['n' => count($keys)]
+            )
+        ];
     }
 
     /**

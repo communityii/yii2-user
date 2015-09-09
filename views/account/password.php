@@ -26,7 +26,6 @@ $this->title = Yii::t('user', 'Change Password') . ' (' . $model->username . ')'
         ]) ?>
         <?php if (in_array(Module::SCN_CHANGEPASS, $m->passwordSettings['strengthMeter'])): ?>
         <?= $form->field($model, 'password_new')->widget(PasswordInput::classname(), [
-            'pluginOptions' => ['toggleMask' => false],
             'options' => ['placeholder' => Yii::t('user', 'Enter new password')]
         ]); ?>
         <?php else: ?>
@@ -41,6 +40,6 @@ $this->title = Yii::t('user', 'Change Password') . ' (' . $model->username . ')'
 </div>  
 <hr>
 <div class="text-right">
-    <?= $m->button(Module::BTN_RESET_FORM) . ' ' . $m->button(Module::BTN_SUBMIT_FORM) ?>
+    <?= $m->button(Module::BTN_RESET_FORM) ?> <?= $m->button(Module::BTN_SUBMIT_FORM) ?>
 </div>
 <?php ActiveForm::end(); ?>

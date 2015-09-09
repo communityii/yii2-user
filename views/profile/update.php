@@ -53,7 +53,7 @@ $socialDetails = '';
             'title' => Yii::t('user', 'Remove avatar image')
         ]);
     }
-    $widgetOptions = array_replace_recursive($m->profileSettings['widget'], [
+    $widgetOptions = array_replace_recursive($m->profileSettings['widgetAvatar'], [
         'model' => $profile,
         'attribute' => 'image',
         'options' => ['accept' => 'image/*'],
@@ -93,6 +93,6 @@ $socialDetails = '';
 <?php endif;?>
 <hr>
 <div class="text-right">
-    <?= $m->button(Module::BTN_RESET_FORM) . ' ' . $m->button(Module::BTN_SAVE) ?>
+    <?= $m->button(Module::BTN_RESET_FORM) . ' ' . $m->button(Module::BTN_SUBMIT_FORM, ['label' => Yii::t('user', 'Save')]) ?>
 </div>
 <?php ActiveForm::end(); ?>
