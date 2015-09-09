@@ -14,6 +14,7 @@ use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use kartik\helpers\Html;
+use kartik\helpers\Enum;
 use comyii\user\models\User;
 
 /**
@@ -24,25 +25,28 @@ use comyii\user\models\User;
  */
 class Module extends \kartik\base\Module
 {
-
+    // time shortcuts
+    const DAYS_2 = 172800;
+    const DAYS_30 = 2592000;
+    
     // the valid types of login methods
     const LOGIN_USERNAME = 1;
     const LOGIN_EMAIL = 2;
     const LOGIN_BOTH = 3;
 
-    // the major user interfaces (forms/widgets) (some of these also mirror as scenario names in the User model)
-    const UI_ACCESS = 'access';
-    const UI_INSTALL = 'install';
-    const UI_LOGIN = 'login';
-    const UI_REGISTER = 'register';
-    const UI_ACTIVATE = 'activate';
-    const UI_RESET = 'reset';
-    const UI_CHANGEPASS = 'password';
-    const UI_RECOVERY = 'recovery';
-    const UI_LOCKED = 'locked';
-    const UI_PROFILE = 'profile';
-    const UI_ADMIN = 'admin';
-    const UI_NEWEMAIL = 'newemail';
+    // the major model scenarios (some of these map to specific user interfaces)
+    const SCN_ACCESS = 'access';
+    const SCN_INSTALL = 'install';
+    const SCN_LOGIN = 'login';
+    const SCN_REGISTER = 'register';
+    const SCN_ACTIVATE = 'activate';
+    const SCN_RESET = 'reset';
+    const SCN_CHANGEPASS = 'password';
+    const SCN_RECOVERY = 'recovery';
+    const SCN_LOCKED = 'locked';
+    const SCN_PROFILE = 'profile';
+    const SCN_ADMIN = 'admin';
+    const SCN_NEWEMAIL = 'newemail';
 
     // the list of account actions
     const ACTION_LOGIN = 1;             // login as new user
@@ -52,19 +56,19 @@ class Module extends \kartik\base\Module
     const ACTION_RECOVERY = 5;          // account password recovery request
     const ACTION_RESET = 6;             // account password reset
     const ACTION_CAPTCHA = 7;           // account captcha for registration
+    const ACTION_NEWEMAIL = 8;          // account new email change action
     const ACTION_SOCIAL_AUTH = 15;      // social auth & login
 
     // the list of profile actions
-    const ACTION_PROFILE_INDEX = 50;     // profile index
-    const ACTION_PROFILE_MANAGE = 51;     // profile view
+    const ACTION_PROFILE_INDEX = 50;    // profile index
+    const ACTION_PROFILE_VIEW = 51;     // profile view
     const ACTION_PROFILE_EDIT = 52;     // profile update
     const ACTION_ACCOUNT_PASSWORD = 53; // profile password change
-    const ACTION_AVATAR_UPLOAD = 54;    // profile image upload
-    const ACTION_AVATAR_DELETE = 55;    // profile image delete
+    const ACTION_AVATAR_DELETE = 54;    // profile image delete
 
     // the list of admin actions
     const ACTION_ADMIN_LIST = 100;      // user listing
-    const ACTION_ADMIN_VIEW = 101;      // user view
+    const ACTION_ADMIN_MANAGE = 101;    // user view
     const ACTION_ADMIN_EDIT = 102;      // user edit
     const ACTION_ADMIN_CREATE = 103;    // user creation (only for admin)
     const ACTION_ADMIN_RESET = 104;     // user password reset
@@ -77,6 +81,7 @@ class Module extends \kartik\base\Module
     const BTN_SAVE = 'save';                        // save submit button
     const BTN_FORGOT_PASSWORD = 'forgot-password';  // forgot password link
     const BTN_RESET_PASSWORD = 'reset-password';    // reset password action button
+    const BTN_CHANGE_PASSWORD = 'change-password';  // change password action button
     const BTN_ADMIN_RESET = 'admin-reset';          // reset password for any user by admin
     const BTN_ALREADY_REGISTERED = 'already-reg';   // forgot password link
     const BTN_LOGIN = 'login';                      // login submit button
@@ -84,7 +89,7 @@ class Module extends \kartik\base\Module
     const BTN_NEW_USER = 'new-user';                // new user registration link
     const BTN_REGISTER = 'register';                // registration submit button
     const BTN_SOCIAL_VIEW = 'social-view';          // user social profile view
-    const BTN_PROFILE_MANAGE = 'profile-view';        // user profile view button
+    const BTN_PROFILE_VIEW = 'profile-view';        // user profile view button
     const BTN_PROFILE_EDIT = 'profile-edit';        // user profile edit button
     const BTN_USER_CREATE = 'user-create';          // user create button
     const BTN_USER_REFRESH = 'user-refresh';        // user list refresh button
@@ -97,11 +102,6 @@ class Module extends \kartik\base\Module
     const MODEL_SOCIAL_PROFILE = 'SocialProfile';     // social profile model
     const MODEL_PROFILE_SEARCH = 'UserProfileSearch'; // user profile search model
     const MODEL_RECOVERY = 'RecoveryForm';            // user password recovery model
-
-    // the mail delivery settings
-    const ENQUEUE_ONLY = 1;
-    const MAIL_ONLY = 2;
-    const ENQUEUE_AND_MAIL = 3;
 
     /**
      * @var string code for accessing the user install configuration screen. You will need to
@@ -140,6 +140,7 @@ class Module extends \kartik\base\Module
     /**
      * @var array configuration for superuser data editing accesses. Note that these accesses are
      * available only via administration interface. You can set the following boolean properties:
+     * - createUser: bool, whether to allow superuser to create users. Defaults to `true`,
      * - changeUsername: bool, allow username to be changed for superuser. Defaults to `false`.
      *   If set to `true`, can be changed only by the user who is the superuser.
      * - changeEmail: bool, allow email to be changed for superuser. Defaults to `false`.
@@ -154,6 +155,7 @@ class Module extends \kartik\base\Module
     /**
      * @var array configuration for admin user data editing accesses. Note that these accesses are
      * available only via administration interface. You can set the following boolean properties:
+     * - createUser: bool, whether to allow admin to create users. Defaults to `true`,
      * - changeUsername: bool, allow username to be changed for admin. Defaults to `true`.
      *   If set to `true`, can be changed by the superuser OR only by the respective admin user.
      * - changeEmail: bool, allow email to be changed for admin. Defaults to `true`.
@@ -224,6 +226,13 @@ class Module extends \kartik\base\Module
     public $layoutSettings = [];
 
     /**
+     * @var array the view to use for each action in the module. The keys will be one 
+     * of the `Module::ACTION_` constants and the value will be the view location. 
+     * @see `setConfig()` method for the default settings
+     */
+    public $viewSettings = [];
+
+    /**
      * @var array the login settings for the module. The following options can be set:
      * - loginType: integer, whether users can login with their username, email address, or both.
      *   Defaults to `Module::LOGIN_BOTH`.
@@ -239,16 +248,16 @@ class Module extends \kartik\base\Module
 
     /**
      * @var array the settings for the password in the module. The following options can be set"
-     * - validateStrengthCurr: array|boolean, the list of forms where password strength will be validated for current password. 
+     * - validateStrengthCurr: array|boolean, the list of scenarios where password strength will be validated for current password. 
      *   If set to `false` or an empty array, no strength will be validated. The strength will be validated
-     *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::UI_INSTALL, Module::UI_RESET]`.
-     * - validateStrengthNew: array|boolean, the list of forms where password strength will be validated for new password. 
+     *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::SCN_INSTALL, Module::SCN_RESET]`.
+     * - validateStrengthNew: array|boolean, the list of scenarios where password strength will be validated for new password. 
      *   If set to `false` or an empty array, no strength will be validated. The strength will be validated
-     *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::UI_RESET, Module::UI_CHANGEPASS]`.
+     *   using `\kartik\password\StrengthValidator`. Defaults to `[Module::SCN_RESET, Module::SCN_CHANGEPASS]`.
      * - strengthRules: array, the strength validation rules as required by `\kartik\password\StrengthValidator`
-     * - strengthMeter: array|boolean, the list of forms where password strength meter will be displayed.
+     * - strengthMeter: array|boolean, the list of scenarios where password strength meter will be displayed.
      *   If set to `false` or an empty array, no strength meter will be displayed.  Defaults to
-     *   `[Module::UI_REGISTER, Module::UI_RESET]`.
+     *   `[Module::SCN_REGISTER, Module::SCN_RESET]`.
      * - activationKeyExpiry: integer|bool, the time in seconds after which the account activation key/token will expire.
      *   Defaults to 3600*24*2 seconds (2 days). If set to `0` or `false`, the key never expires.
      * - resetKeyExpiry: integer|bool, the time in seconds after which the password reset key/token will expire.
@@ -287,20 +296,6 @@ class Module extends \kartik\base\Module
     public $registrationSettings = [];
 
     /**
-     * @var array the user notification settings for the module. Currently, only email notifications
-     * using Yii Swiftmail extension is supported. The following options can be set:
-     * - enabled: bool, whether the notifications are enabled for the module. Defaults to `true`. If set
-     *   to `false`, no notifications will be triggered for users.
-     * - viewPath: string, the path for notification email templates.
-     * - activation: array, the settings for the activation notification.
-     * - recovery: array, the settings for the recovery notification.
-     * - mailDelivery: integer, one of the mailDelivery options `Module::ENQUEUE_ONLY`, `Module::MAIL_ONLY`,
-     *   or `Module::ENQUEUE_AND_MAIL`. Defaults to `Module::ENQUEUE_AND_MAIL`,
-     * @see `setConfig()` method for the default settings
-     */
-    public $notificationSettings = [];
-
-    /**
      * @var array the social authorization settings for the module. The following options should be set:
      * - enabled: bool, whether the social authorization is enabled for the module. Defaults to `true`. If set
      *   to `false`, the remote authentication through social providers will be disabled.
@@ -311,19 +306,21 @@ class Module extends \kartik\base\Module
      */
     public $socialSettings = [];
 
-
     /**
-     * @var array the global widget settings for each form (also available as a widget).
-     * Check each widget documentation for details. Few default settings:
-     * - `type`: the Bootstrap form orientation - one of `vertical`, `horizontal`, or `inline`.
+     * @var array the user notification settings for the module. Currently, only email notifications
+     * using Yii Swiftmail extension is supported. The following options can be set:
+     * - viewPath: string, the path for notification email templates.
+     * - activation: array, the settings for the activation notification
+     * - recovery: array, the settings for the recovery notification
+     * - newemail: array, the settings for the email change notification
      * @see `setConfig()` method for the default settings
      */
-    public $widgetSettings = [];
+    public $notificationSettings = [];
     
     /**
      * @var string The prefix for user module URL.
      *
-     * @See [[GroupUrlRule::prefix]]
+     * @see [[yii\web\GroupUrlRule::prefix]]
      */
     public $urlPrefix = 'user';
     
@@ -332,12 +329,16 @@ class Module extends \kartik\base\Module
      */
     public $urlRules = [
         'profile' => 'profile/index',
+        'profile/<id:\d+>' => 'profile/view',
         'update' => 'profile/update',
-        'profile/view/<id:\d+>' => 'profile/view',
-        'avatar-delete/<user:>' => 'profile/avatar-delete/<user:>',
-        'password' => 'account/password',
-        'admin/<id:\d+>' => 'admin/view',
-        'admin' => 'admin/index'
+        'avatar-delete/<user:>' => 'profile/avatar-delete',
+        'admin' => 'admin/index',
+        'admin/<id:\d+>' => 'admin/manage',
+        'auth/<authclient:>' => 'account/auth',
+        'activate/<key:>' => 'account/activate',
+        'reset/<key:>' => 'account/reset',
+        'newemail/<key:>' => 'account/newemail',
+        '<action>' => 'account/<action>',
     ];
 
     /**
@@ -376,6 +377,15 @@ class Module extends \kartik\base\Module
                 return date('Y-m-d H:i:s');
             };
         }
+        $this->modelSettings += [
+            self::MODEL_LOGIN => 'comyii\user\models\LoginForm',
+            self::MODEL_USER => 'comyii\user\models\User',
+            self::MODEL_USER_SEARCH => 'comyii\user\models\UserSearch',
+            self::MODEL_PROFILE => 'comyii\user\models\UserProfile',
+            self::MODEL_SOCIAL_PROFILE => 'comyii\user\models\SocialProfile',
+            self::MODEL_PROFILE_SEARCH => 'comyii\user\models\UserProfileSearch',
+            self::MODEL_RECOVERY => 'comyii\user\models\RecoveryForm',
+        ];
         $this->actionSettings += [
             // the list of account actions
             self::ACTION_LOGIN => 'account/login',
@@ -385,21 +395,21 @@ class Module extends \kartik\base\Module
             self::ACTION_RESET => 'account/reset',
             self::ACTION_RECOVERY => 'account/recovery',
             self::ACTION_CAPTCHA => 'account/captcha',
+            self::ACTION_NEWEMAIL => 'account/newemail',
             self::ACTION_SOCIAL_AUTH => 'account/auth',
 
             // the list of profile actions
             self::ACTION_PROFILE_INDEX => 'profile/index',
             self::ACTION_PROFILE_EDIT => 'profile/update',
             self::ACTION_ACCOUNT_PASSWORD => 'account/password',
-            self::ACTION_PROFILE_MANAGE => 'profile/manage',
+            self::ACTION_PROFILE_VIEW => 'profile/view',
             
             // the list of avatar actions
-            self::ACTION_AVATAR_UPLOAD => 'profile/avatar-upload',
             self::ACTION_AVATAR_DELETE => 'profile/avatar-delete',
 
             // the list of admin actions
             self::ACTION_ADMIN_LIST => 'admin/index',
-            self::ACTION_ADMIN_VIEW => 'admin/view',
+            self::ACTION_ADMIN_MANAGE => 'admin/manage',
             self::ACTION_ADMIN_EDIT => 'admin/update',
             self::ACTION_ADMIN_RESET => 'admin/reset',
         ];
@@ -414,16 +424,52 @@ class Module extends \kartik\base\Module
             // the list of social actions
             self::ACTION_SOCIAL_AUTH => 'social/login',
             // the list of profile actions
-            self::ACTION_PROFILE_MANAGE => 'profile/view',
+            self::ACTION_PROFILE_VIEW => 'profile/view',
             self::ACTION_PROFILE_EDIT => 'profile/update',
             self::ACTION_ACCOUNT_PASSWORD => 'account/password',
             
             // the list of admin actions
             self::ACTION_ADMIN_LIST => 'admin/index',
-            self::ACTION_ADMIN_VIEW => 'admin/view',
+            self::ACTION_ADMIN_MANAGE => 'admin/view',
             self::ACTION_ADMIN_EDIT => 'admin/update',
             self::ACTION_ADMIN_RESET => 'admin/reset',
         ];
+        $this->profileSettings = array_replace_recursive([
+            'enabled' => true,
+            'emailChangeKeyExpiry' => static::DAYS_2,
+            'basePath' => '@frontend/../uploads',
+            'baseUrl' => '/uploads',
+            'defaultAvatar' => 'avatar.png',
+            'widget' => [
+                'options' => ['accept' => 'image/*'],
+                'pluginOptions' => [
+                    'elErrorContainer' => '#user-avatar-errors',
+                    'allowedFileExtensions' => ['jpg', 'gif', 'png'],
+                    'maxFileSize' => 200,
+                    'showCaption' => false,
+                    'overwriteInitial' => true,
+                    'browseLabel' => '',
+                    'removeLabel' => '',
+                    'removeIcon' => '<i class="glyphicon glyphicon-ban-circle"></i>',
+                    'browseIcon' => '<i class="glyphicon glyphicon-folder-open"></i>',
+                    'showClose' => false,
+                    'showUpload' => false,
+                    'removeTitle' => Yii::t('user', 'Cancel or reset changes'),
+                    'previewClass' => 'user-avatar',
+                    'msgErrorClass' => 'alert alert-block alert-danger',
+                    'previewSettings' => [
+                        'image' => ['width' => 'auto', 'height' => '180px'],
+                    ]
+                ]
+            ]
+        ], $this->profileSettings);
+        $this->socialSettings = array_replace_recursive([
+            'enabled' => true,
+            'refreshAttributes' => [
+                'display_name',
+                'email'
+            ],
+        ], $this->socialSettings);
         $this->superuserEditSettings += [
             'changeUsername' => false,
             'changeEmail' => false,
@@ -440,11 +486,11 @@ class Module extends \kartik\base\Module
         ];
         $this->loginSettings = array_replace_recursive([
             'loginType' => self::LOGIN_BOTH,
-            'rememberMeDuration' => 2592000
+            'rememberMeDuration' => self::DAYS_30
         ], $this->loginSettings);
         $this->passwordSettings = array_replace_recursive([
-            'validateStrengthCurr' => [self::UI_INSTALL, self::UI_REGISTER],
-            'validateStrengthNew' => [Module::UI_RESET, Module::UI_CHANGEPASS],
+            'validateStrengthCurr' => [self::SCN_INSTALL, self::SCN_REGISTER],
+            'validateStrengthNew' => [Module::SCN_RESET, Module::SCN_CHANGEPASS],
             'strengthRules' => [
                 'min' => 8,
                 'upper' => 1,
@@ -454,9 +500,9 @@ class Module extends \kartik\base\Module
                 'hasUser' => true,
                 'hasEmail' => true
             ],
-            'strengthMeter' => [self::UI_INSTALL, self::UI_REGISTER, Module::UI_RESET, Module::UI_CHANGEPASS],
-            'activationKeyExpiry' => 172800,
-            'resetKeyExpiry' => 172800,
+            'strengthMeter' => [self::SCN_INSTALL, self::SCN_REGISTER, Module::SCN_RESET, Module::SCN_CHANGEPASS],
+            'activationKeyExpiry' => self::DAYS_2,
+            'resetKeyExpiry' => self::DAYS_2,
             'passwordExpiry' => false,
             'wrongAttempts' => false,
             'enableRecovery' => true
@@ -496,78 +542,25 @@ HTML;
         ], $this->registrationSettings);
         $appName = \Yii::$app->name;
         $supportEmail = isset(\Yii::$app->params['supportEmail']) ? \Yii::$app->params['supportEmail'] : 'nobody@support.com';
+        $fromName = Yii::t('user', '{appname} Robot', ['appname' => $appName]);
         $this->notificationSettings = array_replace_recursive([
-            'enabled' => true,
-            'viewPath' => '@communityii/user/views/mail',
+            'viewPath' => '@vendor/communityii/yii2-user/views/mail',
             'activation' => [
-                'enabled' => true,
                 'fromEmail' => $supportEmail,
-                'fromName' => Yii::t('user', '{appname} Robot', ['appname' => $appName]),
-                'subject' => Yii::t('user', Yii::t('user', 'Account activation for {appname}', ['appname' => $appName])),
-                'template' => 'activation'
+                'fromName' => $fromName,
+                'subject' => Yii::t('user', Yii::t('user', 'Account activation for {appname}', ['appname' => $appName]))
             ],
             'recovery' => [
-                'enabled' => true,
                 'fromEmail' => $supportEmail,
-                'fromName' => Yii::t('user', '{appname} Robot', ['appname' => $appName]),
-                'subject' => Yii::t('user', Yii::t('user', 'Account recovery for {appname}', ['appname' => $appName])),
-                'template' => 'recovery'
+                'fromName' => $fromName,
+                'subject' => Yii::t('user', Yii::t('user', 'Account recovery for {appname}', ['appname' => $appName]))
             ],
-            'mailDelivery' => self::ENQUEUE_AND_MAIL
-        ],  $this->notificationSettings);
-        $this->socialSettings = array_replace_recursive([
-            'enabled' => true,
-            'refreshAttributes' => [
-                'display_name',
-                'email'
-            ],
-        ], $this->socialSettings);
-        $this->profileSettings = array_replace_recursive([
-            'enabled' => true,
-            'basePath' => '@frontend/../uploads',
-            'baseUrl' => '/uploads',
-            'defaultAvatar' => 'avatar.png',
-            'widget' => [
-                'options' => ['accept' => 'image/*'],
-                'pluginOptions' => [
-                    'elErrorContainer' => '#user-avatar-errors',
-                    'allowedFileExtensions' => ['jpg', 'gif', 'png'],
-                    'maxFileSize' => 200,
-                    'showCaption' => false,
-                    'overwriteInitial' => true,
-                    'browseLabel' => '',
-                    'removeLabel' => '',
-                    'removeIcon' => '<i class="glyphicon glyphicon-ban-circle"></i>',
-                    'browseIcon' => '<i class="glyphicon glyphicon-folder-open"></i>',
-                    'showClose' => false,
-                    'showUpload' => false,
-                    'removeTitle' => Yii::t('user', 'Cancel or reset changes'),
-                    'previewClass' => 'user-avatar',
-                    'msgErrorClass' => 'alert alert-block alert-danger',
-                    'previewSettings' => [
-                        'image' => ['width' => 'auto', 'height' => '180px'],
-                    ]
-                ]
+            'newemail' => [
+                'fromEmail' => $supportEmail,
+                'fromName' => $fromName,
+                'subject' => Yii::t('user', Yii::t('user', 'Email change for {appname}', ['appname' => $appName]))
             ]
-        ], $this->profileSettings);
-        $this->modelSettings += [
-            self::MODEL_LOGIN => 'comyii\user\models\LoginForm',
-            self::MODEL_USER => 'comyii\user\models\User',
-            self::MODEL_USER_SEARCH => 'comyii\user\models\UserSearch',
-            self::MODEL_PROFILE => 'comyii\user\models\UserProfile',
-            self::MODEL_SOCIAL_PROFILE => 'comyii\user\models\SocialProfile',
-            self::MODEL_PROFILE_SEARCH => 'comyii\user\models\UserProfileSearch',
-            self::MODEL_RECOVERY => 'comyii\user\models\RecoveryForm',
-        ];
-        $this->widgetSettings = array_replace_recursive([
-            self::UI_LOGIN => ['type' => 'vertical'],
-            self::UI_REGISTER => ['type' => 'horizontal'],
-            self::UI_ACTIVATE => ['type' => 'inline'],
-            self::UI_RECOVERY => ['type' => 'inline'],
-            self::UI_RESET => ['type' => 'vertical'],
-            self::UI_PROFILE => ['type' => 'vertical'],
-            self::UI_ADMIN => ['type' => 'vertical'],
-        ], $this->widgetSettings);
+        ],  $this->notificationSettings);
         $this->buttons = array_replace_recursive(static::getDefaultButtonConfig(), $this->buttons);
     }
 
@@ -745,6 +738,12 @@ HTML;
                 'action' => self::ACTION_RECOVERY,
                 'options' => ['class' => 'btn btn-default'],
             ],
+            self::BTN_CHANGE_PASSWORD => [
+                'label' => Yii::t('user', 'Change Password'),
+                'icon' => 'lock',
+                'action' => self::ACTION_ACCOUNT_PASSWORD,
+                'options' => ['class' => 'btn btn-sm btn-default'],
+            ],
             self::BTN_ADMIN_RESET => [
                 'label' => Yii::t('user', 'Reset Password'),
                 'icon' => 'lock',
@@ -787,10 +786,10 @@ HTML;
                 'icon' => 'edit',
                 'options' => ['class' => 'btn btn-primary'],
             ],
-            self::BTN_PROFILE_MANAGE => [
-                'label' => Yii::t('user', 'Manage User Profile'),
+            self::BTN_PROFILE_VIEW => [
+                'label' => Yii::t('user', 'View User Profile'),
                 'icon' => 'eye-open',
-                'action' => self::ACTION_PROFILE_MANAGE,
+                'action' => self::ACTION_PROFILE_VIEW,
                 'options' => [
                     'class' => 'btn btn-sm btn-default',
                     'title' => Yii::t('user', 'View / manage user profile'),
@@ -822,5 +821,48 @@ HTML;
                 ],
             ],
         ];
+    }
+    
+    /**
+     * Helper to convert expiry time left from now
+     * @param int $seconds the time left in seconds
+     * @return string
+     */
+    public static function timeLeft($type, $seconds) {
+        if ($seconds > 0) {
+            return Yii::t('user', 'The {type} link will expire in {time} from now.', [
+                'type' => $type, 'time' => Enum::timeInterval($seconds, '')
+            ]);    
+        }
+        return '';
+    }
+    
+    /**
+     * Send an email notification
+     * @param string $type the type of email notification (view name)
+     * @param User $model the user model
+     * @param array $params additional parameters to be parsed and replaced in the
+     * mail template
+     * @param string $to the email address to send email to. If not passed,
+     * will default to `$model->email`.
+     * @return bool
+     */
+    public function sendEmail($type, $model, $params = [], $to = null)
+    {
+        if (!empty($this->notificationSettings[$type])) {
+            $settings = $this->notificationSettings[$type];
+            $mailer = Yii::$app->mailer;
+            $mailer->viewPath = $this->notificationSettings['viewPath'];
+            if (empty($to)) {
+                $to = $model->email;
+            }
+            return $mailer
+                ->compose($type, ['user' => $model] + $params)
+                ->setFrom([$settings['fromEmail'] => $settings['fromName']])
+                ->setTo($to)
+                ->setSubject($settings['subject'])
+                ->send();
+        }
+        return false;        
     }
 }

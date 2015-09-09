@@ -68,9 +68,10 @@ class m140402_143411_create_user_module extends Migration
         // Table # 3: User profile
         $this->createTable('{{%user_profile}}', [
             'id' => $this->bigInteger()->notNull(),
-            'display_name' => $this->string(120),
             'first_name' => $this->string(60),
             'last_name' => $this->string(60),
+            'gender' => $this->string(1)->defaultValue('M'),
+            'birth_date' => $this->date(),
             'avatar' => $this->string(150),
             'created_on' => $timestamp,
             'updated_on' => $timestamp,
@@ -84,28 +85,10 @@ class m140402_143411_create_user_module extends Migration
             'id',
             'CASCADE'
         );
-
-        // Table # 4: Mail queue
-        $this->createTable('{{%mail_queue}}', [
-            'id' => $this->bigPrimaryKey(),
-            'from_email' => $this->string(255)->notNull(),
-            'from_name' => $this->string(255),
-            'subject' => $this->string(255)->notNull(),
-            'template' => $this->string(60)->notNull(),
-            'user_id' => $this->bigInteger()->notNull(),
-            'mail_log' => $this->text(),
-            'status' => $this->smallInteger()->notNull()->defaultValue(0),
-            'created_on' => $timestamp,
-            'updated_on' => $timestamp,
-        ], $tableOptions);
-        $this->addForeignKey('mail_queue_user_id_fk', '{{%mail_queue}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
-        $this->createIndex('mail_queue_user_id_idx', '{{%mail_queue}}', 'user_id');
     }
 
     public function down()
     {
-        // echo 'm140402_143411_create_user_module cannot be reverted.\n';
-        $this->dropTable('{{%mail_queue}}');
         $this->dropTable('{{%user_profile}}');
         $this->dropTable('{{%social_auth}}');
         $this->dropTable('{{%user}}');

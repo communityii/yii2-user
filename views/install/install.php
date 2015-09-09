@@ -11,7 +11,7 @@ use kartik\form\ActiveForm;
  * @var kartik\form\ActiveForm $form
  */
 $m = $this->context->module;
-$model->action = Module::UI_INSTALL;
+$model->action = Module::SCN_INSTALL;
 $this->params['install-mode'] = true;
 ?>
 <div class="text-center">

@@ -2,12 +2,14 @@
 namespace comyii\user\models;
 
 use Yii;
+use yii\base\Model;
+use comyii\user\Module;
 use comyii\user\models\User;
 
 /**
  * Password reset request form
  */
-class RecoveryForm extends BaseModel
+class RecoveryForm extends Model
 {
     public $email;
 
@@ -16,13 +18,13 @@ class RecoveryForm extends BaseModel
      */
     public function rules()
     {
-        $m = $this->_module;
+        $m = Yii::$app->getModule('user');
         return [
             ['email', 'filter', 'filter' => 'trim'],
             ['email', 'required'],
             ['email', 'email'],
             ['email', 'exist',
-                'targetClass' => User::classname(),
+                'targetClass' => $m->modelSettings[Module::MODEL_USER],
                 'filter' => ['status' => User::STATUS_ACTIVE],
                 'message' => Yii::t('user', 'There is no user registered with the email!')
             ],
@@ -32,30 +34,21 @@ class RecoveryForm extends BaseModel
     /**
      * Sends an email with a link, for resetting the password.
      *
-     * @return boolean whether the email was send
+     * @param string $timeLeft the action link expiry information
+     * @param User $user the user model
+     *
+     * @return bool whether the email was sent
      */
-    public function sendEmail()
+    public function sendEmail($timeLeft, $user)
     {
-        /* @var $user User */
-        $user = User::findOne([
-            'status' => User::STATUS_ACTIVE,
-            'email' => $this->email,
-        ]);
-
         if ($user) {
-            if (!User::isPasswordResetTokenValid($user->password_reset_token)) {
-                $user->generatePasswordResetToken();
+            if ($user && !$class::isKeyValid($user->reset_key, $user->resetKeyExpiry)) {
+                $user->generateResetKey();
             }
-
             if ($user->save()) {
-                return \Yii::$app->mailer->compose(['html' => 'passwordResetToken-html', 'text' => 'passwordResetToken-text'], ['user' => $user])
-                    ->setFrom([\Yii::$app->params['supportEmail'] => \Yii::$app->name . ' robot'])
-                    ->setTo($this->email)
-                    ->setSubject('Password reset for ' . \Yii::$app->name)
-                    ->send();
+                return $m->sendEmail('recovery', $user, ['timeLeft' => $timeLeft]);
             }
         }
-
         return false;
     }
 }

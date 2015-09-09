@@ -18,6 +18,24 @@ $this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'Manage Users'), 'ur
 $this->params['breadcrumbs'][] = $model->username;
 $list = Html::a($m->icon('list'), $url, ['class'=>'kv-action-btn', 'data-toggle'=>'tooltip', 'title' => Yii::t('user', 'View users listing')]);
 $editSettings = $m->getEditSettingsAdmin($model);
+$getKey = function($key, $flag = true) use ($model) {
+    $settings = [
+        'attribute' => $key, 
+        'displayOnly' => true, 
+        'format' => 'raw', 
+        'value' => $model->$key ? '<kbd>' . $model->$key . '</kbd>' : null
+    ];
+    if ($flag) {
+        $settings['valueColOptions'] = ['style' => 'width: 30%'];
+    }
+    return $settings;
+};
+$passActions = $m->button(Module::BTN_ADMIN_RESET, ['id' => $model->id], [
+    'disabled' => is_array($editSettings) ? !$editSettings['resetPassword'] : true
+]);
+if ($model->id == Yii::$app->user->id) {
+    $passActions .= ' ' . $m->button(Module::BTN_CHANGE_PASSWORD);
+}
 ?>
 <?= DetailView::widget([
     'model' => $model,
@@ -39,8 +57,6 @@ $editSettings = $m->getEditSettingsAdmin($model);
             'columns' => [
                 [
                     'attribute'=> 'id',
-                    'format' => 'raw',
-                    'value' => '<code><big>' . $model->id . '</big></code>',
                     'displayOnly' => true,
                     'valueColOptions' => ['style' => 'width: 30%']
                 ], 
@@ -80,7 +96,7 @@ $editSettings = $m->getEditSettingsAdmin($model);
         ],
         [
             'label' => Yii::t('user', 'User Details'),
-            'value' => $m->button(Module::BTN_PROFILE_MANAGE, ['id' => $model->id]),
+            'value' => $m->button(Module::BTN_PROFILE_VIEW, ['id' => $model->id]),
             'displayOnly' => true,
             'format' => 'raw'
         ],
@@ -93,6 +109,8 @@ $editSettings = $m->getEditSettingsAdmin($model);
             'columns' => [
                 [
                     'attribute' => 'last_login_ip', 
+                    'format' => 'raw',
+                    'value' => $model->last_login_ip ? '<code>' . $model->last_login_ip . '</code>' : null,
                     'valueColOptions' => ['style' => 'width: 30%'], 
                     'displayOnly' => true
                 ],
@@ -133,9 +151,7 @@ $editSettings = $m->getEditSettingsAdmin($model);
                     'label' => Yii::t('user', 'Password Actions'),
                     'format' => 'raw',
                     'displayOnly' => true,
-                    'value' => $m->button(Module::BTN_ADMIN_RESET, ['id' => $model->id], [
-                        'disabled' => is_array($editSettings) ? !$editSettings['resetPassword'] : true
-                    ]),
+                    'value' => $passActions,
                     'valueColOptions' => ['style' => 'width:30%']
                 ],
             ]
@@ -145,9 +161,18 @@ $editSettings = $m->getEditSettingsAdmin($model);
             'label'=> $m->icon('lock') . ' ' . Yii::t('user', 'Hidden Information'),
             'rowOptions'=>['class'=>'info']
         ],
-        ['attribute'=> 'password_hash', 'displayOnly' => true],
-        ['attribute'=> 'auth_key', 'displayOnly' => true],
-        ['attribute'=> 'activation_key', 'displayOnly' => true],
-        ['attribute'=> 'reset_key', 'displayOnly' => true],
+        $getKey('password_hash', false),
+        [
+            'columns' => [
+                $getKey('auth_key'),
+                $getKey('email_change_key'),
+            ]
+        ],
+        [
+            'columns' => [
+                $getKey('reset_key'),
+                $getKey('activation_key'),
+            ]
+        ]
     ],
 ]) ?>

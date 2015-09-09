@@ -84,20 +84,20 @@ class InstallForm extends Model
         $config = $this->_module->registrationSettings;
         $rules = [
             [['access_code', 'username', 'password', 'email', 'password_confirm', 'action'], 'safe'],
-            ['access_code', 'required', 'on' => [Module::UI_ACCESS]],
-            ['access_code', 'checkAccess', 'on' => [Module::UI_ACCESS]],
-            [['username', 'email'], 'filter', 'filter' => 'trim', 'on' => [Module::UI_INSTALL]],
-            ['email', 'email', 'on' => [Module::UI_INSTALL]],
-            [['username', 'password', 'password_confirm', 'email'], 'required', 'on' => [Module::UI_INSTALL]],
-            ['username', 'match', 'pattern' => $config['userNamePattern'], 'message' => $config['userNameValidMsg'], 'on' => [Module::UI_INSTALL]],
-            ['username', 'string'] + $config['userNameRules'] + ['on' => Module::UI_INSTALL],
-            ['password_confirm', 'compare', 'compareAttribute' => 'password', 'on' => [Module::UI_INSTALL]],
-            [['password'], StrengthValidator::className()] +  $this->_module->passwordSettings['strengthRules'] + ['on' => [Module::UI_INSTALL]]
+            ['access_code', 'required', 'on' => [Module::SCN_ACCESS]],
+            ['access_code', 'checkAccess', 'on' => [Module::SCN_ACCESS]],
+            [['username', 'email'], 'filter', 'filter' => 'trim', 'on' => [Module::SCN_INSTALL]],
+            ['email', 'email', 'on' => [Module::SCN_INSTALL]],
+            [['username', 'password', 'password_confirm', 'email'], 'required', 'on' => [Module::SCN_INSTALL]],
+            ['username', 'match', 'pattern' => $config['userNamePattern'], 'message' => $config['userNameValidMsg'], 'on' => [Module::SCN_INSTALL]],
+            ['username', 'string'] + $config['userNameRules'] + ['on' => Module::SCN_INSTALL],
+            ['password_confirm', 'compare', 'compareAttribute' => 'password', 'on' => [Module::SCN_INSTALL]],
+            [['password'], StrengthValidator::className()] +  $this->_module->passwordSettings['strengthRules'] + ['on' => [Module::SCN_INSTALL]]
         ];
-        if (in_array(Module::UI_INSTALL, $this->_module->passwordSettings['validateStrength'])) {
+        if (in_array(Module::SCN_INSTALL, $this->_module->passwordSettings['validateStrengthCurr'])) {
             $rules[] = [['password'], StrengthValidator::className()] +
                 $this->_module->passwordSettings['strengthRules'] +
-                ['on' => [Module::UI_INSTALL]];
+                ['on' => [Module::SCN_INSTALL]];
         }
         return $rules;
     }

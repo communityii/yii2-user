@@ -43,7 +43,6 @@ use comyii\user\Module;
  * @property string $password_confirm write-only password
  * @property string $captcha the captcha for registration
  *
- * @property MailQueues $mailQueues
  * @property RemoteIdentity[] $remoteIdentities
  * @property UserProfile $userProfile
  *
@@ -93,21 +92,6 @@ class User extends BaseModel implements IdentityInterface
     private $_statusClasses = [];
 
     /**
-     * @var integer, the auth key ("remember me") expiry time in seconds
-     */
-    private $_authKeyExpiry;
-
-    /**
-     * @var integer, the reset key expiry time in seconds
-     */
-    private $_resetKeyExpiry;
-
-    /**
-     * @var integer, the activation key expiry time in seconds
-     */
-    private $_activationKeyExpiry;
-
-    /**
      * Table name for the User model
      *
      * @return string
@@ -128,12 +112,11 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
-     * Initialize User model
+     * @inheritdoc
      */
     public function init()
     {
         parent::init();
-        $m = $this->_module;
         $this->_statuses = [
             self::STATUS_SUPERUSER => Yii::t('user', 'Superuser'),
             self::STATUS_PENDING => Yii::t('user', 'Pending'),
@@ -174,24 +157,24 @@ class User extends BaseModel implements IdentityInterface
             ['status', 'default', 'value' => self::STATUS_PENDING],
             ['status', 'in', 'range' => array_keys($this->_statuses)],
 
-            ['password', 'required', 'on' => Module::UI_REGISTER],
-            [['password_new', 'password_confirm'], 'required', 'on' => [Module::UI_RESET, Module::UI_CHANGEPASS]],
-            ['password_confirm', 'compare', 'compareAttribute' => 'password_new', 'on' => [Module::UI_RESET, Module::UI_CHANGEPASS]], 
+            ['password', 'required', 'on' => [Module::SCN_REGISTER, Module::SCN_NEWEMAIL]],
+            [['password_new', 'password_confirm'], 'required', 'on' => [Module::SCN_RESET, Module::SCN_CHANGEPASS]],
+            ['password_confirm', 'compare', 'compareAttribute' => 'password_new', 'on' => [Module::SCN_RESET, Module::SCN_CHANGEPASS]], 
             
-            ['password', 'required', 'on' => Module::UI_CHANGEPASS],
-            ['password', 'isValidPassword', 'on' => Module::UI_CHANGEPASS],  
+            ['password', 'required', 'on' => [Module::SCN_CHANGEPASS, Module::SCN_NEWEMAIL]],
+            ['password', 'isValidPassword', 'on' => [Module::SCN_CHANGEPASS, Module::SCN_NEWEMAIL]],
             [   
                 'password_new', 
                 'compare', 
                 'compareAttribute' => 'password', 
                 'operator'=>'!=', 
-                'on' => Module::UI_CHANGEPASS, 
+                'on' => Module::SCN_CHANGEPASS, 
                 'message' => Yii::t('user', 'Your new password cannot be same as your existing password')
             ], 
         ];
         if ($m->registrationSettings['captcha'] !== false) {
             $config = ArrayHelper::getValue($m->registrationSettings['captcha'], 'validator', []);
-            $rules[] = ['captcha', 'captcha'] + $config + ['on' => Module::UI_REGISTER];
+            $rules[] = ['captcha', 'captcha'] + $config + ['on' => Module::SCN_REGISTER];
         }
         $strengthRules = $m->passwordSettings['strengthRules'];
         if (($scenarios = $m->passwordSettings['validateStrengthCurr'])) {
@@ -230,10 +213,11 @@ class User extends BaseModel implements IdentityInterface
     public function scenarios()
     {
         $scenarios = parent::scenarios();
-        $scenarios[Module::UI_REGISTER] = ['username', 'password', 'email', 'captcha', 'status'];
-        $scenarios[Module::UI_RESET] = ['password_new', 'password_confirm'];
-        $scenarios[Module::UI_CHANGEPASS] = ['password', 'password_new', 'password_confirm'];
-        $scenarios[Module::UI_INSTALL] = ['username', 'password', 'email', 'status'];
+        $scenarios[Module::SCN_REGISTER] = ['username', 'password', 'email', 'captcha', 'status'];
+        $scenarios[Module::SCN_RESET] = ['password_new', 'password_confirm'];
+        $scenarios[Module::SCN_CHANGEPASS] = ['password', 'password_new', 'password_confirm'];
+        $scenarios[Module::SCN_INSTALL] = ['username', 'password', 'email', 'status'];
+        $scenarios[Module::SCN_NEWEMAIL] = ['password'];
         $m = $this->_module;
         $settings = [];
         // for admin user and superuser
@@ -249,10 +233,10 @@ class User extends BaseModel implements IdentityInterface
             $settings = ['username', 'email'];
         }
         if (!empty($settings)) {
-            $scenarios[Module::UI_ADMIN] = ['status'] + $settings;
+            $scenarios[Module::SCN_ADMIN] = ['status'] + $settings;
         }
         // for normal user
-        $settings = [];
+        $settings = ['email_new', 'email_change_key'];
         $editSettings = $m->getEditSettingsUser($this);
         if (is_array($editSettings)) {
             if ($editSettings['changeUsername']) {
@@ -263,7 +247,7 @@ class User extends BaseModel implements IdentityInterface
             }
         }
         if (!empty($settings)) {
-            $scenarios[Module::UI_PROFILE] = $settings;
+            $scenarios[Module::SCN_PROFILE] = $settings;
         }
         return $scenarios;
     }
@@ -281,6 +265,7 @@ class User extends BaseModel implements IdentityInterface
             'id' => Yii::t('user', 'ID'),
             'username' => Yii::t('user', 'Username'),
             'email' => Yii::t('user', 'Email'),
+            'email_new' => Yii::t('user', 'Email Change Requested'),
             'password_hash' => Yii::t('user', 'Password Hash'),
             'auth_key' => Yii::t('user', 'Authorization Key'),
             'activation_key' => Yii::t('user', 'Activation Key'),
@@ -288,13 +273,14 @@ class User extends BaseModel implements IdentityInterface
             'status' => $status,
             'statusText' => $status,
             'statusHtml' => $status,
+            'fullName' => Yii::t('user', 'Full Name'),
             'created_on' => Yii::t('user', 'Created On'),
-            'updated_on' => $this->scenario == Module::UI_CHANGEPASS ? Yii::t('user', 'Last Updated On') : Yii::t('user', 'Updated On'),
-            'last_login_ip' => Yii::t('user', 'Last Login IP'),
+            'updated_on' => $this->scenario == Module::SCN_CHANGEPASS ? Yii::t('user', 'Last Updated On') : Yii::t('user', 'Updated On'),
+            'last_login_ip' => Yii::t('user', 'Last Login From'),
             'last_login_on' => Yii::t('user', 'Last Login On'),
             'password_reset_on' => Yii::t('user', 'Password Reset On'),
             'password_fail_attempts' => Yii::t('user', 'Password Fail Attempts'), 
-            'password' => $this->scenario == Module::UI_CHANGEPASS ? Yii::t('user', 'Current Password') : Yii::t('user', 'Password'),
+            'password' => $this->scenario == Module::SCN_CHANGEPASS ? Yii::t('user', 'Current Password') : Yii::t('user', 'Password'),
             'password_new' => Yii::t('user', 'New Password'),
             'password_confirm' => Yii::t('user', 'Confirm Password')
         ];
@@ -309,21 +295,11 @@ class User extends BaseModel implements IdentityInterface
     {
         $label = $showId ? $this->id : $this->username;
         $m = $this->_module;
-        $url = $m->actionSettings[Module::ACTION_ADMIN_VIEW];
+        $url = $m->actionSettings[Module::ACTION_ADMIN_MANAGE];
         return Html::a($label, [$url, 'id' => $this->id], [
             'data-pjax'=>'0', 
             'title' => Yii::t('user', 'View user details')
         ]);
-    }
-
-    /**
-     * Mail queues relation
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getMailQueues()
-    {
-        return $this->hasMany(MailQueue::className(), ['id' => 'id']);
     }
 
     /**
@@ -341,54 +317,9 @@ class User extends BaseModel implements IdentityInterface
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getUserProfile()
+    public function getProfile()
     {
         return $this->hasOne(UserProfile::className(), ['id' => 'id']);
-    }
-
-    /**
-     * Before save event
-     *
-     * @param $insert
-     * @return bool
-     */
-    public function beforeSave($insert)
-    {
-        if (parent::beforeSave($insert)) {
-            $this->setAccess();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Sets the access for user and configures user keys and statuses based on scenario
-     */
-    public function setAccess()
-    {
-        if ($this->scenario == Module::UI_REGISTER) {
-            $this->status = self::STATUS_PENDING;
-            $this->removeResetKey();
-            $this->generateActivationKey();
-        } elseif ($this->scenario == Module::UI_ACTIVATE || $this->scenario == Module::UI_RECOVERY) {
-            $this->status = self::STATUS_ACTIVE;
-            $this->password_reset_on = call_user_func($this->_module->now);
-            $this->password_fail_attempts = 0;
-            $this->removeResetKey();
-            $this->removeActivationKey();
-        } elseif ($this->scenario == Module::UI_RESET) {
-            $this->status = self::STATUS_PENDING;
-            $this->removeActivationKey();
-            $this->generateResetKey();
-        } elseif ($this->scenario == Module::UI_LOCKED) {
-            $this->status = self::STATUS_INACTIVE;
-            $this->removeActivationKey();
-            $this->generateResetKey();
-        } elseif ($this->scenario == Module::UI_NEWEMAIL) {
-            $this->removeEmailChangeKey();
-            $this->generateResetKey();
-        }
     }
 
     /**
@@ -537,41 +468,49 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
-     * Finds user by password reset key
+     * Finds user by either auth_key, reset_key, activation_key, 
+     * or email_change_key
      *
-     * @param string $key password reset key
-     * @param integer $expire password reset key expiry
+     * @param string $attribute the key attribute name
+     * @param string $value key attribute value
+     * @param integer $expire key expiry
+     *
      * @return static|null
      */
-    public static function findByPasswordResetKey($key, $expire)
+    public static function findByKey($attribute, $value, $expire = 0)
     {
-        if (!static::isKeyValid($key, $expire)) {
+        if (!static::isKeyValid($value, $expire)) {
             return null;
         }
-
-        return static::find()->where(['reset_key' => $key])->active()->one;
+        return static::find()->where([$attribute => $value])->active()->one();
     }
 
     /**
-     * Check if a key is valid
+     * Check if a key value is valid
      *
-     * @param $key string the key
-     * @param $expire integer the expiry time in seconds
+     * @param string $value key value
+     * @param integer $expire the expiry time in seconds
+     *
      * @return bool
      */
-    public static function isKeyValid($key, $expire)
+    public static function isKeyValid($value, $expire)
     {
-        if (empty($key)) {
+        if ($expire === 0) {
+            return true;
+        }
+        if (empty($value)) {
             return false;
         }
-        $timestamp = (int) substr($key, strrpos($key, '_') + 1);
-        return timestamp + $expire >= time();
+        $parts = explode('_', $value);
+        $timestamp = (int) end($parts);
+        return $timestamp + $expire >= time();
     }
 
     /**
      * Generates a hash key
      *
      * @param $expire integer the expiry time in seconds
+     *
      * @return bool
      */
     public static function generateKey($expire = 0)
@@ -623,6 +562,38 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
+     * Generates "remember me" authentication key
+     */
+    public function generateAuthKey()
+    {
+        $this->auth_key = self::generateKey($this->authKeyExpiry);
+    }
+
+    /**
+     * Generates new password reset key
+     */
+    public function generateResetKey()
+    {
+        $this->reset_key = self::generateKey($this->resetKeyExpiry);
+    }
+
+    /**
+     * Generates new activation key
+     */
+    public function generateActivationKey()
+    {
+        $this->activation_key = self::generateKey($this->activationKeyExpiry);
+    }
+
+    /**
+     * Generates new email change key
+     */
+    public function generateEmailChangeKey()
+    {
+        $this->email_change_key = self::generateKey($this->emailChangeKeyExpiry);
+    }
+
+    /**
      * Validates password
      *
      * @param string $password password to validate
@@ -644,79 +615,11 @@ class User extends BaseModel implements IdentityInterface
     }
 
     /**
-     * Generates "remember me" authentication key
-     */
-    public function generateAuthKey()
-    {
-        $this->auth_key = self::generateKey($this->getAuthKeyExpiry());
-    }
-
-    /**
-     * Generates new password reset key
-     */
-    public function generateResetKey()
-    {
-        $this->reset_key = self::generateKey($this->getResetKeyExpiry());
-    }
-
-    /**
-     * Generates new activation key
-     */
-    public function generateActivationKey()
-    {
-        $this->activation_key = self::generateKey($this->getActivationKeyExpiry());
-    }
-
-    /**
-     * Generates new email change key
-     */
-    public function generateEmailChangeKey()
-    {
-        $this->email_change_key = self::generateKey();
-    }
-
-    /**
-     * Removes "remember me" authorization key
-     */
-    public function removeAuthKey()
-    {
-        $this->auth_key = null;
-    }
-
-    /**
-     * Removes password reset key
-     */
-    public function removeResetKey()
-    {
-        $this->reset_key = null;
-    }
-
-    /**
-     * Removes activation key
-     */
-    public function removeActivationKey()
-    {
-        $this->activation_key = null;
-    }
-
-    /**
-     * Removes email change key
-     */
-    public function removeEmailChangeKey()
-    {
-        $this->email_change_key = null;
-    }
-
-    /**
      * Get auth key expiry
      */
     public function getAuthKeyExpiry()
     {
-        if (isset($this->_authKeyExpiry)) {
-            return $this->_authKeyExpiry;
-        }
-        $this->_authKeyExpiry = ArrayHelper::getValue($this->_module->loginSettings, 'rememberMeDuration', 2592000);
-        return $this->_authKeyExpiry;
+        return ArrayHelper::getValue($this->_module->loginSettings, 'rememberMeDuration', 0);
     }
 
     /**
@@ -724,11 +627,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function getResetKeyExpiry()
     {
-        if (isset($this->_resetKeyExpiry)) {
-            return $this->_resetKeyExpiry;
-        }
-        $this->_resetKeyExpiry = ArrayHelper::getValue($this->_module->passwordSettings, 'resetKeyExpiry', 172800);
-        return $this->_resetKeyExpiry;
+        return ArrayHelper::getValue($this->_module->passwordSettings, 'resetKeyExpiry', 0);
     }
 
     /**
@@ -736,11 +635,15 @@ class User extends BaseModel implements IdentityInterface
      */
     public function getActivationKeyExpiry()
     {
-        if (isset($this->_activationKeyExpiry)) {
-            return $this->_activationKeyExpiry;
-        }
-        $this->_activationKeyExpiry = ArrayHelper::getValue($this->_module->passwordSettings, 'activationKeyExpiry', 172800);
-        return $this->_activationKeyExpiry;
+        return ArrayHelper::getValue($this->_module->passwordSettings, 'activationKeyExpiry', 0);
+    }
+
+    /**
+     * Get email key expiry
+     */
+    public function getEmailChangeKeyExpiry()
+    {
+        return ArrayHelper::getValue($this->_module->profileSettings, 'emailChangeKeyExpiry', 0);
     }
 
     /**
@@ -783,27 +686,62 @@ class User extends BaseModel implements IdentityInterface
     public function getStatusHtml()
     {
         return '<span class="' . $this->_statusClasses[$this->status] . '">' . $this->statusText . '</span>';
-    }        
+    }
 
     /**
-     * Sends an email with a link, for account activation or account recovery/reset
+     * Full Person Name
      *
-     * @param string $type the type/template of mail to be sent
+     * @return string
+     */
+    public function getFullName()
+    {
+        $profile = $this->profile;
+        if ($profile === null) {
+            return null;
+        }
+        return trim($profile->first_name . ' ' . $profile->last_name);
+    }
+    
+    /**
+     * Validates and prepares email for a change
+     * @param string $emailOld the old email
+     * @return string
+     */    
+    public function validateEmailChange($emailOld)
+    {
+        if ($emailOld != $this->email) {
+            $this->email_new = $this->email;
+            $this->email = $emailOld;
+            if (!static::isKeyValid($this->email_change_key, $this->emailChangeExpiry)) {
+                $this->generateEmailChangeKey();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Sends an email with a link, for account activation or new email change
+     *
+     * @param string $type the type of email - 'activation' or 'recovery'  or 'newemail'
+     * @param string $timeLeft the action link expiry information
      * @return bool whether the email was sent
      */
-    public function sendEmail($type)
+    public function sendEmail($type, $timeLeft)
     {
-        if (!empty($this->_module->notificationSettings[$type])) {
-            $content = Yii::$app->controller->renderPartial($this->_module->notificationSettings['viewPath'] . '/' . $type, ['user' => $this]);
-            $settings = $this->_module->notificationSettings[$type];
-            return \Yii::$app->mail
-                ->compose($content)
-                ->setFrom([$settings['fromEmail'] => $settings['fromName']])
-                ->setTo($this->email)
-                ->setSubject($settings['subject'])
-                ->send();
-        }
-        return null;
+        $m = $this->_module;
+        if ($type == 'activation') {
+            return $m->sendEmail($type, $this, ['timeLeft' => $timeLeft]);
+        } elseif ($type == 'recovery') {
+            return $m->sendEmail('recovery', $this, ['timeLeft' => $timeLeft]);
+        } elseif ($type == 'newemail') {
+            if ($m->sendEmail('newemail', $this, ['timeLeft' => $timeLeft], $this->email_new)) {
+                return true;
+            }
+            $this->email_new = null;
+            $this->email_change_key = null;
+            return false;
+        } 
+        return false;
     }
-        
 }

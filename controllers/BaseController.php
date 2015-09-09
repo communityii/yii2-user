@@ -92,7 +92,7 @@ class BaseController extends \yii\web\Controller
                 return $this->redirect($user->returnUrl);
             }
             if ($user->isAdmin || $user->isSuperuser) {
-                return $this->forward(Module::ACTION_ADMIN_VIEW, ['id' => $user->id]);
+                return $this->forward(Module::ACTION_ADMIN_MANAGE, ['id' => $user->id]);
             } else {
                 return $this->forward(Module::ACTION_PROFILE_INDEX);
             }

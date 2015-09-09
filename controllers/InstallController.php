@@ -54,24 +54,24 @@ class InstallController extends BaseController
         $m = $this->module;
         $userClass = $this->getConfig('modelSettings', Module::MODEL_USER);
         if (isset($m->installAccessCode) && !$m->hasSuperUser()) {
-            $model = new InstallForm(['scenario' => Module::UI_ACCESS]);
+            $model = new InstallForm(['scenario' => Module::SCN_ACCESS]);
             $session = Yii::$app->session;
             if (!isset($model->action)) {
                 $model->action = self::UI_INIT_SETUP;
             }
             if ($model->load(Yii::$app->request->post())) {
                 if ($model->action === self::UI_INIT_SETUP && $model->validate()) {
-                    $model = new InstallForm(['scenario' => Module::UI_INSTALL]);
+                    $model = new InstallForm(['scenario' => Module::SCN_INSTALL]);
                 }
-                elseif ($model->action === Module::UI_ACCESS && $model->validate()) {
-                    $model = new InstallForm(['scenario' => Module::UI_INSTALL]);
-                    $model->scenario = Module::UI_INSTALL;
-                    $model->action = Module::UI_INSTALL;
+                elseif ($model->action === Module::SCN_ACCESS && $model->validate()) {
+                    $model = new InstallForm(['scenario' => Module::SCN_INSTALL]);
+                    $model->scenario = Module::SCN_INSTALL;
+                    $model->action = Module::SCN_INSTALL;
                     if (isset(Yii::$app->params['adminEmail'])) {
                         $model->email = Yii::$app->params['adminEmail'];
                     }
                 }
-                elseif ($model->action === Module::UI_INSTALL) {
+                elseif ($model->action === Module::SCN_INSTALL) {
                     $model->access_code = $m->installAccessCode;
                     if ($model->validate()) {
                         $user = new $userClass([
@@ -79,19 +79,18 @@ class InstallController extends BaseController
                             'password' => $model->password,
                             'email' => $model->email,
                             'status' => User::STATUS_SUPERUSER,
-                            'scenario' => Module::UI_INSTALL
+                            'scenario' => Module::SCN_INSTALL
                         ]);
                         $user->setPassword($model->password);
-                        $user->generateAuthKey();
-                        $user->generateResetKey();                        
+                        $user->generateAuthKey();       
                         if (!$user->save()) {
                             $session->setFlash('error', Yii::t(
                                 'user', 
                                 'Error creating the superuser. Fix the following errors:<br>{errors}', 
                                 ['errors' => Module::showErrors($user)]
                             ));
-                            $model->action = Module::UI_INSTALL;
-                            $model->scenario = Module::UI_INSTALL;
+                            $model->action = Module::SCN_INSTALL;
+                            $model->scenario = Module::SCN_INSTALL;
                         }
                         else {
                             $session->setFlash('success', Yii::t(
@@ -104,12 +103,12 @@ class InstallController extends BaseController
                             ));
                             Yii::$app->user->login($user);
                             $user->setLastLogin();
-                            return $this->forward(Module::ACTION_ADMIN_VIEW, ['id'=>$user->id]);
+                            return $this->forward(Module::ACTION_ADMIN_MANAGE, ['id'=>$user->id]);
                         }
                     }
                     else {
-                        $model->action = Module::UI_ACCESS;
-                        $model->scenario = Module::UI_ACCESS;
+                        $model->action = Module::SCN_ACCESS;
+                        $model->scenario = Module::SCN_ACCESS;
                     }
                 }
             }

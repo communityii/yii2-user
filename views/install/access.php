@@ -10,7 +10,7 @@ use kartik\form\ActiveForm;
  * @var comyii\user\models\InstallForm $model
  * @var kartik\form\ActiveForm $form
  */
-$model->action = Module::UI_ACCESS;
+$model->action = Module::SCN_ACCESS;
 $hints = $model->attributeHints();
 $this->params['install-mode'] = true;
 ?>
@@ -45,6 +45,7 @@ $this->params['install-mode'] = true;
         <li>You must have setup a module named <code>user</code> and setup an install access code for the module in your configuration file.</li>
         <li>You must have setup the user component in your configuration file to use/extend <code>comyii\user\components\User</code> class.</li>
         <li>You must have run the database migrations as mentioned in documentation.</li>
+        <li>You must have setup the mailer component in your configuration file to use <code>yii\swiftmailer\Mailer</code> component.</li>
         <li>You should optionally edit the user module settings for your user and password preferences.</li>
         <li>The installer would guide you to create a superuser. Ensure you remember the superuser access credentials for future.</li>
     </ul>

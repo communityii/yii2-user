@@ -33,7 +33,7 @@ class ProfileController extends BaseController
                         'roles' => ['@'],
                     ],
                     [
-                        'actions' => ['manage'],
+                        'actions' => ['view'],
                         'allow' => $user->isSuperuser || $user->isAdmin,
                         'roles' => ['@'],
                     ],
@@ -64,7 +64,7 @@ class ProfileController extends BaseController
      * @param string $id
      * @return mixed
      */
-    public function actionManage($id)
+    public function actionView($id)
     {
         return $this->render('view', $this->findModel($id));
     }
@@ -78,15 +78,22 @@ class ProfileController extends BaseController
     {
         $data = $this->findModel();
         extract($data);
-        $model->scenario = Module::UI_PROFILE;
+        $model->scenario = Module::SCN_PROFILE;
         $post = Yii::$app->request->post();
         $hasProfile = $this->getConfig('profileSettings' , 'enabled');
+        $emailOld = $model->email;
         if ($hasProfile) {
             $validate = $model->load($post) && $profile->load($post) && Model::validateMultiple ([$model, $profile]);
         } else {
             $validate = $model->load($post) && $model->validate();
         }
         if ($validate) {
+            $timeLeft = Module::timeLeft('email change confirmation', $model->emailChangeKeyExpiry);
+            $emailSent = $emailNew = null;
+            if ($model->validateEmailChange($emailOld)) {
+                $emailNew = $model->email_new;
+                $emailSent = $model->sendEmail('newemail', $timeLeft);
+            }
             $model->save();
             if ($hasProfile) {
                 $profile->uploadAvatar();
@@ -94,7 +101,20 @@ class ProfileController extends BaseController
             }
             $action = $this->getConfig('actionSettings', Module::ACTION_PROFILE_INDEX);
             Yii::$app->session->setFlash('success', Yii::t('user', 'The user profile was updated successfully.'));
-            return $this->redirect([$action]);
+            if ($emailSent === true) {
+                Yii::$app->session->setFlash('info', Yii::t(
+                    'user', 
+                    'Instructions to confirm the new email has been sent to your new email address <b>{email}</b>. {timeLeft}', 
+                    ['email' => $emailNew, 'timeLeft' => $timeLeft]
+                ));
+                return $this->redirect([$action]);
+            } elseif ($emailSent === false) {
+                Yii::$app->session->setFlash('warning', Yii::t(
+                    'user', 
+                    'Your email change to <b>{email}</b> could not be processed. Please contact the system administrator or try again later.', 
+                    ['email' => $emailNew]
+                ));
+            }
         } 
         return $this->render('update', [
             'model' => $model,

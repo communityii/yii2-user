@@ -1,31 +1,43 @@
 <?php
 
-/* @var $this yii\web\View */
-/* @var $form yii\bootstrap\ActiveForm */
-/* @var $model \frontend\models\ResetPasswordForm */
+use kartik\form\ActiveForm;
+use kartik\helpers\Html;
+use kartik\password\PasswordInput;
+use comyii\user\Module;
+use comyii\user\widgets\Logo;
+use comyii\user\widgets\UserMenu;
 
-use yii\helpers\Html;
-use yii\bootstrap\ActiveForm;
-
-$this->title = 'Reset password';
-$this->params['breadcrumbs'][] = $this->title;
+$m = $this->context->module;
+$this->title = Yii::t('user', 'Reset Password') . ' (' . $model->username . ')';
+/**
+ * @var yii\web\View $this
+ * @var comyii\user\models\Login $model
+ */
 ?>
-<div class="site-reset-password">
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <p>Please choose your new password:</p>
-
-    <div class="row">
-        <div class="col-lg-5">
-            <?php $form = ActiveForm::begin(['id' => 'reset-password-form']); ?>
-
-                <?= $form->field($model, 'password')->passwordInput() ?>
-
-                <div class="form-group">
-                    <?= Html::submitButton('Save', ['class' => 'btn btn-primary']) ?>
-                </div>
-
-            <?php ActiveForm::end(); ?>
-        </div>
-    </div>
+<div class="page-header">
+    <div class="pull-right"><?= UserMenu::widget(['ui' => 'password', 'user' => $model->id]) ?></div>
+    <h1><?= $this->title ?></h1>
 </div>
+<?php $form = ActiveForm::begin(['type' => ActiveForm::TYPE_HORIZONTAL, 'formConfig'=>['labelSpan' => 4]]); ?>
+<div class="row">
+    <div class="col-md-8">
+        <?php if (in_array(Module::SCN_RESET, $m->passwordSettings['strengthMeter'])): ?>
+        <?= $form->field($model, 'password_new')->widget(PasswordInput::classname(), [
+            'pluginOptions' => ['toggleMask' => false],
+            'options' => ['placeholder' => Yii::t('user', 'Enter new password')]
+        ]); ?>
+        <?php else: ?>
+            <?= $form->field($model, 'password_new')->passwordInput([
+            'placeholder' => Yii::t('user', 'Enter new password')
+        ]) ?>
+        <?php endif; ?>
+        <?=  $form->field($model, 'password_confirm')->passwordInput([
+            'placeholder' => Yii::t('user', 'Confirm new password')
+        ]) ?>
+    </div>
+</div>  
+<hr>
+<div class="text-right">
+    <?= $m->button(Module::BTN_SUBMIT_FORM) ?>
+</div>
+<?php ActiveForm::end(); ?>

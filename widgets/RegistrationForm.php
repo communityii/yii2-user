@@ -61,12 +61,11 @@ class RegistrationForm extends LoginForm
         $m = Yii::$app->getModule('user');
         $captcha = '';
         $password = ['type' => Form::INPUT_PASSWORD];
-        if (in_array(Module::UI_REGISTER, $m->passwordSettings['strengthMeter'])) {
+        if (in_array(Module::SCN_REGISTER, $m->passwordSettings['strengthMeter'])) {
             $password = [
                 'type' => Form::INPUT_WIDGET, 
                 'widgetClass' => PasswordInput::classname(),
                 'options' => [
-                    'pluginOptions' => ['toggleMask' => false],
                     'options' => [
                         'placeholder' => Yii::t('user', 'Password'), 
                         'autocomplete'=>'new-password'

@@ -29,10 +29,17 @@ class AdminController extends BaseController
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
-                        'allow' => $user->isAdmin || $user->isSuperuser 
+                        'allow' => $user->isAdmin || $user->isSuperuser,
+                        'roles' => ['@']
                     ],
                 ],
-            ]
+            ],
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'batch-update' => ['post'],
+                ],
+            ],
         ];
     }
      
@@ -56,10 +63,10 @@ class AdminController extends BaseController
      * @param string $id
      * @return mixed
      */
-    public function actionView($id)
+    public function actionManage($id)
     {
         $model = $this->findModel($id);
-        $model->setScenario(Module::UI_ADMIN);
+        $model->setScenario(Module::SCN_ADMIN);
         $post = Yii::$app->request->post();
         if ($model->load($post)) {
             if ($model->save()) {
@@ -80,18 +87,23 @@ class AdminController extends BaseController
      */
     public function actionBatchUpdate()
     {
-        if (!Yii::$app->request->isAjax || !Yii::$app->request->isPost) {
+        $request = Yii::$app->request;
+        if (!$request->isAjax) {
             throw new BadRequestHttpException('This operation is not allowed');
         }
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $post = Yii::$app->request->post();
-        if (empty($post) || empty($post['keys'])) {
+        $post = $request->post();
+        if (empty($post) || empty($post['keys']) || empty($post['status'])) {
             return null;
         }
         $keys = $post['keys'];
         $status = $post['status'];
-        $user = User::tableName();
-        Yii::$app->db->createCommand()->update($user, ['status' => $status], ['and', ['id' => $keys], 'status <> ' . User::STATUS_SUPERUSER])->execute();
+        $class = $this->getConfig('modelSettings', Module::MODEL_USER);
+        Yii::$app->db->createCommand()->update(
+            $class::tableName(), 
+            ['status' => $status], 
+            ['and', ['id' => $keys], 'status <> ' . User::STATUS_SUPERUSER]
+        )->execute();
         return $keys;
     }
 
@@ -102,8 +114,8 @@ class AdminController extends BaseController
      */
     public function actionCreate()
     {
-        $userClass = $this->getConfig('modelSettings', Module::MODEL_USER);
-        $model = new $userClass;
+        $class = $this->getConfig('modelSettings', Module::MODEL_USER);
+        $model = new $class(['scenario' => Module::SCN_ADMIN]);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
@@ -123,8 +135,8 @@ class AdminController extends BaseController
      */
     protected function findModel($id)
     {
-        $userClass = $this->getConfig('modelSettings', Module::MODEL_USER);
-        if (($model = $userClass::findOne($id)) !== null) {
+        $class = $this->getConfig('modelSettings', Module::MODEL_USER);
+        if (($model = $class::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');

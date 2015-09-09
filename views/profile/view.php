@@ -75,14 +75,15 @@ $profileAttribs = [
         'label' => $m->icon('user') . ' ' . Yii::t('user', 'Profile Details'),
         'rowOptions' => ['class'=>'info']
     ],
-    'display_name',
     'first_name',
     'last_name',
     [
-        'attribute' => 'updated_on',
-        'format' => 'datetime',
+        'attribute' => 'gender',
+        'format' => 'raw',
+        'value' => $profile->genderHtml,
         'labelColOptions' => ['style' => 'width:40%;text-align:right']
-    ]
+    ],
+    'birth_date:date'
 ];
 
 // render social details

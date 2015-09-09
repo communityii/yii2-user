@@ -18,14 +18,15 @@ $this->title = Yii::t('user', 'Change Password') . ' (' . $model->username . ')'
     <div class="pull-right"><?= UserMenu::widget(['ui' => 'password', 'user' => $model->id]) ?></div>
     <h1><?= $this->title ?></h1>
 </div>
-<?php $form = ActiveForm::begin(); ?>
+<?php $form = ActiveForm::begin(['type' => ActiveForm::TYPE_HORIZONTAL, 'formConfig'=>['labelSpan' => 4]]); ?>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <?= $form->field($model, 'password')->passwordInput([
             'placeholder' => Yii::t('user', 'Enter current password')
         ]) ?>
-        <?php if (in_array(Module::UI_CHANGEPASS, $m->passwordSettings['strengthMeter'])): ?>
+        <?php if (in_array(Module::SCN_CHANGEPASS, $m->passwordSettings['strengthMeter'])): ?>
         <?= $form->field($model, 'password_new')->widget(PasswordInput::classname(), [
+            'pluginOptions' => ['toggleMask' => false],
             'options' => ['placeholder' => Yii::t('user', 'Enter new password')]
         ]); ?>
         <?php else: ?>

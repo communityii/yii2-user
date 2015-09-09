@@ -10,9 +10,9 @@ use yii\web\UploadedFile;
  * This is the model class for table {{%user_profile}}.
  *
  * @property string $id
- * @property string $display_name
  * @property string $first_name
  * @property string $last_name
+ * @property string $gender
  * @property string $avatar
  * @property string $created_on
  * @property string $updated_on
@@ -21,10 +21,24 @@ use yii\web\UploadedFile;
  */
 class UserProfile extends BaseModel
 {
+    const G_MALE = 'M';
+    const G_FEMALE = 'F';
+    const G_OTHER = 'O';
+
     /**
      * @var UploadedFile the image file blob uploaded
      */
     public $image;
+
+    /**
+     * @var array the list of genders
+     */
+    private $_genders = [];
+
+    /**
+     * @var array the list of gender CSS classes
+     */
+    private $_genderClasses = [];
     
     /**
      * Table name for the UserProfile model
@@ -37,6 +51,24 @@ class UserProfile extends BaseModel
     }
 
     /**
+     * @inheritdoc
+     */
+    public function init()
+    {
+        parent::init();
+        $this->_genders = [
+            self::G_MALE => Yii::t('user', 'Male'),
+            self::G_FEMALE => Yii::t('user', 'Female'),
+            self::G_OTHER => Yii::t('user', 'Other'),
+        ];
+        $this->_genderClasses = [
+            self::G_MALE => 'text-info',
+            self::G_FEMALE => 'text-danger',
+            self::G_OTHER => 'text-muted'
+        ];
+    }
+
+    /**
      * UserProfile model validation rules
      */
     public function rules()
@@ -44,8 +76,9 @@ class UserProfile extends BaseModel
         return [
             [['id'], 'integer'],
             [['avatar'], 'string'],
-            [['first_name', 'last_name', 'display_name', 'image'], 'safe'],
-            [['display_name'], 'string', 'max' => 180],
+            [['first_name', 'last_name', 'gender', 'birth_date', 'image'], 'safe'],
+            [['birth_date'], 'date', 'format' => 'php:Y-m-d'],
+            [['gender'], 'string', 'max' => 5],
             [['first_name', 'last_name'], 'string', 'max' => 60]
         ];
     }
@@ -57,9 +90,10 @@ class UserProfile extends BaseModel
     {
         return [
             'id' => Yii::t('user', 'ID'),
-            'display_name' => Yii::t('user', 'Display Name'),
             'first_name' => Yii::t('user', 'First Name'),
             'last_name' => Yii::t('user', 'Last Name'),
+            'gender' => Yii::t('user', 'Gender'),
+            'birth_date' => Yii::t('user', 'Birth Date'),
             'avatar' => Yii::t('user', 'Avatar'),
             'created_on' => Yii::t('user', 'Created On'),
             'updated_on' => Yii::t('user', 'Updated On'),
@@ -74,6 +108,41 @@ class UserProfile extends BaseModel
     public function getUser()
     {
         return $this->hasOne(User::className(), ['id' => 'id']);
+    }
+    /**
+     * Get gender list
+     *
+     * @return string
+     */
+    public function getGenderList()
+    {
+        return $this->_genders;
+    }
+    
+    /**
+     * User friendly gender name
+     *
+     * @return string
+     */
+    public function getGenderText()
+    {
+        if (empty($this->gender)) {
+            return null;
+        }
+        return $this->_genders[$this->gender];
+    }
+
+    /**
+     * Formatted gender name
+     *
+     * @return string
+     */
+    public function getGenderHtml()
+    {
+        if (empty($this->gender)) {
+            return null;
+        }
+        return '<span class="' . $this->_genderClasses[$this->gender] . '">' . $this->genderText . '</span>';
     }
     
     /**
@@ -102,7 +171,7 @@ class UserProfile extends BaseModel
     /**
      * Process upload of avatar
      *
-     * @return bool the status of the upload
+     * @return bool the gender of the upload
      */
     public function uploadAvatar()
     {
@@ -128,7 +197,7 @@ class UserProfile extends BaseModel
     /**
      * Process deletion of avatar
      *
-     * @return bool the status of deletion
+     * @return bool the gender of deletion
      */
     public function deleteAvatar()
     {
@@ -141,5 +210,5 @@ class UserProfile extends BaseModel
         }
         $this->avatar = null;
         return true;
-    }    
+    }
 }

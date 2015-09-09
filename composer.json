@@ -17,13 +17,11 @@
         "yiisoft/yii2-swiftmailer": "*",
         "kartik-v/yii2-ipinfo": "*",
         "kartik-v/yii2-widget-alert": "*",
-        "kartik-v/yii2-widget-datetimepicker": "*",
         "kartik-v/yii2-widget-fileinput": "*",
         "kartik-v/yii2-widget-select2": "*",
         "kartik-v/yii2-password": "*",
         "kartik-v/yii2-builder": "*",
-        "kartik-v/yii2-detail-view": "*",
-        "kartik-v/yii2-ipinfo": "*"
+        "kartik-v/yii2-detail-view": "*"
     },
     "autoload": {
         "psr-4": {

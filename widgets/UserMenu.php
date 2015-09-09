@@ -75,7 +75,7 @@ class UserMenu extends Nav
             $this->items = ArrayHelper::merge([
                 [
                    'label' => $m->icon('wrench') . Yii::t('user', 'Manage'),
-                   'url' => [$m->actionSettings[Module::ACTION_ADMIN_VIEW], 'id' => $this->user],
+                   'url' => [$m->actionSettings[Module::ACTION_ADMIN_MANAGE], 'id' => $this->user],
                    'linkOptions' => ['title' => Yii::t('user', 'Administer user profile')]
                 ],
             ], $this->items);

@@ -1,11 +1,12 @@
 <?php
 
-use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\helpers\Json;
 use yii\web\View;
+use kartik\helpers\Html;
 use kartik\grid\GridView;
 use kartik\select2\Select2;
+use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\assets\AdminAsset;
 
@@ -18,9 +19,11 @@ use comyii\user\assets\AdminAsset;
 $m = $this->context->module;
 $this->title = Yii::t('user', 'Manage Users');
 $this->params['breadcrumbs'][] = $this->title;
-$user = new User;
+$class = $m->modelSettings[Module::MODEL_USER];
+$user = new $class;
 $allStatuses = $user->allStatusList;
 $statuses = $user->statusList;
+unset($statuses[User::STATUS_PENDING]);
 unset($user);
 $config = Json::encode([
     'confirmMsg' => Yii::t('user', 'Batch update statuses for all selected users?'),
@@ -30,8 +33,6 @@ $config = Json::encode([
 ]);
 $this->registerJs("var kvBatchUpdateConfig = {$config};", View::POS_HEAD);
 AdminAsset::register($this);
-
-$batch = Yii::t('user', 'Batch update...');
 ?>
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
@@ -60,17 +61,17 @@ $batch = Yii::t('user', 'Batch update...');
                 'data' => $statuses,
                 'addon' => [
                     'append' => [
-                        'content' => Html::button($m->icon('save'),[
+                        'content' => Html::button(Html::icon('saved'),[
                             'class' => 'btn btn-default',
                             'id' => 'btn-batch-update',
-                            'title' => $batch
+                            'title' => Yii::t('user', 'Go!')
                         ]),
                         'asButton' => true
                     ],
                 ],
                 'options' => [
                     'id' => 'batch-status',
-                    'placeholder' => $batch
+                    'placeholder' => Yii::t('user', 'Batch update...')
                 ]
             ])  . '</div>'
         ]
@@ -89,28 +90,46 @@ $batch = Yii::t('user', 'Batch update...');
             }
         ],
         'email:email',
-        'created_on:datetime',
-        [
-            'attribute' => 'last_login_on',
-            'format' => 'datetime',
-            'value' => function($model) {
-                return strtotime($model->last_login_on) ? $model->last_login_on : null;
-            }
-        ],
-        'last_login_ip',
         [
             'attribute' => 'status', 
             'format' => 'raw', 
+            'hAlign' => 'center',
             'content' => function($model) {
                 return $model->getStatusHtml();
             },
             'filter' => $allStatuses,
-            'width' => '145px',
+            'width' => '140px',
             'filterType' => GridView::FILTER_SELECT2,
             'filterWidgetOptions' => [
                 'options' => ['placeholder' => Yii::t('user', 'Select...')],
                 'pluginOptions' => ['allowClear'=>true]
             ]
+        ],
+        [
+            'attribute' => 'last_login_ip',
+            'format' => 'raw',
+            'hAlign' => 'center',
+            'width' => '140px',
+            'value' => function($model) {
+                return $model->last_login_ip ? '<code>' . $model->last_login_ip . '</code>' : null;
+            }
+        ],
+        [
+            'attribute' => 'last_login_on',
+            'format' => 'datetime', 
+            'hAlign' => 'center',
+            'filter' => false,
+            'mergeHeader' => true,
+            'value' => function($model) {
+                return strtotime($model->last_login_on) ? $model->last_login_on : null;
+            }
+        ],
+        [
+            'attribute' => 'created_on',
+            'format' => 'datetime', 
+            'hAlign' => 'center',
+            'filter' => false,
+            'mergeHeader' => true
         ],
         [
             'class'=>'kartik\grid\CheckboxColumn',
