@@ -1,4 +1,12 @@
 <?php
+
+/**
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
+ * @version 1.0.0
+ * @see https://github.com/communityii/yii2-user
+ */
+
 namespace comyii\user\models;
 
 use Yii;
@@ -11,6 +19,9 @@ use comyii\user\models\User;
  */
 class RecoveryForm extends Model
 {
+    /**
+     * @var string the email address
+     */
     public $email;
 
     /**
@@ -25,30 +36,19 @@ class RecoveryForm extends Model
             ['email', 'email'],
             ['email', 'exist',
                 'targetClass' => $m->modelSettings[Module::MODEL_USER],
-                'filter' => ['status' => User::STATUS_ACTIVE],
+                'filter' => ['status' => Module::STATUS_ACTIVE],
                 'message' => Yii::t('user', 'There is no user registered with the email!')
             ],
         ];
     }
-
+    
     /**
-     * Sends an email with a link, for resetting the password.
-     *
-     * @param string $timeLeft the action link expiry information
-     * @param User $user the user model
-     *
-     * @return bool whether the email was sent
+     * @inheritdoc
      */
-    public function sendEmail($timeLeft, $user)
+    public function attributeLabels()
     {
-        if ($user) {
-            if ($user && !$class::isKeyValid($user->reset_key, $user->resetKeyExpiry)) {
-                $user->generateResetKey();
-            }
-            if ($user->save()) {
-                return $m->sendEmail('recovery', $user, ['timeLeft' => $timeLeft]);
-            }
-        }
-        return false;
+        return [
+            'email' => Yii::t('user', 'Registered Email'),
+        ];
     }
 }

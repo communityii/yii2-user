@@ -21,10 +21,8 @@ $m = $this->context->module;
 $this->title = Yii::t('user', 'Manage Users');
 $this->params['breadcrumbs'][] = $this->title;
 $class = $m->modelSettings[Module::MODEL_USER];
-$user = new $class;
-$allStatuses = $user->allStatusList;
-$statuses = $user->statusList;
-unset($user);
+$allStatuses = $m->statuses;
+$statuses = $m->getEditStatuses();
 $config = Json::encode([
     'confirmMsg' => Yii::t('user', 'Batch update statuses for all selected users?'),
     'alert1' => Yii::t('user', 'No users have been selected for batch update of status.'),
@@ -90,7 +88,22 @@ AdminAsset::register($this);
             'content' => function($model) {
                 return $model->getStatusHtml();
             },
-            'filter' => $allStatuses,
+            'filter' => $m->getPrimaryStatuses(),
+            'width' => '140px',
+            'filterType' => GridView::FILTER_SELECT2,
+            'filterWidgetOptions' => [
+                'options' => ['placeholder' => Yii::t('user', 'Select...')],
+                'pluginOptions' => ['allowClear'=>true]
+            ]
+        ],
+        [
+            'attribute' => 'status_sec',
+            'format' => 'raw', 
+            'hAlign' => 'center',
+            'content' => function($model) {
+                return $model->getStatusSecHtml();
+            },
+            'filter' => $m->getSecondaryStatuses(),
             'width' => '140px',
             'filterType' => GridView::FILTER_SELECT2,
             'filterWidgetOptions' => [
@@ -102,14 +115,14 @@ AdminAsset::register($this);
             'attribute' => 'last_login_ip',
             'format' => 'raw',
             'hAlign' => 'center',
-            'width' => '140px',
+            'width' => '130px',
             'value' => function($model) {
-                return $model->last_login_ip ? '<code>' . $model->last_login_ip . '</code>' : null;
+                return $model->last_login_ip ? '<samp>' . $model->last_login_ip . '</samp>' : null;
             }
         ],
         [
             'attribute' => 'last_login_on',
-            'format' => 'datetime', 
+            'format' => ['date', 'php:d-M-y H:i'],
             'hAlign' => 'center',
             'filter' => false,
             'mergeHeader' => true,
@@ -119,15 +132,16 @@ AdminAsset::register($this);
         ],
         [
             'attribute' => 'created_on',
-            'format' => 'datetime', 
             'hAlign' => 'center',
+            'format' => ['date', 'php:d-M-y'],
+            'label' => Yii::t('user', 'Member Since'),
             'filter' => false,
             'mergeHeader' => true
         ],
         [
             'class'=>'kartik\grid\CheckboxColumn',
             'checkboxOptions' => function($model) {
-                if ($model->status == User::STATUS_SUPERUSER) {
+                if ($model->status == Module::STATUS_SUPERUSER) {
                     return ['disabled' => 'disabled'];
                 }
             }

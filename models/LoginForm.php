@@ -1,7 +1,7 @@
 <?php
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -10,7 +10,6 @@ namespace comyii\user\models;
 
 use Yii;
 use yii\base\Model;
-use yii\helpers\ArrayHelper;
 use comyii\user\Module;
 use comyii\user\models\User;
 
@@ -26,9 +25,32 @@ use comyii\user\models\User;
  */
 class LoginForm extends Model
 {
+    /**
+     * @var string the username
+     */
     public $username;
+
+    /**
+     * @var string the write only password
+     */
     public $password;
+
+    /**
+     * @var string the new password (required for password change)
+     */
+    public $password_new;
+
+    /**
+     * @var string the new password confirmation
+     * (required during reset and password change)
+     */
+    public $password_confirm;
+
+    /**
+     * @var bool whether to remember the user
+     */
     public $rememberMe = true;
+
     private $_settings = [];
 
     /**
@@ -36,6 +58,9 @@ class LoginForm extends Model
      */
     private $_module;
 
+    /**
+     * @inheritdoc
+     */
     public function init()
     {
         Module::validateConfig($this->_module);
@@ -50,11 +75,15 @@ class LoginForm extends Model
     {
         $rules = [
             // username and password are both required
-            [['username', 'password'], 'required'],
+            [['username', 'password', 'password_new', 'password_confirm'], 'required'],
             // rememberMe must be a boolean value
             ['rememberMe', 'boolean'],
             // check if valid password
             ['password', 'validatePassword'],
+            // validate password confirmation
+            ['password_confirm', 'compare', 'compareAttribute' => 'password_new'],
+            // validate password confirmation
+            ['password_new', 'compare', 'operator' => '!=', 'compareAttribute' => 'password'],
         ];
         if ($this->_settings['loginType'] === Module::LOGIN_EMAIL) {
             $rules += ['username', 'email'];
@@ -63,9 +92,7 @@ class LoginForm extends Model
     }
 
     /**
-     * Attribute labels for the User model
-     *
-     * @return array
+     * @inheritdoc
      */
     public function attributeLabels()
     {
@@ -78,7 +105,9 @@ class LoginForm extends Model
         return [
             'username' => $label,
             'password' => Yii::t('user', 'Password'),
-            'rememberMe' =>  Yii::t('user', 'Remember Me'),
+            'rememberMe' => Yii::t('user', 'Remember Me'),
+            'password_new' => Yii::t('user', 'New Password'),
+            'password_confirm' => Yii::t('user', 'Confirm Password')
         ];
     }
 
@@ -87,9 +116,8 @@ class LoginForm extends Model
      * This method serves as the inline validation for password.
      *
      * @param string $attribute the attribute currently being validated
-     * @param array $params the additional name-value pairs given in the rule
      */
-    public function validatePassword($attribute, $params)
+    public function validatePassword($attribute)
     {
         if ($this->hasErrors()) {
             return;
@@ -97,23 +125,36 @@ class LoginForm extends Model
         $user = $this->getUser();
         $outcome = ($user) ? $user->validatePassword($this->$attribute) : null;
         if (!$user || !$outcome) {
-            $this->addError($attribute, Yii::t('user', 'Invalid login credentials'));
+            $this->addError($attribute, Yii::t('user', 'The password is incorrect'));
         }
         if ($outcome !== null) {
             $user->checkFailedLogin($outcome);
         }
-
     }
 
     /**
      * Logs in a user using the provided username and password.
      *
-     * @param $user the user model
+     * @param User $user the user model
+     *
      * @return boolean whether the user is logged in successfully
      */
     public function login($user)
     {
-        return Yii::$app->getUser()->login($user, $this->rememberMe ? $this->_settings['rememberMeDuration'] : 0);
+        if (!empty($user->status_sec)) {
+            return (int)$user->status_sec;
+        }
+        if ($user->isPasswordExpired()) {
+            $user->status_sec = Module::STATUS_EXPIRED;
+            $user->save(false);
+            return Module::STATUS_EXPIRED;
+        }
+        if ($user->isLocked()) {
+            $user->status_sec = Module::STATUS_LOCKED;
+            $user->save(false);
+            return Module::STATUS_LOCKED;
+        }
+        return Yii::$app->user->login($user, $this->rememberMe ? $this->_settings['rememberMeDuration'] : 0);
     }
 
     /**
@@ -123,6 +164,9 @@ class LoginForm extends Model
      */
     public function getUser()
     {
+        /**
+         * @var User $class
+         */
         $class = $this->_module->modelSettings[Module::MODEL_USER];
         $loginType = $this->_settings['loginType'];
         if ($loginType === Module::LOGIN_USERNAME) {
@@ -133,5 +177,18 @@ class LoginForm extends Model
             $user = $class::findByUserOrEmail($this->username);
         }
         return $user;
+    }
+
+    /**
+     * User model scenarios
+     *
+     * @return array
+     */
+    public function scenarios()
+    {
+        $scenarios = parent::scenarios();
+        $scenarios[Module::SCN_LOGIN] = ['username', 'password', 'email', 'rememberMe'];
+        $scenarios[Module::SCN_EXPIRY] = ['username', 'password', 'password_new', 'password_confirm'];
+        return $scenarios;
     }
 }

@@ -1,25 +1,48 @@
 <?php
 
-use yii\helpers\Html;
+use kartik\helpers\Html;
+use kartik\form\ActiveForm;
+use kartik\select2\Select2;
+use comyii\user\Module;
+use comyii\user\widgets\AdminMenu;
 
 /**
  * @var yii\web\View $this
  * @var comyii\user\models\User $model
  */
-
-$this->title = Yii::t('user', 'Update {modelClass}: ', [
-  'modelClass' => 'User',
-]) . $model->id;
-$this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'Users'), 'url' => ['index']];
-$this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' => $model->id]];
+$m = $this->context->module;
+$actions = $m->actionSettings;
+$this->title = Yii::t('user', 'Update User') . ' (' . $model->username . ')';
+$this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'Users'), 'url' => [$actions[Module::ACTION_ADMIN_INDEX]]];
+$this->params['breadcrumbs'][] = ['label' => $model->username, 'url' => [$actions[Module::ACTION_ADMIN_VIEW], 'id' => $model->id]];
 $this->params['breadcrumbs'][] = Yii::t('user', 'Update');
 ?>
-<div class="user-update">
-
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <?= $this->render('_form', [
-        'model' => $model,
-    ]) ?>
-
+<div class="page-header">
+    <div class="pull-right"><?= AdminMenu::widget(['ui' => 'edit', 'user' => $model]) ?></div>
+    <h1><?= $this->title ?></h1>
 </div>
+<?php $form = ActiveForm::begin(['type'=>ActiveForm::TYPE_HORIZONTAL, 'formConfig'=>['labelSpan'=>4]]); ?>
+<div class="row">
+    <div class="col-md-8">
+        <?php
+            if ($settings === true || $settings['changeUsername']) {
+                echo $form->field($model, 'username')->textInput(['maxlength' => 128]);
+            }
+            if ($settings === true || $settings['changeEmail']) {
+                 echo $form->field($model, 'email')->textInput(['maxlength' => 255]);
+            }
+            if (!$model->isSuperuser()) {
+                echo $form->field($model, 'status')->widget(Select2::classname(), [
+                    'data' => $m->getEditStatuses()
+                ]);
+            }
+            $submit = $m->button(Module::BTN_SUBMIT_FORM, [], ['label' => Yii::t('user', 'Update')]);
+        ?>
+    </div>
+</div>
+<hr>
+<div class="text-right">
+    <?= $m->button(Module::BTN_RESET_FORM) ?> 
+    <?= $m->button(Module::BTN_SUBMIT_FORM, [], ['label' => Yii::t('user', 'Update')]) ?>
+</div>
+<?php ActiveForm::end(); ?>

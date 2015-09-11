@@ -13,7 +13,7 @@ use comyii\user\widgets\AdminMenu;
  */
 
 $m = $this->context->module;
-$url = [$m->actionSettings[Module::ACTION_ADMIN_LIST]];
+$url = [$m->actionSettings[Module::ACTION_ADMIN_INDEX]];
 $this->title =  Yii::t('user', 'Manage User') . ' (' . $model->username . ')';
 $this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'Manage Users'), 'url' => $url];
 $this->params['breadcrumbs'][] = $model->username;
@@ -37,7 +37,11 @@ $attribs1 = [
     'id',
     'username',
     'email:email',
-    'statusHtml:html',
+    [
+        'attribute'=> 'status', 
+        'format' => 'raw',
+        'value' => empty($model->status_sec) ? $model->statusHtml : $model->statusHtml . ' ' . $model->statusSecHtml
+    ],
     [
         'attribute'=> 'created_on', 
         'format'=>['datetime', $m->datetimeFormat], 
@@ -96,6 +100,8 @@ if ($m->checkSettings($editSettings, 'showHiddenInfo')) {
     <div class="col-md-6">
         <?= DetailView::widget([
             'model' => $model,
+            'striped' => false,
+            'hover' => true, 
             'enableEditMode' => false,
             'attributes' => $attribs1 
         ]) ?>   
@@ -103,6 +109,8 @@ if ($m->checkSettings($editSettings, 'showHiddenInfo')) {
     <div class="col-md-6">
         <?= DetailView::widget([
             'model' => $model,
+            'striped' => false,
+            'hover' => true, 
             'enableEditMode' => false,
             'attributes' => $attribs2 
         ]) ?>
@@ -112,6 +120,8 @@ if ($m->checkSettings($editSettings, 'showHiddenInfo')) {
     if ($attribs3 !== null) {
         echo DetailView::widget([
             'model' => $model,
+            'striped' => false,
+            'hover' => true, 
             'enableEditMode' => false,
             'attributes' => $attribs3 
         ]);

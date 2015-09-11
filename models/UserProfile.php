@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
+ * @version 1.0.0
+ * @see https://github.com/communityii/yii2-user
+ */
 namespace comyii\user\models;
 
 use Yii;
@@ -17,7 +22,10 @@ use yii\web\UploadedFile;
  * @property string $created_on
  * @property string $updated_on
  *
- * @property User $user
+ * @property User   $user
+ *
+ * @author Kartik Visweswaran <kartikv2@gmail.com>
+ * @since 1.0
  */
 class UserProfile extends BaseModel
 {
@@ -39,11 +47,9 @@ class UserProfile extends BaseModel
      * @var array the list of gender CSS classes
      */
     private $_genderClasses = [];
-    
+
     /**
-     * Table name for the UserProfile model
-     *
-     * @return string
+     * @inheritdoc
      */
     public static function tableName()
     {
@@ -69,7 +75,7 @@ class UserProfile extends BaseModel
     }
 
     /**
-     * UserProfile model validation rules
+     * @inheritdoc
      */
     public function rules()
     {
@@ -84,7 +90,7 @@ class UserProfile extends BaseModel
     }
 
     /**
-     * Attribute labels for the UserProfile model
+     * @inheritdoc
      */
     public function attributeLabels()
     {
@@ -109,6 +115,7 @@ class UserProfile extends BaseModel
     {
         return $this->hasOne(User::className(), ['id' => 'id']);
     }
+
     /**
      * Get gender list
      *
@@ -118,7 +125,7 @@ class UserProfile extends BaseModel
     {
         return $this->_genders;
     }
-    
+
     /**
      * User friendly gender name
      *
@@ -144,7 +151,7 @@ class UserProfile extends BaseModel
         }
         return '<span class="' . $this->_genderClasses[$this->gender] . '">' . $this->genderText . '</span>';
     }
-    
+
     /**
      * Fetch stored avatar file name with complete path
      *
@@ -180,7 +187,7 @@ class UserProfile extends BaseModel
             return false;
         }
         $ext = $image->extension;
-        $file = null;
+        $file = $filename = null;
         $config = $this->_module->profileSettings;
         while ($file === null || file_exists($file)) {
             $filename = Yii::$app->security->generateRandomString(8) . ".{$ext}";

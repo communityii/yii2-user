@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -31,7 +31,7 @@ class BaseForm extends Widget
     public $title = '';
 
     /**
-     * @var yii\base\Model|yii\db\ActiveRecord the model instance
+     * @var \yii\base\Model|\yii\db\ActiveRecord the model instance
      */
     public $model;
 
@@ -52,12 +52,12 @@ class BaseForm extends Widget
      * `tag`: string, the HTML tag to render the footer. Defaults to `div`.
      */
     public $footerOptions = ['class' => 'y2u-box-footer'];
-    
+
     /**
      * @var string the content to render for the left footer
      */
     public $leftFooter = '';
-    
+
     /**
      * @var string the content to render for the right footer
      */
@@ -67,17 +67,17 @@ class BaseForm extends Widget
      * @var array the widget configuration options for `kartik\builder\Form`
      */
     public $options = ['options' => ['class' => 'y2u-padding']];
-    
+
     /**
-     * @var string template to render the widget. The tag `{fields}` will be replaced 
+     * @var string template to render the widget. The tag `{fields}` will be replaced
      * with form fields, while the tag `{footer}` will be replaced with the output
      * of footer template.
      */
     public $template;
 
     /**
-     * @var string template to render the footer. The tag `{left}` will be replaced 
-     * with the `leftFooter` and the tag `{right}` will be replaced with the 
+     * @var string template to render the footer. The tag `{left}` will be replaced
+     * with the `leftFooter` and the tag `{right}` will be replaced with the
      * `rightFooter`.
      */
     public $footerTemplate;
@@ -108,7 +108,7 @@ class BaseForm extends Widget
             $this->formOptions['fieldConfig'] = ['autoPlaceholder' => true];
         }
         if (!isset($this->template)) {
-            $this->template = "<legend>{$this->title}</legend>\n{fields}\n{footer}";    
+            $this->template = "<legend>{$this->title}</legend>\n{fields}\n{footer}";
         }
         if (!isset($this->footerTemplate)) {
             $this->footerTemplate = <<< HTML
@@ -123,14 +123,18 @@ class BaseForm extends Widget
 HTML;
         }
         $this->_form = ActiveForm::begin($this->formOptions);
-        $options = ['model' => $this->model, 'form' => $this->_form, 'attributes' => $this->attributes] + $this->options;
+        $options = [
+                'model' => $this->model,
+                'form' => $this->_form,
+                'attributes' => $this->attributes
+            ] + $this->options;
         echo strtr($this->template, [
             '{fields}' => Form::widget($options),
             '{footer}' => $this->renderFooter()
         ]);
         ActiveForm::end();
     }
-    
+
     public function renderFooter()
     {
         $footer = strtr($this->footerTemplate, [

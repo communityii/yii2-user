@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -11,12 +11,7 @@ namespace comyii\user\widgets;
 
 use Yii;
 use yii\helpers\ArrayHelper;
-use yii\helpers\Url;
-use yii\base\InvalidConfigException;
-use yii\authclient\widgets\AuthChoice;
 use yii\captcha\Captcha;
-use kartik\helpers\Html;
-use kartik\form\ActiveForm;
 use kartik\builder\Form;
 use kartik\password\PasswordInput;
 use comyii\user\Module;
@@ -34,7 +29,7 @@ class RegistrationForm extends LoginForm
      */
     public $leftLinkOptions = [
         'class' => 'text-warning pull-left',
-        'data-toggle'=>'tooltip',
+        'data-toggle' => 'tooltip',
         'style' => 'margin-top: 7px;'
     ];
 
@@ -58,30 +53,30 @@ class RegistrationForm extends LoginForm
      */
     public function init()
     {
+        /**
+         * @var Module $m
+         */
         $m = Yii::$app->getModule('user');
-        $captcha = '';
         $password = ['type' => Form::INPUT_PASSWORD];
         if (in_array(Module::SCN_REGISTER, $m->passwordSettings['strengthMeter'])) {
             $password = [
-                'type' => Form::INPUT_WIDGET, 
+                'type' => Form::INPUT_WIDGET,
                 'widgetClass' => PasswordInput::classname(),
                 'options' => [
                     'options' => [
-                        'placeholder' => Yii::t('user', 'Password'), 
-                        'autocomplete'=>'new-password'
+                        'placeholder' => Yii::t('user', 'Password'),
+                        'autocomplete' => 'new-password'
                     ]
                 ]
             ];
         }
-        $captcha = ArrayHelper::getValue($m->registrationSettings, 'captcha', false);
         $this->attributes += [
-            'username' => ['type' => Form::INPUT_TEXT, 'options' => ['autocomplete'=>'new-username']],
+            'username' => ['type' => Form::INPUT_TEXT, 'options' => ['autocomplete' => 'new-username']],
             'password' => $password,
             'email' => ['type' => Form::INPUT_TEXT]
         ];
-        if ($captcha === false || !is_array($captcha)) {
-            $captcha = '';
-        } else {
+        $captcha = ArrayHelper::getValue($m->registrationSettings, 'captcha', false);
+        if ($captcha !== false && is_array($captcha)) {
             $this->attributes['captcha'] = [
                 'type' => Form::INPUT_WIDGET,
                 'widgetClass' => Captcha::classname(),

@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -32,7 +32,7 @@ class RecoveryForm extends BaseForm
         Module::validateConfig($this->_module);
         $this->attributes += [
             'email' => [
-                'type' => Form::INPUT_TEXT, 
+                'type' => Form::INPUT_TEXT,
                 'hint' => Yii::t('user', 'Please fill out your email to receive a link to reset your password')
             ],
         ];

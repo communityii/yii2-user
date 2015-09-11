@@ -1,4 +1,11 @@
 <?php
+/**
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
+ * @version 1.0.0
+ * @see https://github.com/communityii/yii2-user
+ */
+
 use yii\helpers\Html;
 use yii\helpers\Url;
 use comyii\user\Module;
@@ -18,8 +25,8 @@ $name = Yii::$app->name;
 <blockquote><?= Html::a(Html::encode($activateLink), $activateLink) ?></blockquote>
 
 <?php if (!empty($timeLeft)): ?>
-<p><em><b>Note</b>: <?= $timeLeft ?></em></p>
-<?php endif;?>
+    <p><em><b>Note</b>: <?= $timeLeft ?></em></p>
+<?php endif; ?>
 
 <p>Regards,</p>
 

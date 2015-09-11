@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -15,13 +15,12 @@ use yii\web\GroupUrlRule;
 use comyii\user\Module;
 
 /**
- * Module initialization bootstrap class for yii2-user module.
- * This assigns and enables module specific URL rules.
+ * Module initialization bootstrap class for yii2-user module. This class assigns and enables module specific URL rules.
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class ModuleInit extends BootstrapInterface
+class ModuleInit implements BootstrapInterface
 {
     /**
      * @inheritdoc
@@ -31,12 +30,14 @@ class ModuleInit extends BootstrapInterface
         if (!$app instanceof \yii\web\Application || !$app->hasModule('user')) {
             return;
         }
-        /** @var Module $m */
+        /**
+         * @var Module $m
+         */
         $m = $app->getModule('user');
-        if (!$module instanceof Module) {
+        if (!$m instanceof Module) {
             return;
         }
-        $config = ['prefix' => $m->urlPrefix, 'rules'  => $m->urlRules];
+        $config = ['prefix' => $m->urlPrefix, 'rules' => $m->urlRules];
         if ($m->urlPrefix != 'user') {
             $config['routePrefix'] = 'user';
         }

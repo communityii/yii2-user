@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -10,6 +10,7 @@
 namespace comyii\user\models;
 
 use Yii;
+use comyii\user\Module;
 
 /**
  * This is the query class for the `User` Model
@@ -24,31 +25,31 @@ class UserQuery extends \yii\db\ActiveQuery
 {
     public function pending()
     {
-        $this->andWhere(['status' => User::STATUS_PENDING]);
+        $this->andWhere(['status' => Module::STATUS_PENDING]);
         return $this;
     }
 
     public function inactive()
     {
-        $this->andWhere(['status' => User::STATUS_INACTIVE]);
+        $this->andWhere(['status' => Module::STATUS_INACTIVE]);
         return $this;
     }
 
     public function superuser()
     {
-        $this->andWhere(['status' => User::STATUS_SUPERUSER]);
+        $this->andWhere(['status' => Module::STATUS_SUPERUSER]);
         return $this;
     }
 
     public function active()
     {
-        $this->andWhere(['in', 'status', [User::STATUS_ACTIVE, User::STATUS_SUPERUSER, User::STATUS_ADMIN]]);
+        $this->andWhere(['in', 'status', [Module::STATUS_ACTIVE, Module::STATUS_SUPERUSER, Module::STATUS_ADMIN]]);
         return $this;
     }
     
     public function admin()
     {
-        $this->andWhere(['in', 'status', [User::STATUS_ADMIN, User::STATUS_SUPERUSER]]);
+        $this->andWhere(['in', 'status', [Module::STATUS_ADMIN, Module::STATUS_SUPERUSER]]);
         return $this;
     }
 }

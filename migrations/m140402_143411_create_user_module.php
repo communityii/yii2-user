@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -19,7 +19,7 @@ class m140402_143411_create_user_module extends Migration
     public function up()
     {
         $tableOptions = null;
-        $timestamp = $this->timestamp()->notNull()->defaultValue('0000-00-00 00:00:00');
+        $timestamp = $this->datetime()->notNull();
 
         if ($this->db->driverName === 'mysql') {
             $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB';
@@ -37,14 +37,16 @@ class m140402_143411_create_user_module extends Migration
             'reset_key' => $this->string(128),
             'email_change_key' => $this->string(128),
             'status' => $this->smallInteger()->notNull()->defaultValue(0),
+            'status_sec' => $this->smallInteger(),
             'password_fail_attempts' => $this->smallInteger()->defaultValue(0),
-            'password_reset_on' => $this->timestamp(),
+            'password_reset_on' => $this->datetime(),
             'created_on' => $timestamp,
             'updated_on' => $timestamp,
-            'last_login_on' => $this->timestamp(),
+            'last_login_on' => $this->datetime(),
             'last_login_ip' => $this->string(50)
         ], $tableOptions);
         $this->createIndex('user_status_idx', '{{%user}}', 'status');
+        $this->createIndex('user_status_sec_idx', '{{%user}}', 'status_sec');
 
         // Table # 2: Social authentication
         $this->createTable('{{%social_auth}}', [

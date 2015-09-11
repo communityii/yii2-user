@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -18,7 +18,10 @@ use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\authclient\AuthAction;
 use comyii\user\Module;
+use comyii\user\models\LoginForm;
+use comyii\user\models\RecoveryForm;
 use comyii\user\models\User;
+use comyii\user\models\SocialProfile;
 
 /**
  * Account controller for authentication of various user actions.
@@ -29,22 +32,22 @@ use comyii\user\models\User;
 class AccountController extends BaseController
 {
     /**
-     * Account controller behaviors
+     * @inheritdoc
      */
     public function behaviors()
     {
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['logout', 'register', 'recovery', 'captcha'],
+                'only' => ['logout', 'register', 'recovery', 'password'],
                 'rules' => [
                     [
-                        'actions' => ['register', 'recovery', 'captcha'],
+                        'actions' => ['register', 'recovery'],
                         'allow' => true,
                         'roles' => ['?'],
                     ],
                     [
-                        'actions' => ['logout'],
+                        'actions' => ['password', 'logout'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -60,9 +63,7 @@ class AccountController extends BaseController
     }
 
     /**
-     * Captcha and other actions
-     *
-     * @return mixed
+     * @inheritdoc
      */
     public function actions()
     {
@@ -76,40 +77,46 @@ class AccountController extends BaseController
         $captcha = $this->getConfig('registrationSettings', 'captcha', false);
         if ($captcha !== false) {
             $captcha = ArrayHelper::getValue($captcha, 'action', []);
-            $actions['captcha'] =  $captcha;
+            $actions['captcha'] = $captcha;
         }
         return $actions;
     }
 
     /**
      * Social client authorization callback
-     * @param yii\authclient\Client $client
+     *
+     * @param \yii\authclient\BaseClient $client
      */
     public function onAuthSuccess($client)
     {
+        /**
+         * @var SocialProfile $socialClass
+         * @var User          $userClass
+         * @var SocialProfile $auth
+         * @var User          $user
+         */
         $attributes = $client->getUserAttributes();
         $clientId = $client->getId();
         $clientTitle = $client->getTitle();
         $session = Yii::$app->session;
-        $userClass = $this->getConfig('modelSettings', Module::MODEL_USER);
-        $socialClass = $this->getConfig('modelSettings', Module::MODEL_SOCIAL_PROFILE);
-
-        /** @var Auth $auth */
+        $userClass = $this->fetchModel(Module::MODEL_USER);
+        $socialClass = $this->fetchModel(Module::MODEL_SOCIAL_PROFILE);
         $auth = $socialClass::find()->where([
             'source' => $clientId,
             'source_id' => $attributes['id'],
         ])->one();
-        
+
         if (Yii::$app->user->isGuest) {
             if ($auth) { // login
                 $user = $auth->user;
                 Yii::$app->user->login($user);
             } else { // signup
-                if (isset($attributes['email']) && isset($attributes['username']) && 
-                    $userClass::find()->where(['email' => $attributes['email']])->exists()) {
+                if (isset($attributes['email']) && isset($attributes['username']) &&
+                    $userClass::find()->where(['email' => $attributes['email']])->exists()
+                ) {
                     $session->setFlash('error', Yii::t(
                         'user',
-                        'User with the same email as in <b>{client}</b> account already exists but is not linked to it. Login using email first to link it.', 
+                        'User with the same email as in <b>{client}</b> account already exists but is not linked to it. Login using email first to link it.',
                         ['client' => $clientTitle]
                     ));
                 } else {
@@ -138,13 +145,13 @@ class AccountController extends BaseController
                         $transaction->rollback();
                         $session->setFlash('error', Yii::t(
                             'user',
-                            'Error while authenticating <b>{client}</b> account.<pre>{errors}</pre>', 
+                            'Error while authenticating <b>{client}</b> account.<pre>{errors}</pre>',
                             ['client' => $clientTitle, 'errors' => print_r($user->getErrors(), true)]
                         ));
                     } else {
                         $session->setFlash('success', Yii::t(
                             'user',
-                            'Successfully authenticated <b>{client}</b> account.', 
+                            'Successfully authenticated <b>{client}</b> account.',
                             ['client' => $clientTitle]
                         ));
                     }
@@ -153,7 +160,6 @@ class AccountController extends BaseController
         } else { // user already logged in
             if (!$auth) { // add auth provider
                 $id = Yii::$app->user->id;
-                $user = $userClass::findOne($id);
                 $auth = new $socialClass([
                     'user_id' => $id,
                     'source' => $clientId,
@@ -162,13 +168,13 @@ class AccountController extends BaseController
                 if ($auth->save()) {
                     $session->setFlash('success', Yii::t(
                         'user',
-                        'Successfully authenticated <b>{client}</b> account for <b>{user}</b>.', 
+                        'Successfully authenticated <b>{client}</b> account for <b>{user}</b>.',
                         ['client' => $clientTitle]
                     ));
                 } else {
                     $session->setFlash('error', Yii::t(
                         'user',
-                        'Error while authenticating <b>{client}</b> account for <b>{user}</b>.<pre>{errors}</pre>', 
+                        'Error while authenticating <b>{client}</b> account for <b>{user}</b>.<pre>{errors}</pre>',
                         ['client' => $clientTitle, 'errors' => print_r($auth->getErrors(), true)]
                     ));
                 }
@@ -177,48 +183,72 @@ class AccountController extends BaseController
     }
 
     /**
-     * User login action
+     * Login the current user after validating credentials, the password expiry, and password lock status.
      *
-     * @return mixed
+     * @return string|\yii\web\Response
+     * @throws InvalidConfigException
      */
     public function actionLogin()
     {
-        if (!\Yii::$app->user->isGuest) {
+        /**
+         * @var LoginForm $model
+         */
+        $app = Yii::$app;
+        if (!$app->user->isGuest) {
             return $this->goBack();
         }
-        $url = $this->getConfig('loginSettings', 'loginRedirectUrl');
         $hasSocialAuth = $this->getConfig('socialSettings', 'enabled', false);
-        $authAction = $this->getConfig('actionSettings', Module::ACTION_SOCIAL_AUTH);
-        if ($hasSocialAuth && empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
+        $authAction = $this->fetchAction(Module::ACTION_SOCIAL_AUTH);
+        if ($hasSocialAuth && empty($app->authClientCollection) && empty($app->authClientCollection->clients)) {
             throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
         }
-        $this->layout = $this->getConfig('layoutSettings', Module::ACTION_LOGIN);
-        $class = $this->getConfig('modelSettings', Module::MODEL_LOGIN);
-        $model = new $class;
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+        $class = $this->fetchModel(Module::MODEL_LOGIN);
+        $post = $app->request->post();
+        $model = new $class();
+        $unlockExpiry = !empty($post) && !empty($post['unlock-account']);
+        $model->scenario = $unlockExpiry ? Module::SCN_EXPIRY : Module::SCN_LOGIN;
+        if ($model->load($post) && $model->validate()) {
+            $session = $app->session;
             $user = $model->getUser();
-            $link = Yii::t('user', 'Click {link} to reset your password.', [
-                'link' => Html::a(Yii::t('user', 'here'), Module::ACTION_RESET)
-            ]);
-            $expiredMsg = Yii::t('user', 'Your password has expired. {reset}', ['reset' => $link]);
-            $lockedMsg = Yii::t('user', 'Your account has been locked. {reset}', ['reset' => $link]);
-            if ($user->status === User::STATUS_INACTIVE) {
-                $msg = ($user->isPasswordExpired()) ? $expiredMsg : $lockedMsg;
-                return $this->lockAccount(null, $msg);
-            } elseif ($user->isPasswordExpired()) {
-                return $this->lockAccount($user, $expiredMsg);
-            } elseif ($user->isAccountLocked()) {
-                return $this->lockAccount($user, $lockedMsg);
-            } elseif ($model->login($user)) {
+            if ($unlockExpiry) {
+                $user->setPassword($model->password_new);
+                $user->status_sec = null;
+                $user->save(false);
+                $session->setFlash(
+                    'success',
+                    Yii::t('user', 'Your password has been changed successfully and you have been logged in.')
+                );
+                $model->login($user);
+                $user->setLastLogin();
+                return $this->safeRedirect();
+            }
+            $status = $model->login($user);
+            if ($status === Module::STATUS_EXPIRED) {
+                $session->setFlash(
+                    'error',
+                    Yii::t('user', 'Your password has expired. Change your password by completing the details below.')
+                );
+                $model->scenario = Module::SCN_EXPIRY;
+            } elseif ($status === Module::STATUS_LOCKED) {
+                $link = Yii::t('user', 'Click {link} to reset your password and unlock your account.', [
+                    'link' => Html::a(Yii::t('user', 'here'), Module::ACTION_RECOVERY)
+                ]);
+                $session->setFlash('error', Yii::t(
+                    'user',
+                    'Your account has been locked due to multiple invalid login attempts. {reset}',
+                    ['reset' => $link]
+                ));
+            } elseif ($status) {
                 $user->setLastLogin();
                 return $this->safeRedirect();
             }
         }
-        return $this->render(Module::SCN_LOGIN, [
-            'model' => $model, 
+        return $this->display(Module::VIEW_LOGIN, [
+            'model' => $model,
             'hasSocialAuth' => $hasSocialAuth,
             'authAction' => $authAction,
-            'loginTitle' => Yii::t('user', 'Login'),
+            'loginTitle' => $model->scenario === Module::SCN_EXPIRY ? Yii::t('user', 'Change Password') :
+                Yii::t('user', 'Login'),
             'authTitle' => Yii::t('user', 'Or Login Using')
         ]);
     }
@@ -226,7 +256,7 @@ class AccountController extends BaseController
     /**
      * User logout action
      *
-     * @return mixed
+     * @return \yii\web\Response
      */
     public function actionLogout()
     {
@@ -238,35 +268,37 @@ class AccountController extends BaseController
     /**
      * User registration action
      *
-     * @return mixed
+     * @return string|\yii\web\Response
+     * @throws InvalidConfigException
      */
     public function actionRegister()
     {
-        $this->layout = $this->getConfig('layoutSettings', Module::ACTION_REGISTER);
+        /**
+         * @var User $model
+         */
         $config = $this->module->registrationSettings;
         if (!$config['enabled']) {
             return $this->goBack();
         }
         $session = Yii::$app->session;
         $hasSocialAuth = $this->getConfig('socialSettings', 'enabled', false);
-        $authAction = $this->getConfig('actionSettings', Module::ACTION_SOCIAL_AUTH);
-        if ($hasSocialAuth && empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
+        $authAction = $this->fetchAction(Module::ACTION_SOCIAL_AUTH);
+        if ($hasSocialAuth && (empty(Yii::$app->authClientCollection) || empty(Yii::$app->authClientCollection->clients))) {
             throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
         }
-        $this->layout = $this->getConfig('layoutSettings', Module::ACTION_REGISTER);
-        $class = $this->getConfig('modelSettings', Module::MODEL_USER);
+        $class = $this->fetchModel(Module::MODEL_USER);
         $model = new $class(['scenario' => Module::SCN_REGISTER]);
         if ($model->load(Yii::$app->request->post())) {
             $model->setPassword($model->password);
             $model->generateAuthKey();
-            $model->status = User::STATUS_PENDING;
+            $model->status = Module::STATUS_PENDING;
             if ($model->save()) {
                 if ($config['autoActivate'] && Yii::$app->user->login($model)) {
-                    $model->status = User::STATUS_ACTIVE;
+                    $model->status = Module::STATUS_ACTIVE;
                     $model->setLastLogin();
                     $session->setFlash('success', Yii::t(
                         'user',
-                        'The user <b>{user}</b> was registered successfully. You have been logged in.', 
+                        'The user <b>{user}</b> was registered successfully. You have been logged in.',
                         ['user' => $model->username]
                     ));
                 } else {
@@ -274,13 +306,13 @@ class AccountController extends BaseController
                     if ($model->sendEmail('activation', $timeLeft)) {
                         $session->setFlash('success', Yii::t(
                             'user',
-                            'Instructions for activating your account has been sent to your email <b>{email}</b>. {timeLeft}', 
+                            'Instructions for activating your account has been sent to your email <b>{email}</b>. {timeLeft}',
                             ['email' => $model->email, 'timeLeft' => $timeLeft]
                         ));
                     } else {
                         $session->setFlash('warning', Yii::t(
                             'user',
-                            'Could not send activation instructions to your email <b>{email}</b>. Contact the system administrator or retry with a valid email for processing the registration.', 
+                            'Could not send activation instructions to your email <b>{email}</b>. Contact the system administrator or retry with a valid email for processing the registration.',
                             ['email' => $model->email]
                         ));
                     }
@@ -288,7 +320,7 @@ class AccountController extends BaseController
                 return $this->goHome();
             }
         }
-        return $this->render(Module::SCN_REGISTER, [
+        return $this->display(Module::VIEW_REGISTER, [
             'model' => $model,
             'hasSocialAuth' => $hasSocialAuth,
             'authAction' => $authAction,
@@ -300,19 +332,22 @@ class AccountController extends BaseController
     /**
      * Requests password reset.
      *
-     * @return mixed
+     * @return string|\yii\web\Response
      */
     public function actionRecovery()
     {
-        $class = $this->getConfig('modelSettings', Module::MODEL_RECOVERY);
+        /**
+         * @var RecoveryForm $model
+         * @var User         $class
+         * @var User         $user
+         */
+        $class = $this->fetchModel(Module::MODEL_RECOVERY);
         $model = new $class();
-        $this->layout = $this->getConfig('layoutSettings', Module::ACTION_RECOVERY);
         $session = Yii::$app->session;
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $class = $this->getConfig('modelSettings', Module::MODEL_USER);
-            /* @var $user User */
+            $class = $this->fetchModel(Module::MODEL_USER);
             $user = $class::findOne([
-                'status' => User::STATUS_ACTIVE,
+                'status' => [Module::STATUS_ACTIVE, Module::STATUS_LOCKED],
                 'email' => $model->email,
             ]);
             $proceed = true;
@@ -324,7 +359,7 @@ class AccountController extends BaseController
             if ($proceed && $user->sendEmail('recovery', $timeLeft)) {
                 $session->setFlash('success', Yii::t(
                     'user',
-                    'Check your email for further instructions to reset your password. {timeLeft}', 
+                    'Check your email for further instructions to reset your password. {timeLeft}',
                     ['timeLeft' => $timeLeft]
                 ));
                 return $this->goHome();
@@ -335,36 +370,74 @@ class AccountController extends BaseController
                 ));
             }
         }
-        return $this->render('recovery', [
+        return $this->display(Module::VIEW_RECOVERY, [
             'model' => $model,
         ]);
     }
 
     /**
-     * Change password.
+     * Change password for currently logged in user
      *
-     * @return mixed
+     * @return string|\yii\web\Response
      */
     public function actionPassword()
     {
+        /**
+         * @var User $model
+         */
         $model = Yii::$app->user->identity;
         $model->scenario = Module::SCN_CHANGEPASS;
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $model->setPassword($model->password_new);
             $model->save(false);
             Yii::$app->session->setFlash('success', Yii::t('user', 'The password was changed successfully.'));
-            $action = $this->getConfig('actionSettings', Module::ACTION_PROFILE_INDEX);
+            $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
             return $this->redirect([$action]);
         }
-        return $this->render('password', [
+        return $this->display(Module::VIEW_PASSWORD, [
             'model' => $model,
         ]);
     }
 
     /**
-     * Reset password.
+     * Activates user account
      *
-     * @return mixed
+     * @param string $key the activation auth key
+     *
+     * @return string|\yii\web\Response
+     * @throws NotFoundHttpException
+     */
+    public function actionActivate($key)
+    {
+        $model = $this->getUserByKey('auth', $key);
+        if ($model === null) {
+            throw new NotFoundHttpException(Yii::t('user', 'The activation link is invalid or expired'));
+        }
+        $model->scenario = Module::SCN_ACTIVATE;
+        $model->status = Module::STATUS_ACTIVE;
+        $model->password_reset_on = call_user_func($this->module->now);
+        $model->reset_key = null;
+        $session = Yii::$app->session;
+        if ($model->save()) {
+            $session->setFlash(
+                'success',
+                Yii::t('user', 'The account was activated successfully. You can proceed to login.')
+            );
+            $action = $this->fetchAction(Module::ACTION_LOGIN);
+            return $this->redirect([$action]);
+        } else {
+            $session->setFlash('error', Yii::t('user', 'Could not activate the account. Please try again later.'));
+        }
+        return $this->goHome();
+    }
+
+    /**
+     * Reset user account password
+     *
+     * @param string $key the reset key
+     *
+     * @return string|\yii\web\Response
+     * @throws NotFoundHttpException
      */
     public function actionReset($key)
     {
@@ -375,25 +448,32 @@ class AccountController extends BaseController
         $model->scenario = Module::SCN_RESET;
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $model->setPassword($model->password_new);
+            $model->unlock();
             $model->reset_key = null;
-            $sess = Yii::$app->session;
+            $session = Yii::$app->session;
             if ($model->save()) {
-                $sess->setFlash('success', Yii::t('user', 'The password was reset successfully. You can proceed to login with your new password.'));
-                $action = $this->getConfig('actionSettings', Module::ACTION_LOGIN);
-                return $this->redirect([$action]);
+                $session->setFlash('success', Yii::t(
+                    'user',
+                    'The password was reset successfully. You can proceed to login with your new password.'
+                ));
+                return $this->redirect([$this->fetchAction(Module::ACTION_LOGIN)]);
             } else {
-                $sess->setFlash('error', Yii::t('user', 'Could not reset the password. Please try again later.'));
+                $session->setFlash('error', Yii::t('user', 'Could not reset the password. Please try again later.'));
             }
         }
-        return $this->render('reset', [
+        return $this->display(Module::VIEW_RESET, [
             'model' => $model,
         ]);
     }
 
+
     /**
-     * Change email.
+     * Confirm new email change for user
      *
-     * @return mixed
+     * @param string $key the email change key
+     *
+     * @return string|\yii\web\Response
+     * @throws NotFoundHttpException
      */
     public function actionNewemail($key)
     {
@@ -406,16 +486,19 @@ class AccountController extends BaseController
             $model->email = $model->email_new;
             $model->email_new = null;
             $model->email_change_key = null;
-            $sess = Yii::$app->session;
+            $session = Yii::$app->session;
             if ($model->save()) {
-                $sess->setFlash('success', Yii::t('user', 'The email address was changed successfully.'));
-                $action = $this->getConfig('actionSettings', Module::ACTION_PROFILE_INDEX);
+                $session->setFlash('success', Yii::t('user', 'The email address was changed successfully.'));
+                $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
                 return $this->redirect([$action]);
             } else {
-                $sess->setFlash('error', Yii::t('user', 'Could not confirm the new email address. Please try again later.'));
+                $session->setFlash(
+                    'error',
+                    Yii::t('user', 'Could not confirm the new email address. Please try again later.')
+                );
             }
         }
-        return $this->render('newemail', [
+        return $this->display(Module::VIEW_NEWEMAIL, [
             'model' => $model,
         ]);
     }
@@ -430,32 +513,14 @@ class AccountController extends BaseController
      */
     protected function getUserByKey($type, $key)
     {
+        /**
+         * @var User $class
+         */
         if ($type !== 'activation' && $type !== 'reset' && $type !== 'email_change') {
             return null;
         }
-        $class = $this->getConfig('modelSettings', Module::MODEL_USER);
+        $class = $this->fetchModel(Module::MODEL_USER);
         $attribute = "{$type}_key";
         return $class::findByKey($attribute, $key);
     }
-
-    /**
-     * Locks the user account
-     *
-     * @param Model $user the user model
-     * @param string $msg the flash message to be displayed
-     * @param string $link the reset link
-     */
-    protected function lockAccount($user, $msg)
-    {
-        if (!Yii::$app->user->isGuest) {
-            Yii::$app->user->logout(true);
-        }
-        if ($user !== null) {
-            $user->scenario = Module::SCN_LOCKED;
-            $user->save();
-        }
-        Yii::$app->session->setFlash('error', $msg);
-        return $this->render(Module::SCN_LOCKED, ['user' => $user]);
-    }
-
 }

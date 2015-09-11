@@ -1,7 +1,7 @@
 <?php
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -10,8 +10,8 @@ namespace comyii\user\models;
 
 use Yii;
 use yii\base\Model;
-use yii\helpers\ArrayHelper;
 use kartik\password\StrengthValidator;
+use comyii\user\components\User;
 use comyii\user\Module;
 
 /**
@@ -66,7 +66,7 @@ class InstallForm extends Model
     private $_module;
 
     /**
-     * Initialize InstallForm model
+     * @inheritdoc
      */
     public function init()
     {
@@ -75,9 +75,7 @@ class InstallForm extends Model
     }
 
     /**
-     * InstallForm model validation rules
-     *
-     * @return array
+     * @inheritdoc
      */
     public function rules()
     {
@@ -89,10 +87,19 @@ class InstallForm extends Model
             [['username', 'email'], 'filter', 'filter' => 'trim', 'on' => [Module::SCN_INSTALL]],
             ['email', 'email', 'on' => [Module::SCN_INSTALL]],
             [['username', 'password', 'password_confirm', 'email'], 'required', 'on' => [Module::SCN_INSTALL]],
-            ['username', 'match', 'pattern' => $config['userNamePattern'], 'message' => $config['userNameValidMsg'], 'on' => [Module::SCN_INSTALL]],
+            [
+                'username',
+                'match',
+                'pattern' => $config['userNamePattern'],
+                'message' => $config['userNameValidMsg'],
+                'on' => [Module::SCN_INSTALL]
+            ],
             ['username', 'string'] + $config['userNameRules'] + ['on' => Module::SCN_INSTALL],
             ['password_confirm', 'compare', 'compareAttribute' => 'password', 'on' => [Module::SCN_INSTALL]],
-            [['password'], StrengthValidator::className()] +  $this->_module->passwordSettings['strengthRules'] + ['on' => [Module::SCN_INSTALL]]
+            [
+                ['password'],
+                StrengthValidator::className()
+            ] + $this->_module->passwordSettings['strengthRules'] + ['on' => [Module::SCN_INSTALL]]
         ];
         if (in_array(Module::SCN_INSTALL, $this->_module->passwordSettings['validateStrengthCurr'])) {
             $rules[] = [['password'], StrengthValidator::className()] +
@@ -113,11 +120,13 @@ class InstallForm extends Model
             $this->addError('access_code', Yii::t('user', 'The installation access code entered is incorrect'));
         }
         $userComponent = Yii::$app->get('user');
-        if (!$userComponent instanceof \comyii\user\components\User) {
-            $this->addError('access_code', Yii::t('user', 
+        if (!$userComponent instanceof User) {
+            $this->addError('access_code', Yii::t(
+                'user',
                 'You have not setup a valid class for your user component in your application configuration file. ' .
-                'The class must extend {classValid}. Class currently set: {classSet}.', [
-                    'classValid' => '\comyii\user\components\User' ,
+                'The class must extend {classValid}. Class currently set: {classSet}.',
+                [
+                    'classValid' => User::classname(),
                     'classSet' => $userComponent::classname()
                 ]
             ));
@@ -129,7 +138,6 @@ class InstallForm extends Model
      */
     public function attributeLabels()
     {
-        $m = $this->_module;
         return [
             'access_code' => Yii::t('user', 'Access Code'),
             'username' => Yii::t('user', 'Username'),
@@ -142,10 +150,13 @@ class InstallForm extends Model
     /**
      * @inheritdoc
      */
-    public function attributeHints() {
-        $m = $this->_module;
+    public function attributeHints()
+    {
         return [
-            'access_code' => Yii::t('user', 'Enter the installation access code as setup in your module configuration.'),
+            'access_code' => Yii::t(
+                'user',
+                'Enter the installation access code as setup in your module configuration.'
+            ),
             'username' => Yii::t('user', 'Select an username for the superuser'),
             'password' => Yii::t('user', 'Select a password for the superuser'),
             'password_confirm' => Yii::t('user', 'Reconfirm the superuser password'),

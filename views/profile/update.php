@@ -93,6 +93,6 @@ $socialDetails = '';
 <?php endif;?>
 <hr>
 <div class="text-right">
-    <?= $m->button(Module::BTN_RESET_FORM) . ' ' . $m->button(Module::BTN_SUBMIT_FORM, ['label' => Yii::t('user', 'Save')]) ?>
+    <?= $m->button(Module::BTN_RESET_FORM) . ' ' . $m->button(Module::BTN_SUBMIT_FORM, [], ['label' => Yii::t('user', 'Save')]) ?>
 </div>
 <?php ActiveForm::end(); ?>

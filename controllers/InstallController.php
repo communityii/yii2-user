@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -22,7 +22,7 @@ use comyii\user\models\InstallForm;
  */
 class InstallController extends BaseController
 {
-    const UI_INIT_SETUP = 'begin_setup';
+    const SETUP = 'begin_setup';
     public $layout = 'install';
 
     /**
@@ -51,62 +51,63 @@ class InstallController extends BaseController
      */
     public function actionIndex()
     {
+        /**
+         * @var Module $m
+         * @var User   $user
+         */
         $m = $this->module;
-        $userClass = $this->getConfig('modelSettings', Module::MODEL_USER);
+        $userClass = $this->fetchModel(Module::MODEL_USER);
         if (isset($m->installAccessCode) && !$m->hasSuperUser()) {
             $model = new InstallForm(['scenario' => Module::SCN_ACCESS]);
             $session = Yii::$app->session;
             if (!isset($model->action)) {
-                $model->action = self::UI_INIT_SETUP;
+                $model->action = self::SETUP;
             }
             if ($model->load(Yii::$app->request->post())) {
-                if ($model->action === self::UI_INIT_SETUP && $model->validate()) {
+                if ($model->action === self::SETUP && $model->validate()) {
                     $model = new InstallForm(['scenario' => Module::SCN_INSTALL]);
-                }
-                elseif ($model->action === Module::SCN_ACCESS && $model->validate()) {
+                } elseif ($model->action === Module::SCN_ACCESS && $model->validate()) {
                     $model = new InstallForm(['scenario' => Module::SCN_INSTALL]);
                     $model->scenario = Module::SCN_INSTALL;
                     $model->action = Module::SCN_INSTALL;
                     if (isset(Yii::$app->params['adminEmail'])) {
                         $model->email = Yii::$app->params['adminEmail'];
                     }
-                }
-                elseif ($model->action === Module::SCN_INSTALL) {
+                } elseif ($model->action === Module::SCN_INSTALL) {
                     $model->access_code = $m->installAccessCode;
                     if ($model->validate()) {
                         $user = new $userClass([
                             'username' => $model->username,
                             'password' => $model->password,
                             'email' => $model->email,
-                            'status' => User::STATUS_SUPERUSER,
+                            'status' => Module::STATUS_SUPERUSER,
                             'scenario' => Module::SCN_INSTALL
                         ]);
                         $user->setPassword($model->password);
-                        $user->generateAuthKey();       
+                        $user->generateAuthKey();
                         if (!$user->save()) {
                             $session->setFlash('error', Yii::t(
-                                'user', 
-                                'Error creating the superuser. Fix the following errors:<br>{errors}', 
+                                'user',
+                                'Error creating the superuser. Fix the following errors:<br>{errors}',
                                 ['errors' => Module::showErrors($user)]
                             ));
                             $model->action = Module::SCN_INSTALL;
                             $model->scenario = Module::SCN_INSTALL;
-                        }
-                        else {
+                        } else {
                             $session->setFlash('success', Yii::t(
-                                'user', 
-                                'User module successfully installed! You have been automatically logged in as the superuser (username: <b>{username}</b>).',  ['username' => $model->username]
+                                'user',
+                                'User module successfully installed! You have been automatically logged in as the superuser (username: <b>{username}</b>).',
+                                ['username' => $model->username]
                             ));
                             $session->setFlash('warning', Yii::t(
-                                'user', 
+                                'user',
                                 'You should now remove the <code>installAccessCode</code> setting from user module configuration for better security.'
                             ));
                             Yii::$app->user->login($user);
                             $user->setLastLogin();
-                            return $this->forward(Module::ACTION_ADMIN_MANAGE, ['id'=>$user->id]);
+                            return $this->forward(Module::ACTION_ADMIN_VIEW, ['id' => $user->id]);
                         }
-                    }
-                    else {
+                    } else {
                         $model->action = Module::SCN_ACCESS;
                         $model->scenario = Module::SCN_ACCESS;
                     }

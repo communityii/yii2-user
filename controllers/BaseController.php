@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @copyright Copyright &copy; communityii, 2014
- * @package yii2-user
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
  */
@@ -25,10 +25,7 @@ class BaseController extends \yii\web\Controller
 {
 
     /**
-     * This method is invoked right before an action within this module is executed.
-     *
-     * @param Action $action the action to be executed.
-     * @return boolean whether the action should continue to be executed.
+     * @inheritdoc
      */
     public function beforeAction($action)
     {
@@ -39,6 +36,23 @@ class BaseController extends \yii\web\Controller
         else {
             return false;
         }
+    }
+
+    /**
+     * Modified render method to display the view. This takes in the view id as a parameter instead of 
+     * view name.
+     * @param int $view the view identifier as set in one of Module::VIEW constants
+     * @param array $params the parameters (name-value pairs) that should be made available in the view.
+     * These parameters will not be available in the layout.
+     * @return string the rendering result
+     */
+    public function display($view, $params = []) {
+        if (!empty($this->module->layoutSettings[$view])) {
+            $this->layout = $this->module->layoutSettings[$view];
+            
+        }
+        $view = $this->fetchView($view);
+        return parent::render($view, $params);
     }
 
     /**
@@ -92,7 +106,7 @@ class BaseController extends \yii\web\Controller
                 return $this->redirect($user->returnUrl);
             }
             if ($user->isAdmin || $user->isSuperuser) {
-                return $this->forward(Module::ACTION_ADMIN_MANAGE, ['id' => $user->id]);
+                return $this->forward(Module::ACTION_ADMIN_INDEX, ['id' => $user->id]);
             } else {
                 return $this->forward(Module::ACTION_PROFILE_INDEX);
             }
@@ -113,5 +127,38 @@ class BaseController extends \yii\web\Controller
             return $default;
         }
         return ArrayHelper::getValue($this->module->$setting, $param, $default);
+    }
+
+    /**
+     * Gets the view from the module view settings
+     *
+     * @param string $view the identifier of the view
+     * @return string the view name
+     */
+    protected function fetchView($view)
+    {
+        return $this->getConfig('viewSettings', $view);
+    }
+
+    /**
+     * Gets the view from the module action settings
+     *
+     * @param string $action the identifier of the action
+     * @return string the action name
+     */
+    protected function fetchAction($action)
+    {
+        return $this->getConfig('actionSettings', $action);
+    }
+
+    /**
+     * Gets the model from the module model settings
+     *
+     * @param string $model the identifier of the model
+     * @return string the model class
+     */
+    protected function fetchModel($model)
+    {
+        return $this->getConfig('modelSettings', $model);
     }
 }

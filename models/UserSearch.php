@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @package communityii/yii2-user
+ * @version 1.0.0
+ * @see https://github.com/communityii/yii2-user
+ */
 namespace comyii\user\models;
 
 use Yii;
@@ -9,6 +14,9 @@ use comyii\user\models\User;
 
 /**
  * UserSearch represents the model behind the search form about `comyii\user\models\User`.
+ *
+ * @author Kartik Visweswaran <kartikv2@gmail.com>
+ * @since 1.0
  */
 class UserSearch extends User
 {
@@ -18,8 +26,23 @@ class UserSearch extends User
     public function rules()
     {
         return [
-            [['id', 'status', 'password_fail_attempts'], 'integer'],
-            [['username', 'email', 'password_hash', 'auth_key', 'activation_key', 'reset_key', 'password_reset_on', 'created_on', 'updated_on', 'last_login_on', 'last_login_ip'], 'safe'],
+            [['id', 'status', 'status_sec', 'password_fail_attempts'], 'integer'],
+            [
+                [
+                    'username',
+                    'email',
+                    'password_hash',
+                    'auth_key',
+                    'activation_key',
+                    'reset_key',
+                    'password_reset_on',
+                    'created_on',
+                    'updated_on',
+                    'last_login_on',
+                    'last_login_ip'
+                ],
+                'safe'
+            ],
         ];
     }
 
@@ -60,14 +83,14 @@ class UserSearch extends User
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'status' => $this->status,
             'password_fail_attempts' => $this->password_fail_attempts,
             'password_reset_on' => $this->password_reset_on,
+            'status' => $this->status,
+            'status_sec' => $this->status_sec,
             'created_on' => $this->created_on,
             'updated_on' => $this->updated_on,
             'last_login_on' => $this->last_login_on,
         ]);
-
         $query->andFilterWhere(['like', 'username', $this->username])
             ->andFilterWhere(['like', 'email', $this->email])
             ->andFilterWhere(['like', 'password_hash', $this->password_hash])
