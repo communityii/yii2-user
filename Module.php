@@ -297,7 +297,6 @@ class Module extends \kartik\base\Module
     public $layoutSettings = [
         self::VIEW_LOGIN => self::LAYOUT,
         self::VIEW_REGISTER => self::LAYOUT,
-        self::VIEW_RESET => self::LAYOUT,
         self::VIEW_RECOVERY => self::LAYOUT
     ];
 
@@ -334,7 +333,7 @@ class Module extends \kartik\base\Module
      * - passwordExpiry: integer|bool, the timeout in seconds after which user is required to reset his password
      *   after logging in. Defaults to 90 days. If set to `0` or `false`, the password never expires.
      * - wrongAttempts: integer|bool, the number of consecutive wrong password type attempts, at login, after which
-     *   the account is inactivated and needs to be reset. Defaults to `3`. If set to `0` or `false`, the account
+     *   the account is inactivated and needs to be reset. Defaults to `5`. If set to `0` or `false`, the account
      *   is never inactivated after any wrong password attempts.
      * - enableRecovery: bool, whether password recovery is permitted. If set to `true`, users will be given an option
      *   to reset/recover a lost password. Defaults to `true`.
@@ -572,7 +571,7 @@ class Module extends \kartik\base\Module
             'activationKeyExpiry' => self::DAYS_2,
             'resetKeyExpiry' => self::DAYS_2,
             'passwordExpiry' => self::DAYS_90,
-            'wrongAttempts' => 3,
+            'wrongAttempts' => 5,
             'enableRecovery' => true
         ], $this->passwordSettings);
         $captchaTemplate = <<< HTML
@@ -962,6 +961,17 @@ HTML;
         return '';
     }
 
+    /**
+     * Whether the module has social authorization enabled
+     */
+    public function hasSocialAuth()
+    {
+        if (empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
+            throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
+        }
+        return ArrayHelper::getValue($this->socialSettings, 'enabled', false);        
+    }
+    
     /**
      * Get timestamp as integer or date time object or as a specific format
      *

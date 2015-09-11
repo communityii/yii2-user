@@ -17,7 +17,10 @@ $this->params['install-mode'] = true;
 <div class="text-center">
     <?= Logo::widget(['title' => "communityii\\yii2-user"]) ?>
 </div>
-<p class="text-success text-center"><?= Yii::t('user', '<b>Access code validated!</b> Setup a superuser to finish the install.') ?></p>
+<p class="text-success text-center">
+    <b><?= Yii::t('user', 'Access code validated!') ?></b> 
+    <?= Yii::t('user', 'Setup a superuser to finish the install.') ?>
+</p>
 <?php $form = ActiveForm::begin(); ?>
 <div class="y2u-box">
     <div class = "y2u-padding">

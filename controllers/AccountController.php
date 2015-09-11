@@ -192,12 +192,14 @@ class AccountController extends BaseController
     {
         /**
          * @var LoginForm $model
+         * @var Module    $m
          */
         $app = Yii::$app;
+        $m = $this->module;
         if (!$app->user->isGuest) {
             return $this->goBack();
         }
-        $hasSocialAuth = $this->getConfig('socialSettings', 'enabled', false);
+        $hasSocialAuth = $m->hasSocialAuth();
         $authAction = $this->fetchAction(Module::ACTION_SOCIAL_AUTH);
         if ($hasSocialAuth && empty($app->authClientCollection) && empty($app->authClientCollection->clients)) {
             throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
@@ -231,7 +233,7 @@ class AccountController extends BaseController
                 $model->scenario = Module::SCN_EXPIRY;
             } elseif ($status === Module::STATUS_LOCKED) {
                 $link = Yii::t('user', 'Click {link} to reset your password and unlock your account.', [
-                    'link' => Html::a(Yii::t('user', 'here'), Module::ACTION_RECOVERY)
+                    'link' => Html::a(Yii::t('user', 'here'), $this->fetchAction(Module::ACTION_RECOVERY))
                 ]);
                 $session->setFlash('error', Yii::t(
                     'user',
@@ -274,18 +276,17 @@ class AccountController extends BaseController
     public function actionRegister()
     {
         /**
-         * @var User $model
+         * @var User   $model
+         * @var Module $m
          */
-        $config = $this->module->registrationSettings;
+        $m = $this->module;
+        $config = $m->registrationSettings;
         if (!$config['enabled']) {
             return $this->goBack();
         }
         $session = Yii::$app->session;
-        $hasSocialAuth = $this->getConfig('socialSettings', 'enabled', false);
+        $hasSocialAuth = $m->hasSocialAuth();
         $authAction = $this->fetchAction(Module::ACTION_SOCIAL_AUTH);
-        if ($hasSocialAuth && (empty(Yii::$app->authClientCollection) || empty(Yii::$app->authClientCollection->clients))) {
-            throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
-        }
         $class = $this->fetchModel(Module::MODEL_USER);
         $model = new $class(['scenario' => Module::SCN_REGISTER]);
         if ($model->load(Yii::$app->request->post())) {
@@ -312,7 +313,7 @@ class AccountController extends BaseController
                     } else {
                         $session->setFlash('warning', Yii::t(
                             'user',
-                            'Could not send activation instructions to your email <b>{email}</b>. Contact the system administrator or retry with a valid email for processing the registration.',
+                            'Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
                             ['email' => $model->email]
                         ));
                     }
@@ -347,11 +348,12 @@ class AccountController extends BaseController
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $class = $this->fetchModel(Module::MODEL_USER);
             $user = $class::findOne([
-                'status' => [Module::STATUS_ACTIVE, Module::STATUS_LOCKED],
+                'status' => Module::STATUS_ACTIVE,
                 'email' => $model->email,
             ]);
             $proceed = true;
             if (!$class::isKeyValid($user->reset_key, $user->resetKeyExpiry)) {
+                $user->scenario = Module::SCN_RECOVERY;
                 $user->generateResetKey();
                 $proceed = $user->save();
             }

@@ -28,6 +28,9 @@ class RecoveryForm extends BaseForm
      */
     public function init()
     {
+        /**
+         * @var Module $m
+         */
         $m = Yii::$app->getModule('user');
         Module::validateConfig($this->_module);
         $this->attributes += [
@@ -36,8 +39,10 @@ class RecoveryForm extends BaseForm
                 'hint' => Yii::t('user', 'Please fill out your email to receive a link to reset your password')
             ],
         ];
-        $this->leftFooter = $m->button(Module::BTN_HOME) . $m->button(Module::BTN_NEW_USER);
-        $this->rightFooter = $m->button(Module::BTN_RESET_FORM) . ' ' . $m->button(Module::BTN_SUBMIT_FORM);
+        $this->leftFooter = $m->button(Module::BTN_HOME, [], ['tabindex' => 1]) .
+            $m->button(Module::BTN_NEW_USER, [], ['tabindex' => 2]);
+        $this->rightFooter = $m->button(Module::BTN_RESET_FORM, [], ['tabindex' => 3]) . ' ' .
+            $m->button(Module::BTN_SUBMIT_FORM, [], ['tabindex' => 0]);
         parent::init();
     }
-}
+}s

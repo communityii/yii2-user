@@ -123,12 +123,25 @@ class LoginForm extends Model
             return;
         }
         $user = $this->getUser();
-        $outcome = ($user) ? $user->validatePassword($this->$attribute) : null;
-        if (!$user || !$outcome) {
-            $this->addError($attribute, Yii::t('user', 'The password is incorrect'));
+        if ($user->status_sec == Module::STATUS_LOCKED) {
+            return;
         }
-        if ($outcome !== null) {
-            $user->checkFailedLogin($outcome);
+        $outcome = $user ? $user->validatePassword($this->$attribute) : null;
+        if ($outcome !== null && !$outcome) {
+            $user->checkFailedLogin();
+        }
+        $attempts = $this->_module->passwordSettings['wrongAttempts'];
+        if (!$user || !$outcome) {
+            if (empty($attempts)) {
+                $this->addError($attribute, Yii::t('user', 'The password is incorrect'));
+            } else {
+                $this->addError(
+                    $attribute,
+                    Yii::t('user', 'The password is incorrect. {n, plural, one{One try} other{# tries}} left.', [
+                        'n' => ($attempts - (int)$user->password_fail_attempts)
+                    ])
+                );
+            }
         }
     }
 
@@ -143,6 +156,9 @@ class LoginForm extends Model
     {
         if (!empty($user->status_sec)) {
             return (int)$user->status_sec;
+        }
+        if ($user->status_sec == Module::STATUS_EXPIRED || $user->status_sec == Module::STATUS_LOCKED) {
+            return $user->status_sec;
         }
         if ($user->isPasswordExpired()) {
             $user->status_sec = Module::STATUS_EXPIRED;

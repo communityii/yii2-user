@@ -17,7 +17,10 @@ $this->params['install-mode'] = true;
 <div class="text-center">
     <?= Logo::widget(['title' => "communityii\\yii2-user"]) ?>
 </div>
-<p class="text-info text-center"><?= Yii::t('user', '<b>Welcome!</b> You are 2 steps away to start using the yii2-user module.') ?></p>
+<p class="text-info text-center">
+    <b><?= Yii::t('user', 'Welcome!') ?></b> 
+    <?= Yii::t('user', 'You are 2 steps away to start using the yii2-user module.') ?>
+</p>
 <?php $form = ActiveForm::begin(); ?>
 <div class="y2u-box">
     <div class = "y2u-padding">

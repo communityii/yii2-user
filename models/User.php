@@ -185,6 +185,7 @@ class User extends BaseModel implements IdentityInterface
         $scenarios[Module::SCN_CHANGEPASS] = ['password', 'password_new', 'password_confirm'];
         $scenarios[Module::SCN_INSTALL] = ['username', 'password', 'email', 'status'];
         $scenarios[Module::SCN_NEWEMAIL] = ['password'];
+        $scenarios[Module::SCN_RECOVERY] = ['reset_key'];
         $m = $this->_module;
         $settings = [];
         // for admin user and superuser
@@ -364,19 +365,23 @@ class User extends BaseModel implements IdentityInterface
 
     /**
      * Validate failed login attempt
-     *
-     * @param bool $outcome the password validation outcome
      */
-    public function checkFailedLogin($outcome)
+    public function checkFailedLogin()
     {
-        if ($this->_module->passwordSettings['wrongAttempts'] > 0) {
-            if ($outcome) {
-                $this->password_fail_attempts = 0;
-            } else {
-                $this->password_fail_attempts += 1;
-            }
-            $this->save();
+        if ($this->status_sec == Module::STATUS_LOCKED) {
+            return;
         }
+        $attempts = $this->_module->passwordSettings['wrongAttempts'];
+        if (empty($attempts)) {
+            return;
+        }
+        $n = (int)$this->password_fail_attempts;
+        if ($n < $attempts - 1) {
+            $this->password_fail_attempts = $n + 1;
+        } else {
+            $this->status_sec = Module::STATUS_LOCKED;
+        }
+        $this->save(false);
     }
 
 
