@@ -25,7 +25,7 @@ Administrators behave like superusers - but can be inactivated or manipulated by
 
 _INTERNAL STATUS_
 
-By default users are placed in pending status when registered. This will not be applicable if you have `autoActivate` setting to `false` in your `registrationSettings`
+By default users are placed in pending status when registered. This will not be applicable if you have `autoActivate` setting to `true` in your `registrationSettings`
 
 #### Active
 
