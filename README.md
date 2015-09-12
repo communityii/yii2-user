@@ -53,7 +53,7 @@ _INTERNAL STATUS_
 
 Whenever an user types a wrong password for a specified number of times consecutively - his / her account is locked. This is controlled by configuring `wrongAttempts` in  `passwordSettings`. This status is additionally applicable in addition to the primary statuses above (other than `Inactive`).
 
-#### _more concepts and usage information to be added later in detailed documentation_
+#### _More concepts and usage information to be added later in detailed documentation_
 
 ## Installation & Setup
 
