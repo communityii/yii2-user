@@ -286,6 +286,7 @@ class Module extends \kartik\base\Module
      * @var array the view to use for each action in the module. The keys will be one of the `self::VIEW_`
      * constants and the value will be the view file name. The view file name can be combined with Yii
      * path aliases (for example `@frontend/views/user/login`).
+     *
      * @see `setConfig()` method for the default settings
      */
     public $viewSettings = [];
@@ -310,6 +311,7 @@ class Module extends \kartik\base\Module
      *   url will be used. This setting will only be used if no return url is found.
      * - logoutRedirectUrl: string|array, the default url to redirect after logout. If not set, it will redirect
      *   to home page.
+     *
      * @see `setConfig()` method for the default settings
      */
     public $loginSettings = [];
@@ -337,6 +339,7 @@ class Module extends \kartik\base\Module
      *   is never inactivated after any wrong password attempts.
      * - enableRecovery: bool, whether password recovery is permitted. If set to `true`, users will be given an option
      *   to reset/recover a lost password. Defaults to `true`.
+     *
      * @see `setConfig()` method for the default settings
      */
     public $passwordSettings = [];
@@ -359,6 +362,7 @@ class Module extends \kartik\base\Module
      *   Defaults to `/^[A-Za-z0-9_\-]+$/u`.
      * - userNameValidMsg: string, the error message to display if the username pattern validation fails.
      *   Defaults to `"{attribute} can contain only letters, numbers, hyphen, and underscore."`.
+     *
      * @see `setConfig()` method for the default settings
      */
     public $registrationSettings = [];
@@ -367,9 +371,6 @@ class Module extends \kartik\base\Module
      * @var array the social authorization settings for the module. The following options should be set:
      * - enabled: bool, whether the social authorization is enabled for the module. Defaults to `true`. If set
      *   to `false`, the remote authentication through social providers will be disabled.
-     * - refreshAttributes: array, the attributes that will be automatically refreshed in the UserProfile,
-     *   based on the user consent, after social authentication. The 'email' field will be updated in the
-     *   base user table.
      * @see `setConfig()` method for the default settings
      */
     public $socialSettings = [];
@@ -381,6 +382,7 @@ class Module extends \kartik\base\Module
      * - activation: array, the settings for the activation notification
      * - recovery: array, the settings for the recovery notification
      * - newemail: array, the settings for the email change notification
+     *
      * @see `setConfig()` method for the default settings
      */
     public $notificationSettings = [];
