@@ -201,9 +201,6 @@ class AccountController extends BaseController
         }
         $hasSocialAuth = $m->hasSocialAuth();
         $authAction = $this->fetchAction(Module::ACTION_SOCIAL_AUTH);
-        if ($hasSocialAuth && empty($app->authClientCollection) && empty($app->authClientCollection->clients)) {
-            throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
-        }
         $class = $this->fetchModel(Module::MODEL_LOGIN);
         $post = $app->request->post();
         $model = new $class();
