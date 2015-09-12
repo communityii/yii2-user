@@ -50,7 +50,7 @@ $attribs1 = [
     ],
     [
         'attribute'=> 'created_on', 
-        'format'=>['datetime', $m->datetimeFormat], 
+        'format'=>['datetime', $m->datetimeDispFormat], 
         'labelColOptions' => ['style'=>'width:40%;text-align:right'] 
     ],
 ];
@@ -62,7 +62,7 @@ $attribs2 = [
     ],
     [
         'attribute'=> 'updated_on', 
-        'format'=>['datetime', $m->datetimeFormat], 
+        'format'=>['datetime', $m->datetimeDispFormat], 
     ],
     [
         'attribute' => 'last_login_ip', 
@@ -72,13 +72,13 @@ $attribs2 = [
     [
         'attribute'=> 'last_login_on', 
         'value' => strtotime($model->last_login_on) ? $model->last_login_on : null,
-        'format'=>['datetime', $m->datetimeFormat], 
+        'format'=>['datetime', $m->datetimeDispFormat], 
         'labelColOptions' => ['style'=>'width:40%;text-align:right'] 
     ],
     [
         'attribute'=> 'password_reset_on', 
         'value' => strtotime($model->last_login_on) ? $model->last_login_on : null,
-        'format'=>['datetime', $m->datetimeFormat], 
+        'format'=>['datetime', $m->datetimeDispFormat], 
     ],
     'password_fail_attempts'
 ];

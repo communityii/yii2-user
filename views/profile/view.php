@@ -44,12 +44,12 @@ if ($editSettings['changeEmail'] && !empty($model->email_new)) {
 $accountAttribs[] = [
     'attribute' => 'created_on',
     'label' => Yii::t('user', 'Registered On'),
-    'format' => 'datetime',
+    'format'=>['datetime', $m->datetimeDispFormat],
     'labelColOptions' => ['style' => 'width:' . ($hasSocial || $hasProfile ? '40' : '20') . '%;text-align:right']
 ];
 $accountAttribs[] = [
     'attribute' => 'last_login_on',
-    'format' => 'datetime',
+    'format'=>['datetime', $m->datetimeDispFormat],
     'value' => strtotime($model->last_login_on) ? $model->last_login_on : null,
 ];
 

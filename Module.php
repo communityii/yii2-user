@@ -13,6 +13,7 @@ use Yii;
 use DateTime;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
+use yii\helpers\FormatConverter;
 use yii\helpers\Url;
 use kartik\helpers\Html;
 use kartik\helpers\Enum;
@@ -142,9 +143,18 @@ class Module extends \kartik\base\Module
     public $buttons = [];
 
     /**
-     * @var string the PHP datetime format in which timestamps are stored to database.
+     * @var string the datetime format in which timestamps are stored to database. Use Yii notation
+     * to assign formats. Formats prepended with `php:` will use PHP DateTime format, while others
+     * will be parsed as ICU notation.
      */
-    public $timestampFormat = 'Y-m-d H:i:s';
+    public $datetimeSaveFormat = 'php:Y-m-d H:i:s';
+
+    /**
+     * @var string the datetime format in which timestamps are displayed. Use Yii notation to
+     * assign formats. Formats prepended with `php:` will use PHP DateTime format, while others
+     * will be parsed as ICU notation.
+     */
+    public $datetimeDispFormat = 'php:M d, Y H:i';
 
     /**
      * @var \Closure an anonymous function that will return current timestamp
@@ -152,16 +162,6 @@ class Module extends \kartik\base\Module
      * `function() { return date("Y-m-d H:i:s"); }`
      */
     public $now;
-
-    /**
-     * @var string the default date time format
-     */
-    public $datetimeFormat = 'php:Y-m-d H:i:s';
-
-    /**
-     * @var string the default date format
-     */
-    public $dateFormat = 'php:Y-m-d';
 
     /**
      * @var array the list of user statuses
@@ -984,7 +984,9 @@ HTML;
      */
     public function timestamp($source, $format = true)
     {
-        $fmtSource = !empty($this->timestampFormat) ? $this->timestampFormat : 'Y-m-d H:i:s';
+        $fmtSource = !empty($this->datetimeSaveFormat) ? $this->datetimeSaveFormat : 'php:Y-m-d H:i:s';
+        $fmtSource = strncmp($fmtSource, 'php:', 4) === 0 ? substr($fmtSource, 4) : 
+            FormatConverter::convertDateIcuToPhp($fmtSource, 'datetime');
         try {
             $timestamp = DateTime::createFromFormat($fmtSource, $source);
         } catch (\Exception $e) {
