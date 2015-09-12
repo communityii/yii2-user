@@ -159,8 +159,11 @@ class ProfileController extends BaseController
          */
         $userClass = $this->fetchModel(Module::MODEL_USER);
         $model = $userClass::findByUsername($user);
-        $id = $model->id;
-        if ($id != Yii::$app->user->id) {
+        $id = null;
+        if ($model !== null) {
+            $id = $model->id;
+        }
+        if ($id === null || $id != Yii::$app->user->id) {
             throw new ForbiddenHttpException(Yii::t('user', 'This operation is not allowed'));
         }
         $class = $this->fetchModel(Module::MODEL_PROFILE);
@@ -200,7 +203,7 @@ class ProfileController extends BaseController
             $id = $user->id;
         } else {
             $userClass = $this->fetchModel(Module::MODEL_USER);
-            $model = $userClass::findOne($id);
+            $model = $userClass::findIdentity($id);
         }
         if ($model === null) {
             throw new NotFoundHttpException(Yii::t('user', 'The requested page does not exist.'));

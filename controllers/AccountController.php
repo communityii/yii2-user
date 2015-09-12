@@ -344,10 +344,7 @@ class AccountController extends BaseController
         $session = Yii::$app->session;
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $class = $this->fetchModel(Module::MODEL_USER);
-            $user = $class::findOne([
-                'status' => Module::STATUS_ACTIVE,
-                'email' => $model->email,
-            ]);
+            $user = $class::findByEmail($model->email);
             $proceed = true;
             if (!$class::isKeyValid($user->reset_key, $user->resetKeyExpiry)) {
                 $user->scenario = Module::SCN_RECOVERY;

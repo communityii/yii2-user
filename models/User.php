@@ -384,7 +384,6 @@ class User extends BaseModel implements IdentityInterface
         $this->save(false);
     }
 
-
     /**
      * Finds user by username
      *
