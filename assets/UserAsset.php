@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @copyright Copyright &copy; Kartik Visweswaran, 2014 - 2015
+ * @copyright Copyright &copy; Kartik Visweswaran, communityii, 2014 - 2015
  * @package communityii/yii2-user
  * @version 1.0.0
  * @see https://github.com/communityii/yii2-user
@@ -24,7 +24,7 @@ class UserAsset extends \kartik\base\AssetBundle
     public function init()
     {
         $this->setSourcePath(__DIR__);
-        $this->setupAssets('css', ['css/main']);
+        $this->setupAssets('css', ['css/user']);
         parent::init();
     }
 
