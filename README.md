@@ -85,3 +85,7 @@ for the module.
 ```
 $ php yii migrate/up --migrationPath=@vendor/communityii/yii2-user/migrations
 ```
+
+### Getting started
+
+Login to the url pertaining to the user module path (e.g. `http://localhost/app/user`) and you should be automatically guided with an installation wizard. Finish the superuser setup to proceed using the module.

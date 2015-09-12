@@ -511,7 +511,6 @@ class Module extends \kartik\base\Module
                     'showClose' => false,
                     'showUpload' => false,
                     'removeTitle' => Yii::t('user', 'Cancel or reset changes'),
-                    'previewClass' => 'user-avatar',
                     'msgErrorClass' => 'alert alert-block alert-danger',
                     'previewSettings' => [
                         'image' => ['width' => 'auto', 'height' => '180px'],

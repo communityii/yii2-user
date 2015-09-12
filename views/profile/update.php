@@ -66,9 +66,8 @@ $socialDetails = '';
             ])
         ]
     ]);
-    $css = ".user-avatar{text-align:center}
-        .user-avatar .file-preview-thumbnails{width:180px;margin:auto;left:0;right:0}
-        .user-avatar .file-preview-frame,.user-avatar .file-preview-frame:hover{border:none;box-shadow:none}";
+    $css = ".user-avatar .file-input{display:table-cell;max-width:220px;text-align:center}\n".
+        ".user-avatar .file-preview-frame,.user-avatar .file-preview-frame:hover{margin:0;padding:0;border:none;box-shadow:none}";
     $this->registerCss($css);
 ?>
     <?php if ($model->hasErrors() || $profile->hasErrors()): ?>
@@ -77,7 +76,9 @@ $socialDetails = '';
     <div id="user-avatar-errors" style="display:none"></div>
     <div class="row">      
         <div class="col-md-3 text-center">
-            <?= FileInput::widget($widgetOptions) ?>
+            <div class="user-avatar center-block" style="width:220px">
+                <?= FileInput::widget($widgetOptions) ?>
+            </div>
         </div>   
         <div class="col-md-9">
             <div class="row">   
