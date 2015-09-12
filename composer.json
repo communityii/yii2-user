@@ -1,6 +1,6 @@
 {
     "name": "communityii/yii2-user",
-    "description": "Yii 2 user management module with social authentication.",
+    "description": "Configurable Yii 2 user management module with social authentication and various controls.",
     "keywords": ["yii2", "user", "module", "auth", "social", "password"],
     "homepage": "https://github.com/communityii/yii2-user",
     "type": "yii2-extension",
