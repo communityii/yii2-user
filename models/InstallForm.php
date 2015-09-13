@@ -11,7 +11,7 @@ namespace comyii\user\models;
 use Yii;
 use yii\base\Model;
 use kartik\password\StrengthValidator;
-use comyii\user\components\User;
+use comyii\user\components\User as UserComponent;
 use comyii\user\Module;
 
 /**
@@ -120,13 +120,13 @@ class InstallForm extends Model
             $this->addError('access_code', Yii::t('user', 'The installation access code entered is incorrect'));
         }
         $userComponent = Yii::$app->get('user');
-        if (!$userComponent instanceof User) {
+        if (!$userComponent instanceof UserComponent) {
             $this->addError('access_code', Yii::t(
                 'user',
                 'You have not setup a valid class for your user component in your application configuration file. ' .
                 'The class must extend {classValid}. Class currently set: {classSet}.',
                 [
-                    'classValid' => User::classname(),
+                    'classValid' => UserComponent::classname(),
                     'classSet' => $userComponent::classname()
                 ]
             ));

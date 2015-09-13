@@ -10,7 +10,6 @@
 namespace comyii\user\widgets;
 
 use Yii;
-use yii\authclient\widgets\AuthChoice;
 use kartik\helpers\Html;
 use kartik\builder\Form;
 use kartik\password\PasswordInput;
@@ -35,11 +34,6 @@ class LoginForm extends BaseForm
     public $authTitle = '';
 
     /**
-     * @var mixed the social authorization action
-     */
-    public $authAction = 'account/auth';
-
-    /**
      * @inheritdoc
      */
     public function init()
@@ -48,7 +42,6 @@ class LoginForm extends BaseForm
          * @var Module $m
          */
         $m = Yii::$app->getModule('user');
-        Module::validateConfig($this->_module);
         if ($this->model->scenario === Module::SCN_LOGIN) {
             $this->attributes += [
                 'username' => ['type' => Form::INPUT_TEXT],
@@ -58,10 +51,7 @@ class LoginForm extends BaseForm
             $this->leftFooter = $m->button(Module::BTN_FORGOT_PASSWORD) . $m->button(Module::BTN_NEW_USER);
             $this->rightFooter = $m->button(Module::BTN_LOGIN);
             if ($this->hasSocialAuth) {
-                $social = AuthChoice::widget([
-                    'baseAuthUrl' => [$this->authAction],
-                    'popupMode' => false,
-                ]);
+                $social = $m->getSocialWidget();
                 if (!isset($this->template)) {
                     $this->template = <<< HTML
 <div class="row">
@@ -69,7 +59,7 @@ class LoginForm extends BaseForm
         <legend>{$this->title}</legend>
         {fields}
     </div>
-    <div class="col-sm-4 y2u-social-clients">
+    <div class="col-sm-4">
         <legend>{$this->authTitle}</legend>
         {$social}
     </div>

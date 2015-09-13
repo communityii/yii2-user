@@ -45,4 +45,4 @@ class RecoveryForm extends BaseForm
             $m->button(Module::BTN_SUBMIT_FORM, [], ['tabindex' => 0]);
         parent::init();
     }
-}s
+}
