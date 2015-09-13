@@ -50,7 +50,7 @@ class LoginForm extends BaseForm
             ];
             $this->leftFooter = $m->button(Module::BTN_FORGOT_PASSWORD) . $m->button(Module::BTN_NEW_USER);
             $this->rightFooter = $m->button(Module::BTN_LOGIN);
-            if ($this->hasSocialAuth) {
+            if ($this->hasSocialAuth && $m->socialSettings['widgetEnabled']) {
                 $social = $m->getSocialWidget();
                 if (!isset($this->template)) {
                     $this->template = <<< HTML

@@ -180,6 +180,7 @@ $this->registerCss('.user-link-social .auth-clients {margin:4px;padding:0}');
                     ]) ?>
                     <?= $socialDetails ?>
                 </div>
+                <?php if ($m->socialSettings['widgetEnabled']): ?>
                 <div class="col-md-6">
                     <?= DetailView::widget([
                         'model' => $model,
@@ -190,6 +191,7 @@ $this->registerCss('.user-link-social .auth-clients {margin:4px;padding:0}');
                     ]) ?>
                     <?= $authClients ?>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

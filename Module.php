@@ -373,6 +373,10 @@ class Module extends \kartik\base\Module
      * @var array the social authorization settings for the module. The following options should be set:
      * - enabled: bool, whether the social authorization is enabled for the module. Defaults to `true`. If set
      *   to `false`, the remote authentication through social providers will be disabled.
+     * - widgetEnabled: bool, whether the display of the widget is enabled in login form and the user profile view. 
+     *   Defaults to `true`. For most cases, to override the clients displayed you can set the `widgetSocialClass`
+     *   to use your own widget. But if you need to totally hide the social connections for some reason, then set 
+     *   this to `false`.
      * - widgetSocial: array, the settings for the yii\authclient\widgets\AuthChoice widget.
      * - widgetSocialClass: string, the classname to use. Will default to `comyii\user\widgets\SocialConnects`,
      *   which extends from `yii\authclient\widgets\AuthChoice` widget.
@@ -527,6 +531,7 @@ class Module extends \kartik\base\Module
         ], $this->profileSettings);
         $this->socialSettings = array_replace_recursive([
             'enabled' => true,
+            'widgetEnabled' => true,
             'widgetSocial' => [
                 'baseAuthUrl' => [$this->actionSettings[Module::ACTION_SOCIAL_AUTH]]
             ],
@@ -1029,8 +1034,7 @@ HTML;
      *
      * @param string $type the type of email notification (view name)
      * @param User   $model the user model
-     * @param array  $params additional parameters to be parsed and replaced in the
-     * mail template
+     * @param array  $params additional parameters to be parsed and replaced in the mail template
      * @param string $to the email address to send email to. If not passed,
      * will default to `$model->email`.
      *
