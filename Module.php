@@ -17,6 +17,7 @@ use yii\helpers\FormatConverter;
 use yii\helpers\Url;
 use kartik\helpers\Html;
 use kartik\helpers\Enum;
+use yii\authclient\Collection;
 use comyii\user\models\User;
 use comyii\user\widgets\SocialConnects;
 
@@ -971,11 +972,19 @@ HTML;
      */
     public function hasSocialAuth()
     {
-        $out = ArrayHelper::getValue($this->socialSettings, 'enabled', false);
-        if ($out && empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
+        if (!$this->socialSettings['enabled']) {
+            return false;
+        }
+        $valid = true;
+        try {
+            $valid = Yii::$app->authClientCollection instanceof Collection;
+        } catch (\Exception $e) {
+            $valid = false;
+        }
+        if (!$valid) {
             throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
         }
-        return $out;
+        return true;
     }
     
     /**
