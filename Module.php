@@ -971,7 +971,7 @@ HTML;
      */
     public function hasSocialAuth()
     {
-        if (empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
+        if (empty(Yii::$app->authClientCollection) || empty(Yii::$app->authClientCollection->clients)) {
             throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
         }
         return ArrayHelper::getValue($this->socialSettings, 'enabled', false);        
