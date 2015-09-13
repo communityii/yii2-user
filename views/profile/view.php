@@ -26,13 +26,13 @@ $socialSettings = $m->socialSettings;
 $hasSocial = $socialSettings['enabled'];
 $hasProfile = $profileSettings['enabled'];
 $editSettings = $m->getEditSettingsUser($model);
-$socialDetails = '';
+$socialDetails = $authClients = '';
 
 // basic attributes from User model
 $accountAttribs = [
     [
         'group'=>true,
-        'label'=> $m->icon('tag') . ' ' . Yii::t('user', 'Account Details'),
+        'label'=> $m->icon('tag') . Yii::t('user', 'Account Details'),
         'rowOptions'=>['class'=>'info']
     ],
     'username',
@@ -59,7 +59,7 @@ if ($hasSocial) {
     $socialAttribs = [
         [
             'group' => true,
-            'label' => $m->icon('globe') . ' ' . Yii::t('user', 'Social Details'),
+            'label' => $m->icon('globe') . Yii::t('user', 'Social Details'),
             'rowOptions' => ['class'=>'info']
         ],
     ];
@@ -69,10 +69,22 @@ if ($hasSocial) {
             'label' => '<span class="not-set" style="font-weight:normal">' . Yii::t('user', 'No social profiles linked yet') . '</span>'
         ];
     } else {
-        foreach($social as $model) {
+        foreach($social as $record) {
+            $provider = empty($record->source) ? Yii::t('user', 'Unknown') : '<span class="auth-icon ' . $record->source . '"></span>' .
+                '<span class="auth-title">' . ucfirst($record->source) . '</span>';
             $socialAttribs[] = [
-                'label' => empty($model->source) ? Yii::t('user', 'Provider Source') : $model->source,
-                'value' => $model->source_id
+                'label' => Yii::t('user', 'Source'),
+                'value' => '<b>' . Yii::t('user', 'Connected On') . '</b>',
+                'format' => 'raw',
+                'rowOptions' => ['class'=>'active'],
+                'labelColOptions' => ['style' => 'width:90px;text-align:center']
+            ];
+            $socialAttribs[] = [
+                'label' => '<div class="auth-client"><span class="auth-link">' . $provider . '</span></div>',
+                'value' => $record->updated_on,
+                'labelColOptions' => ['style' => 'text-align:center;vertical-align:middle'],
+                'valueColOptions' => ['style' => 'vertical-align:middle'],
+                'format' => ['datetime', $m->datetimeDispFormat]
             ];
         }
     }
@@ -82,7 +94,7 @@ if ($hasSocial) {
 $profileAttribs = [
     [
         'group' => true,
-        'label' => $m->icon('user') . ' ' . Yii::t('user', 'Profile Details'),
+        'label' => $m->icon('user') . Yii::t('user', 'Profile Details'),
         'rowOptions' => ['class'=>'info']
     ],
     'first_name',
@@ -105,7 +117,26 @@ if ($hasSocial) {
         'enableEditMode' => false,
         'attributes' => $socialAttribs
     ]);
+    if (Yii::$app->user->id == $model->id) {
+        $authClients = DetailView::widget([
+            'model' => $profile,
+            'striped' => false,
+            'enableEditMode' => false,
+            'attributes' => [
+                [
+                    'group' => true,
+                    'label' => $m->icon('link') . Yii::t('user', 'Connect Social Accounts'),
+                    'rowOptions' => ['class'=>'info']
+                ],
+                [
+                    'group' => true,
+                    'label' => $m->getSocialWidget()
+                ]
+            ]
+        ]);
+    }
 }
+$this->registerCss('.user-link-social .auth-clients {margin:4px;padding:0}');
 ?>
 <div class="page-header">
     <div class="pull-right"><?= UserMenu::widget(['ui' => 'view', 'user' => $model->id]) ?></div>
@@ -157,6 +188,7 @@ if ($hasSocial) {
                         'enableEditMode' => false,
                         'attributes' => $accountAttribs
                     ]) ?>
+                    <?= $authClients ?>
                 </div>
             </div>
         </div>

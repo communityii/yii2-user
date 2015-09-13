@@ -21,7 +21,6 @@ use comyii\user\widgets\Logo;
         'model' => $model,
         'title' => $loginTitle,
         'hasSocialAuth' => $hasSocialAuth,
-        'authAction' => $authAction,
         'authTitle' => $authTitle
     ]); ?>
 </div>

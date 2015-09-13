@@ -18,6 +18,7 @@ use yii\helpers\Url;
 use kartik\helpers\Html;
 use kartik\helpers\Enum;
 use comyii\user\models\User;
+use comyii\user\widgets\SocialConnects;
 
 /**
  * User module with inbuilt social authentication for Yii framework 2.0.
@@ -371,6 +372,9 @@ class Module extends \kartik\base\Module
      * @var array the social authorization settings for the module. The following options should be set:
      * - enabled: bool, whether the social authorization is enabled for the module. Defaults to `true`. If set
      *   to `false`, the remote authentication through social providers will be disabled.
+     * - widgetSocial: array, the settings for the yii\authclient\widgets\AuthChoice widget.
+     * - widgetSocialClass: string, the classname to use. Will default to `comyii\user\widgets\SocialConnects`,
+     *   which extends from `yii\authclient\widgets\AuthChoice` widget.
      * @see `setConfig()` method for the default settings
      */
     public $socialSettings = [];
@@ -522,10 +526,10 @@ class Module extends \kartik\base\Module
         ], $this->profileSettings);
         $this->socialSettings = array_replace_recursive([
             'enabled' => true,
-            'refreshAttributes' => [
-                'display_name',
-                'email'
+            'widgetSocial' => [
+                'baseAuthUrl' => [$this->actionSettings[Module::ACTION_SOCIAL_AUTH]]
             ],
+            'widgetSocialClass' => SocialConnects::classname()
         ], $this->socialSettings);
         $this->superuserEditSettings += [
             'createUser' => true,
@@ -967,7 +971,7 @@ HTML;
      */
     public function hasSocialAuth()
     {
-        if (empty(Yii::$app->authClientCollection) || empty(Yii::$app->authClientCollection['clients'])) {
+        if (empty(Yii::$app->authClientCollection) && empty(Yii::$app->authClientCollection->clients)) {
             throw new InvalidConfigException("You must setup the `authClientCollection` component and its `clients` in your app configuration file.");
         }
         return ArrayHelper::getValue($this->socialSettings, 'enabled', false);        
@@ -996,6 +1000,18 @@ HTML;
         }
         return $format === true ? $timestamp :
             ($format === false ? date_format($timestamp, 'U') : date_format($timestamp, $format));
+    }
+
+    /**
+     * Gets the default SocialConnect widget based on `socialSettings`
+     * @return string
+     */
+    public function getSocialWidget()
+    {
+        $config = $this->socialSettings;
+        $class = $config['widgetSocialClass'];
+        $settings = $config['widgetSocial'];
+        return $class::widget($settings);
     }
 
     /**

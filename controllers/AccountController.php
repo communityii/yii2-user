@@ -110,6 +110,11 @@ class AccountController extends BaseController
             if ($auth) { // login
                 $user = $auth->user;
                 Yii::$app->user->login($user);
+                $session->setFlash('success', Yii::t(
+                    'user',
+                    'Logged in successfully with your <b>{client}</b> account.',
+                    ['client' => $clientTitle]
+                ));
             } else { // signup
                 if (isset($attributes['email']) && isset($attributes['username']) &&
                     $userClass::find()->where(['email' => $attributes['email']])->exists()
@@ -151,7 +156,7 @@ class AccountController extends BaseController
                     } else {
                         $session->setFlash('success', Yii::t(
                             'user',
-                            'Successfully authenticated <b>{client}</b> account.',
+                            'Logged in successfully with your <b>{client}</b> account.',
                             ['client' => $clientTitle]
                         ));
                     }
@@ -159,7 +164,8 @@ class AccountController extends BaseController
             }
         } else { // user already logged in
             if (!$auth) { // add auth provider
-                $id = Yii::$app->user->id;
+                $user = Yii::$app->user;
+                $id = $user->id;
                 $auth = new $socialClass([
                     'user_id' => $id,
                     'source' => $clientId,
@@ -169,7 +175,7 @@ class AccountController extends BaseController
                     $session->setFlash('success', Yii::t(
                         'user',
                         'Successfully authenticated <b>{client}</b> account for <b>{user}</b>.',
-                        ['client' => $clientTitle]
+                        ['client' => $clientTitle, 'user' => $user->username]
                     ));
                 } else {
                     $session->setFlash('error', Yii::t(
@@ -178,6 +184,12 @@ class AccountController extends BaseController
                         ['client' => $clientTitle, 'errors' => print_r($auth->getErrors(), true)]
                     ));
                 }
+            } else {
+                 $session->setFlash('success', Yii::t(
+                    'user',
+                    'You have already connected your <b>{client}</b> account previously. Logged in successfully.',
+                    ['client' => $clientTitle]
+                ));
             }
         }
     }
