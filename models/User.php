@@ -132,8 +132,8 @@ class User extends BaseModel implements IdentityInterface
             ],
             ['password', 'required'],
             ['password', 'isValidPassword', 'on' => [Module::SCN_CHANGEPASS, Module::SCN_NEWEMAIL]],
-            [['password_new', 'password_confirm'], 'required'],
-            ['password_confirm', 'compare', 'compareAttribute' => 'password_new'],
+            [['password_new', 'password_confirm'], 'required', 'on' => [Module::SCN_RESET, Module::SCN_CHANGEPASS]],
+            ['password_confirm', 'compare', 'compareAttribute' => 'password_new', 'on' => [Module::SCN_RESET, Module::SCN_CHANGEPASS]],
             [
                 'password_new',
                 'compare',
