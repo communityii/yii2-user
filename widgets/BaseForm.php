@@ -10,12 +10,12 @@
 namespace comyii\user\widgets;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 use comyii\user\Module;
 use kartik\helpers\Html;
 use kartik\form\ActiveForm;
 use kartik\builder\Form;
 use kartik\base\Widget;
-use yii\helpers\ArrayHelper;
 
 /**
  * Base form widget for the yii2-user module
@@ -95,9 +95,17 @@ class BaseForm extends Widget
     /**
      * @inheritdoc
      */
-    public function run()
+    public function init()
     {
         $this->_module = Yii::$app->getModule('user');
+        parent::init();
+    }
+    
+    /**
+     * @inheritdoc
+     */
+    public function run()
+    {
         if (empty($this->options['id'])) {
             $this->options['id'] = $this->getId();
         }
@@ -135,6 +143,10 @@ HTML;
         ActiveForm::end();
     }
 
+    /**
+     * Renders the footer
+     * @return string
+     */
     public function renderFooter()
     {
         $footer = strtr($this->footerTemplate, [
@@ -143,5 +155,18 @@ HTML;
         ]);
         $tag = ArrayHelper::remove($this->footerOptions, 'tag', 'div');
         return Html::tag($tag, $footer, $this->footerOptions);
+    }
+ 
+    /**
+     * Merges the passed attributes within the attributes configuration
+     * @param array the passed attributes
+     */
+    protected function mergeAttributes($attributes = [])
+    {
+        if (empty($this->attributes)) {
+            $this->attributes = $attributes;
+        } else {
+            $this->attributes = array_replace_recursive($attributes, $this->attributes);
+        }
     }
 }

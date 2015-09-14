@@ -84,8 +84,8 @@ class RegistrationForm extends LoginForm
             ];
         }
         parent::init();
+        unset($this->attributes['rememberMe']);
         $this->leftFooter = $m->button(Module::BTN_HOME) . $m->button(Module::BTN_ALREADY_REGISTERED);
         $this->rightFooter = $m->button(Module::BTN_RESET_FORM) . ' ' . $m->button(Module::BTN_REGISTER);
-        unset($this->attributes['rememberMe']);
     }
 }
