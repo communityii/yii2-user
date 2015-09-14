@@ -218,6 +218,7 @@ class AccountController extends BaseController
         $model = new $class();
         $unlockExpiry = !empty($post) && !empty($post['unlock-account']);
         $model->scenario = $unlockExpiry ? Module::SCN_EXPIRY : Module::SCN_LOGIN;
+        $redirectUrl = $this->getConfig('loginSettings', 'loginRedirectUrl');
         if ($model->load($post) && $model->validate()) {
             $session = $app->session;
             $user = $model->getUser();
@@ -231,7 +232,11 @@ class AccountController extends BaseController
                 );
                 $model->login($user);
                 $user->setLastLogin();
-                return $this->safeRedirect();
+                if ($redirectUrl) {
+                    return $this->redirect([$redirectUrl]);
+                } else {
+                    return $this->safeRedirect();
+                }
             }
             $status = $model->login($user);
             if ($status === Module::STATUS_EXPIRED) {
@@ -251,7 +256,11 @@ class AccountController extends BaseController
                 ));
             } elseif ($status) {
                 $user->setLastLogin();
-                return $this->safeRedirect();
+                if ($redirectUrl) {
+                    return $this->redirect([$redirectUrl]);
+                } else {
+                    return $this->safeRedirect();
+                }
             }
         }
         return $this->display(Module::VIEW_LOGIN, [

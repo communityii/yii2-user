@@ -310,9 +310,9 @@ class Module extends \kartik\base\Module
      * - rememberMeDuration: integer, the duration in seconds for which user will remain logged in on his/her client
      *   using cookies. Defaults to 3600*24*1 seconds (30 days).
      * - loginRedirectUrl: string|array, the default url to redirect after login. Normally the last return
-     *   url will be used. This setting will only be used if no return url is found.
+     *   url will be used. This setting will override this behavior and always redirect to this specified url.
      * - logoutRedirectUrl: string|array, the default url to redirect after logout. If not set, it will redirect
-     *   to home page.
+     *   to the home page.
      *
      * @see `setConfig()` method for the default settings
      */
