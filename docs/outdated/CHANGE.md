@@ -3,7 +3,7 @@ Version 1.0.0
 
 The features planned for first release:
 
-1. Extend Yii2 Advanced App User management (without RBAC)
+1. Extend Yii 2 Advanced App User management (without RBAC)
    - Add Roles
    - User interface for each role
      - Admin UI
@@ -16,7 +16,7 @@ The features planned for first release:
    - Feature # 1
    - Feature # 2
 4. Social signon integration. 
-   - Use features from [Yii2 Auth Client Extension](https://github.com/yiisoft/yii2-authclient/).
+   - Use features from [Yii 2 Auth Client Extension](https://github.com/yiisoft/yii2-authclient/).
    - Database structure to be modified to capture social provider user id in user profile
    - Ability for user to login through multiple social providers.
    - Ability to reuse avatar/image from social provider

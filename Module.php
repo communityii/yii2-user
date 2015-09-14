@@ -256,7 +256,7 @@ class Module extends \kartik\base\Module
      *
      * - enabled: bool, whether the user profile is enabled for the module. Defaults to `true`.
      * - basePath: string, the default file path where uploads will be stored. You can use Yii path
-     *   aliases for setting this. Defaults to '@frontend/../uploads'.
+     *   aliases for setting this. Defaults to '@webroot/uploads'.
      * - baseUrl: string, the absolute baseUrl pointing to the uploads path. Defaults to '/uploads'.
      *   You must set the full absolute url here to enable avatar URL to be parsed seamlessly across
      *   both frontend and backend apps in yii2-app-advanced.
@@ -413,6 +413,7 @@ class Module extends \kartik\base\Module
         'avatar-delete/<user:>' => 'profile/avatar-delete',
         'admin' => 'admin/index',
         'admin/<id:\d+>' => 'admin/view',
+        'admin/update/<id:\d+>' => 'admin/update',
         'auth/<authclient:>' => 'account/auth',
         'activate/<key:>' => 'account/activate',
         'reset/<key:>' => 'account/reset',
@@ -504,7 +505,7 @@ class Module extends \kartik\base\Module
         $this->profileSettings = array_replace_recursive([
             'enabled' => true,
             'emailChangeKeyExpiry' => static::DAYS_2,
-            'basePath' => '@frontend/../uploads',
+            'basePath' => '@webroot/uploads',
             'baseUrl' => '/uploads',
             'defaultAvatar' => 'avatar.png',
             'widgetAvatar' => [
