@@ -52,36 +52,40 @@ class UserMenu extends Nav
          */
         $m = Yii::$app->getModule('user');
         $currUser = Yii::$app->user;
+        $isAdmin = $currUser->isAdmin || $currUser->isSuperuser;
         if ($currUser->id == $this->user) {
-            $this->items = [
-                [
-                    'label' => $m->icon('eye-open') . Yii::t('user', 'View'),
-                    'url' => [$m->actionSettings[Module::ACTION_PROFILE_INDEX]],
-                    'active' => ($this->ui === 'view'),
-                    'linkOptions' => ['title' => Yii::t('user', 'View user profile')]
-                ],
-                [
-                    'label' => $m->icon('pencil') . Yii::t('user', 'Edit'),
-                    'url' => [$m->actionSettings[Module::ACTION_PROFILE_UPDATE]],
-                    'active' => ($this->ui === 'edit'),
-                    'linkOptions' => ['title' => Yii::t('user', 'Edit user profile')]
-                ],
-                [
-                    'label' => $m->icon('lock') . Yii::t('user', 'Password'),
-                    'url' => [$m->actionSettings[Module::ACTION_ACCOUNT_PASSWORD]],
-                    'active' => ($this->ui === 'password'),
-                    'linkOptions' => ['title' => Yii::t('user', 'Change user password')]
-                ],
+            $this->items[] =  [
+                'label' => $m->icon('eye-open') . Yii::t('user', 'View'),
+                'url' => [$m->actionSettings[Module::ACTION_PROFILE_INDEX]],
+                'active' => ($this->ui === 'view'),
+                'linkOptions' => ['title' => Yii::t('user', 'View user profile')]
+            ];
+            $this->items[] =  [
+                'label' => $m->icon('pencil') . Yii::t('user', 'Edit'),
+                'url' => [$m->actionSettings[Module::ACTION_PROFILE_UPDATE]],
+                'active' => ($this->ui === 'edit'),
+                'linkOptions' => ['title' => Yii::t('user', 'Edit user profile')]
+            ];
+            $this->items[] =  [
+                'label' => $m->icon('lock') . Yii::t('user', 'Password'),
+                'url' => [$m->actionSettings[Module::ACTION_ACCOUNT_PASSWORD]],
+                'active' => ($this->ui === 'password'),
+                'linkOptions' => ['title' => Yii::t('user', 'Change user password')]
+            ];
+        } elseif ($isAdmin) { 
+            $this->items[] =  [
+                'label' => $m->icon('eye-open') . Yii::t('user', 'View'),
+                'url' => [$m->actionSettings[Module::ACTION_PROFILE_INDEX]],
+                'active' => ($this->ui === 'view'),
+                'linkOptions' => ['title' => Yii::t('user', 'View user profile')]
             ];
         }
-        if ($currUser->isAdmin || $currUser->isSuperuser) {
-            $this->items = ArrayHelper::merge([
-                [
-                    'label' => $m->icon('wrench') . Yii::t('user', 'Manage'),
-                    'url' => [$m->actionSettings[Module::ACTION_ADMIN_VIEW], 'id' => $this->user],
-                    'linkOptions' => ['title' => Yii::t('user', 'Administer user profile')]
-                ],
-            ], $this->items);
+        if ($isAdmin) {
+            $this->items[] =  [
+                'label' => $m->icon('wrench') . Yii::t('user', 'Manage'),
+                'url' => [$m->actionSettings[Module::ACTION_ADMIN_VIEW], 'id' => $this->user],
+                'linkOptions' => ['title' => Yii::t('user', 'Administer user profile')]
+            ];
         }
         parent::init();
     }

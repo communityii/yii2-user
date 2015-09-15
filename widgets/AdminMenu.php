@@ -52,13 +52,11 @@ class AdminMenu extends Nav
          */
         $m = Yii::$app->getModule('user');
         $settings = $this->user === null ? [] : $m->getEditSettingsAdmin($this->user);
-        $this->items = [
-            [
-                'label' => $m->icon('list') . Yii::t('user', 'Users'),
-                'url' => [$m->actionSettings[Module::ACTION_ADMIN_INDEX]],
-                'active' => ($this->ui === 'list'),
-                'linkOptions' => ['title' => Yii::t('user', 'View user listing')]
-            ],
+        $this->items[] = [
+            'label' => $m->icon('list') . Yii::t('user', 'Users'),
+            'url' => [$m->actionSettings[Module::ACTION_ADMIN_INDEX]],
+            'active' => ($this->ui === 'list'),
+            'linkOptions' => ['title' => Yii::t('user', 'View user listing')]
         ];
         if ($m->checkSettings($settings, 'createUser')) {
             $this->items[] = [
