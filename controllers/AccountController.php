@@ -147,7 +147,7 @@ class AccountController extends BaseController
                         }
                     }
                     if (!$success) {
-                        $transaction->rollback();
+                        $transaction->rollBack();
                         $session->setFlash('error', Yii::t(
                             'user',
                             'Error while authenticating <b>{client}</b> account.<pre>{errors}</pre>',
@@ -331,7 +331,7 @@ class AccountController extends BaseController
                     } else {
                         $session->setFlash('warning', Yii::t(
                             'user',
-                            'Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
+                            'Could not send activation instructions to your email <b>{email}</b>. Please contact us with your details.',
                             ['email' => $model->email]
                         ));
                     }

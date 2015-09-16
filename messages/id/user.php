@@ -48,7 +48,7 @@ return [
     'Could not activate the account. Please try again later.' => '',
     'Could not confirm the new email address. Please try again later.' => '',
     'Could not reset the password. Please try again later.' => '',
-    'Could not send activation instructions to your email <b>{email}</b>. Retry again later.' => '',
+    'Could not send activation instructions to your email <b>{email}</b>. Please contact us with your details.' => '',
     'Could not validate the credentials' => '',
     'Create' => '',
     'Create User' => '',
