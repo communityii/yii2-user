@@ -443,7 +443,7 @@ class AccountController extends BaseController
             $action = $this->fetchAction(Module::ACTION_LOGIN);
             return $this->redirect([$action]);
         } else {
-            $session->setFlash('error', Yii::t('user', 'Could not activate the account. Please try again later.'));
+            $session->setFlash('error', Yii::t('user', 'Could not activate the account. Please try again later or contact us.'));
         }
         return $this->goHome();
     }
@@ -475,7 +475,7 @@ class AccountController extends BaseController
                 ));
                 return $this->redirect([$this->fetchAction(Module::ACTION_LOGIN)]);
             } else {
-                $session->setFlash('error', Yii::t('user', 'Could not reset the password. Please try again later.'));
+                $session->setFlash('error', Yii::t('user', 'Could not reset the password. Please try again later or contact us.'));
             }
         }
         return $this->display(Module::VIEW_RESET, [
@@ -511,7 +511,7 @@ class AccountController extends BaseController
             } else {
                 $session->setFlash(
                     'error',
-                    Yii::t('user', 'Could not confirm the new email address. Please try again later.')
+                    Yii::t('user', 'Could not confirm the new email address. Please try again later or contact us.')
                 );
             }
         }
@@ -533,7 +533,7 @@ class AccountController extends BaseController
         /**
          * @var User $class
          */
-        if ($type !== 'activation' && $type !== 'reset' && $type !== 'email_change') {
+        if ($type !== 'auth' && $type !== 'reset' && $type !== 'email_change') {
             return null;
         }
         $class = $this->fetchModel(Module::MODEL_USER);

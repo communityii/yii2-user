@@ -180,6 +180,7 @@ class User extends BaseModel implements IdentityInterface
     public function scenarios()
     {
         $scenarios = parent::scenarios();
+        $scenarios[Module::SCN_ACTIVATE] = ['status'];
         $scenarios[Module::SCN_REGISTER] = ['username', 'password', 'email', 'captcha', 'status'];
         $scenarios[Module::SCN_RESET] = ['password_new', 'password_confirm'];
         $scenarios[Module::SCN_CHANGEPASS] = ['password', 'password_new', 'password_confirm'];
@@ -435,7 +436,11 @@ class User extends BaseModel implements IdentityInterface
         if (!static::isKeyValid($value, $expire)) {
             return null;
         }
-        return static::find()->where([$attribute => $value])->active()->one();
+        if ($attribute === 'auth_key') {
+            return static::find()->where([$attribute => $value])->pending()->one();
+        } else {
+            return static::find()->where([$attribute => $value])->active()->one();
+        }
     }
 
     /**
