@@ -123,6 +123,10 @@ class LoginForm extends Model
             return;
         }
         $user = $this->getUser();
+        if ($user === null) {
+            $this->addError('username', Yii::t('user', 'Could not validate the credentials'));
+            return;
+        }
         if ($user->status_sec == Module::STATUS_LOCKED) {
             return;
         }
