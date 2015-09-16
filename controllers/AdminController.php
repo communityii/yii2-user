@@ -150,7 +150,7 @@ class AdminController extends BaseController
         /**
          * @var Module $m
          */
-        $m = $this->module;
+        $m = $this->_module;
         $model = $this->findModel($id);
         $model->setScenario(Module::SCN_ADMIN);
         $settings = $m->getEditSettingsAdmin($model);
@@ -176,7 +176,7 @@ class AdminController extends BaseController
          * @var Module $m
          * @var User   $model
          */
-        $m = $this->module;
+        $m = $this->_module;
         $user = Yii::$app->user;
         $settings = $user->isSuperuser ? $m->superuserEditSettings : $m->adminEditSettings;
         if (!$m->checkSettings($settings, 'createUser')) {

@@ -55,7 +55,7 @@ class InstallController extends BaseController
          * @var Module $m
          * @var User   $user
          */
-        $m = $this->module;
+        $m = $this->_module;
         $userClass = $this->fetchModel(Module::MODEL_USER);
         if (isset($m->installAccessCode) && !$m->hasSuperUser()) {
             $model = new InstallForm(['scenario' => Module::SCN_ACCESS]);

@@ -12,8 +12,10 @@ namespace comyii\user\controllers;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 use comyii\user\Module;
 use comyii\user\models\User;
+use yii\web\ForbiddenHttpException;
 
 /**
  * Base controller for all controllers in the user module
@@ -23,6 +25,20 @@ use comyii\user\models\User;
  */
 class BaseController extends \yii\web\Controller
 {
+    /**
+     * @var the user module
+     */
+    protected $_module;
+
+    /**
+     * @inheritdoc
+     */
+    public function init()
+    {
+        parent::init();
+        $this->_module = Yii::$app->getModule('user');
+    }        
+     
 
     /**
      * @inheritdoc
@@ -31,6 +47,17 @@ class BaseController extends \yii\web\Controller
     {
         if (parent::beforeAction($action)) {
             $this->validateInstallation();
+            $route = $this->id . '/' . $action->id;
+            $settings = array_flip($this->_module->getDefaultActionSettings());
+            if (isset($settings[$route])) {
+                $actionId = $settings[$route];                
+                $configRoute = $this->fetchAction($actionId);
+                $url1 = Url::to([$route], true);
+                $url2 = Url::to([$configRoute], true);                
+                if ($url1 !== $url2) {
+                    throw new ForbiddenHttpException('The requested url cannot be accessed.');
+                }
+            } 
             return true;
         }
         else {
@@ -47,8 +74,8 @@ class BaseController extends \yii\web\Controller
      * @return string the rendering result
      */
     public function display($view, $params = []) {
-        if (!empty($this->module->layoutSettings[$view])) {
-            $this->layout = $this->module->layoutSettings[$view];
+        if (!empty($this->_module->layoutSettings[$view])) {
+            $this->layout = $this->_module->layoutSettings[$view];
             
         }
         $view = $this->fetchView($view);
@@ -61,15 +88,15 @@ class BaseController extends \yii\web\Controller
      * @throws \yii\base\InvalidConfigException
      */
     protected function validateInstallation() {
-        if (isset($this->module->installAccessCode)) {
+        if (isset($this->_module->installAccessCode)) {
             if (Yii::$app->db->getTableSchema('{{%user}}') == null) {
                 throw new InvalidConfigException('User table schema not found. Ensure the database migration has been run successfully for this module.');
             }
-            if (!$this->module->hasSuperUser() && strpos(Yii::$app->request->getPathInfo(), 'user/install') === false) {
+            if (!$this->_module->hasSuperUser() && strpos(Yii::$app->request->getPathInfo(), 'user/install') === false) {
                 return $this->redirect(['install/index']);
             }
         }
-        elseif (!$this->module->hasSuperUser()) {
+        elseif (!$this->_module->hasSuperUser()) {
             throw new InvalidConfigException('Module installation for "communityii\yii2-user" cannot proceed. You must set a valid "installAccessCode" for the "user" module in your application configuration file.');
         }
     }
@@ -83,7 +110,7 @@ class BaseController extends \yii\web\Controller
      */
     protected function forward($route, $params = [])
     {
-        $route = ArrayHelper::getValue($this->module->actionSettings, $route, $route);
+        $route = ArrayHelper::getValue($this->_module->actionSettings, $route, $route);
         if (!is_array($route)) {
             $route = [$route];
         }
@@ -123,10 +150,10 @@ class BaseController extends \yii\web\Controller
      */
     protected function getConfig($setting, $param, $default = null)
     {
-        if (empty($this->module->$setting)) {
+        if (empty($this->_module->$setting)) {
             return $default;
         }
-        return ArrayHelper::getValue($this->module->$setting, $param, $default);
+        return ArrayHelper::getValue($this->_module->$setting, $param, $default);
     }
 
     /**

@@ -420,6 +420,34 @@ class Module extends \kartik\base\Module
         'newemail/<key:>' => 'account/newemail',
         '<action>' => 'account/<action>',
     ];
+    
+    /**
+     * @var the default action settings
+     */
+    private $_defaultActionSettings = [
+        // the list of account actions
+        self::ACTION_LOGIN => 'account/login',
+        self::ACTION_LOGOUT => 'account/logout',
+        self::ACTION_REGISTER => 'account/register',
+        self::ACTION_ACTIVATE => 'account/activate',
+        self::ACTION_RESET => 'account/reset',
+        self::ACTION_RECOVERY => 'account/recovery',
+        self::ACTION_CAPTCHA => 'account/captcha',
+        self::ACTION_NEWEMAIL => 'account/newemail',
+        self::ACTION_SOCIAL_AUTH => 'account/auth',
+        // the list of profile actions
+        self::ACTION_PROFILE_INDEX => 'profile/index',
+        self::ACTION_PROFILE_UPDATE => 'profile/update',
+        self::ACTION_ACCOUNT_PASSWORD => 'account/password',
+        self::ACTION_PROFILE_VIEW => 'profile/view',
+        // the list of avatar actions
+        self::ACTION_AVATAR_DELETE => 'profile/avatar-delete',
+        // the list of admin actions
+        self::ACTION_ADMIN_INDEX => 'admin/index',
+        self::ACTION_ADMIN_VIEW => 'admin/view',
+        self::ACTION_ADMIN_UPDATE => 'admin/update',
+        self::ACTION_ADMIN_CREATE => 'admin/create',
+    ];
 
     /**
      * Initialize the module
@@ -478,30 +506,7 @@ class Module extends \kartik\base\Module
             self::MODEL_PROFILE_SEARCH => 'comyii\user\models\UserProfileSearch',
             self::MODEL_RECOVERY => 'comyii\user\models\RecoveryForm',
         ];
-        $this->actionSettings += [
-            // the list of account actions
-            self::ACTION_LOGIN => 'account/login',
-            self::ACTION_LOGOUT => 'account/logout',
-            self::ACTION_REGISTER => 'account/register',
-            self::ACTION_ACTIVATE => 'account/activate',
-            self::ACTION_RESET => 'account/reset',
-            self::ACTION_RECOVERY => 'account/recovery',
-            self::ACTION_CAPTCHA => 'account/captcha',
-            self::ACTION_NEWEMAIL => 'account/newemail',
-            self::ACTION_SOCIAL_AUTH => 'account/auth',
-            // the list of profile actions
-            self::ACTION_PROFILE_INDEX => 'profile/index',
-            self::ACTION_PROFILE_UPDATE => 'profile/update',
-            self::ACTION_ACCOUNT_PASSWORD => 'account/password',
-            self::ACTION_PROFILE_VIEW => 'profile/view',
-            // the list of avatar actions
-            self::ACTION_AVATAR_DELETE => 'profile/avatar-delete',
-            // the list of admin actions
-            self::ACTION_ADMIN_INDEX => 'admin/index',
-            self::ACTION_ADMIN_VIEW => 'admin/view',
-            self::ACTION_ADMIN_UPDATE => 'admin/update',
-            self::ACTION_ADMIN_CREATE => 'admin/create',
-        ];
+        $this->actionSettings += $this->_defaultActionSettings;
         $this->profileSettings = array_replace_recursive([
             'enabled' => true,
             'emailChangeKeyExpiry' => static::DAYS_2,
@@ -953,6 +958,15 @@ HTML;
                 'options' => ['class' => 'btn btn-primary'],
             ],
         ];
+    }
+    
+    /**
+     * Return the default action settings
+     * @return array
+     */
+    public function getDefaultActionSettings()
+    {
+        return $this->_defaultActionSettings;
     }
 
     /**

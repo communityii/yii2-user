@@ -13,7 +13,7 @@ use comyii\user\Module;
 use comyii\user\widgets\Logo;
 use comyii\user\widgets\UserMenu;
 
-$m = $this->context->module;
+$m = Yii::$app->getModule('user');
 $this->title = Yii::t('user', 'Change Password') . ' (' . $model->username . ')';
 /**
  * @var yii\web\View             $this

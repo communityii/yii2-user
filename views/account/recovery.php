@@ -9,7 +9,7 @@
 use comyii\user\widgets\RecoveryForm;
 use comyii\user\widgets\Logo;
 
-$m = $this->context->module;
+$m = Yii::$app->getModule('user');
 $this->title = Yii::t('user', 'Password Recovery');
 /**
  * @var yii\web\View $this

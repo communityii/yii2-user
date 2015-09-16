@@ -207,7 +207,7 @@ class AccountController extends BaseController
          * @var Module    $m
          */
         $app = Yii::$app;
-        $m = $this->module;
+        $m = $this->_module;
         if (!$app->user->isGuest) {
             return $this->goBack();
         }
@@ -297,7 +297,7 @@ class AccountController extends BaseController
          * @var User   $model
          * @var Module $m
          */
-        $m = $this->module;
+        $m = $this->_module;
         $config = $m->registrationSettings;
         if (!$config['enabled']) {
             return $this->goBack();
@@ -432,7 +432,7 @@ class AccountController extends BaseController
         }
         $model->scenario = Module::SCN_ACTIVATE;
         $model->status = Module::STATUS_ACTIVE;
-        $model->password_reset_on = call_user_func($this->module->now);
+        $model->password_reset_on = call_user_func($this->_module->now);
         $model->reset_key = null;
         $session = Yii::$app->session;
         if ($model->save()) {
