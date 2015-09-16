@@ -14,7 +14,7 @@ use comyii\user\Module;
 /* @var $user common\models\User */
 $m = Yii::$app->getModule('user');
 $action = $m->actionSettings[Module::ACTION_ACTIVATE];
-$activateLink = Url::to([$action, 'key' => $user->activation_key], true);
+$activateLink = Url::to([$action, 'key' => $user->auth_key], true);
 $name = Yii::$app->name;
 ?>
 
