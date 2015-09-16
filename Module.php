@@ -488,7 +488,7 @@ class Module extends \kartik\base\Module
                 return date('Y-m-d H:i:s');
             };
         }
-        $this->statuses += [
+        $this->statuses = array_replace_recursive([
             self::STATUS_SUPERUSER => Yii::t('user', 'Superuser'),
             self::STATUS_PENDING => Yii::t('user', 'Pending'),
             self::STATUS_ACTIVE => Yii::t('user', 'Active'),
@@ -496,8 +496,8 @@ class Module extends \kartik\base\Module
             self::STATUS_ADMIN => Yii::t('user', 'Admin'),
             self::STATUS_LOCKED => Yii::t('user', 'Locked'),
             self::STATUS_EXPIRED => Yii::t('user', 'Expired'),
-        ];
-        $this->modelSettings += [
+        ], $this->statuses);
+        $this->modelSettings = array_replace_recursive([
             self::MODEL_LOGIN => 'comyii\user\models\LoginForm',
             self::MODEL_USER => 'comyii\user\models\User',
             self::MODEL_USER_SEARCH => 'comyii\user\models\UserSearch',
@@ -505,8 +505,8 @@ class Module extends \kartik\base\Module
             self::MODEL_SOCIAL_PROFILE => 'comyii\user\models\SocialProfile',
             self::MODEL_PROFILE_SEARCH => 'comyii\user\models\UserProfileSearch',
             self::MODEL_RECOVERY => 'comyii\user\models\RecoveryForm',
-        ];
-        $this->actionSettings += $this->_defaultActionSettings;
+        ], $this->modelSettings);
+        $this->actionSettings = array_replace_recursive($this->_defaultActionSettings, $this->actionSettings);
         $this->profileSettings = array_replace_recursive([
             'enabled' => true,
             'emailChangeKeyExpiry' => static::DAYS_2,
@@ -543,24 +543,24 @@ class Module extends \kartik\base\Module
             ],
             'widgetSocialClass' => SocialConnects::classname()
         ], $this->socialSettings);
-        $this->superuserEditSettings += [
+        $this->superuserEditSettings = array_replace_recursive([
             'createUser' => true,
             'changeUsername' => false,
             'changeEmail' => false,
             'resetPassword' => false,
             'showHiddenInfo' => true
-        ];
-        $this->adminEditSettings += [
+        ], $this->superuserEditSettings);
+        $this->adminEditSettings = array_replace_recursive([
             'createUser' => true,
             'changeUsername' => true,
             'changeEmail' => true,
             'resetPassword' => true,
             'showHiddenInfo' => false
-        ];
-        $this->userEditSettings += [
+        ], $this->adminEditSettings);
+        $this->userEditSettings = array_replace_recursive([
             'changeUsername' => true,
             'changeEmail' => true
-        ];
+        ], $this->userEditSettings);
         $this->loginSettings = array_replace_recursive([
             'loginType' => self::LOGIN_BOTH,
             'rememberMeDuration' => self::DAYS_30
@@ -631,7 +631,7 @@ HTML;
         $supportEmail = isset(\Yii::$app->params['supportEmail']) ? \Yii::$app->params['supportEmail'] :
             'nobody@support.com';
         $fromName = Yii::t('user', '{appname} Robot', ['appname' => $appName]);
-        $this->viewSettings += [
+        $this->viewSettings = array_replace_recursive([
             // views in AccountController
             self::VIEW_LOGIN => 'login',
             self::VIEW_REGISTER => 'register',
@@ -648,7 +648,7 @@ HTML;
             self::VIEW_PROFILE_INDEX => 'view',
             self::VIEW_PROFILE_UPDATE => 'update',
             self::VIEW_PROFILE_VIEW => 'view',
-        ];
+        ], $this->viewSettings);
         $this->notificationSettings = array_replace_recursive([
             'viewPath' => '@vendor/communityii/yii2-user/views/mail',
             'activation' => [
