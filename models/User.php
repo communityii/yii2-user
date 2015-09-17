@@ -485,7 +485,7 @@ class User extends BaseModel implements IdentityInterface
         $this->password_fail_attempts = 0;
         $this->last_login_ip = Yii::$app->getRequest()->getUserIP();
         $this->last_login_on = call_user_func($this->_module->now);
-        $this->save();
+        $this->save(false);
     }
 
     /**
