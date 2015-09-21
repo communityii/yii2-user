@@ -14,6 +14,7 @@ use yii\base\InvalidConfigException;
 use yii\web\NotFoundHttpException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\authclient\AuthAction;
@@ -209,6 +210,9 @@ class AccountController extends BaseController
         $app = Yii::$app;
         $m = $this->_module;
         if (!$app->user->isGuest) {
+            if ($app->user->returnUrl == Url::to([$this->fetchAction(Module::ACTION_LOGOUT)])) {
+                return $this->goHome();
+            }
             return $this->goBack();
         }
         $hasSocialAuth = $m->hasSocialAuth();
