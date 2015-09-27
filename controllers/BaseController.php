@@ -93,7 +93,7 @@ class BaseController extends \yii\web\Controller
                 throw new InvalidConfigException('User table schema not found. Ensure the database migration has been run successfully for this module.');
             }
             if (!$this->_module->hasSuperUser() && strpos(Yii::$app->request->getPathInfo(), 'user/install') === false) {
-                return $this->redirect(['install/index']);
+                return $this->redirect(['/user/install/index']);
             }
         }
         elseif (!$this->_module->hasSuperUser()) {
