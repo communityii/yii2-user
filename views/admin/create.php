@@ -46,7 +46,8 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             echo $form->field($model, 'email')->textInput(['maxlength' => 255]);
             echo $form->field($model, 'status')->widget(Select2::classname(), [
-                'data' => $m->getEditStatuses()
+                'data' => $m->getEditStatuses(),
+                'options' => ['options' => $m->getDisabledStatuses()]
             ]);
         ?>
     </div>

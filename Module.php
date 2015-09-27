@@ -678,14 +678,27 @@ HTML;
     public function getEditStatuses()
     {
         $statuses = [];
-        $exclude1 = array_flip($this->internalStatuses);
-        $exclude2 = array_flip($this->secondaryStatuses);
+        $exclude = array_flip($this->secondaryStatuses);
         foreach ($this->statuses as $status => $name) {
-            if (!isset($exclude1[$status]) && !isset($exclude2[$status])) {
+            if (!isset($exclude[$status])) {
                 $statuses[$status] = $name;
             }
         }
         return $statuses;
+    }
+
+    /**
+     * Get disabled statuses
+     *
+     * @return array
+     */
+    public function getDisabledStatuses()
+    {
+        $options = [];
+        foreach ($this->internalStatuses as $status) {
+            $options[$status] = ['disabled' => true];
+        }
+        return $options;
     }
 
     /**

@@ -39,7 +39,8 @@ $this->params['breadcrumbs'][] = Yii::t('user', 'Update');
             }
             if (!$model->isSuperuser()) {
                 echo $form->field($model, 'status')->widget(Select2::classname(), [
-                    'data' => $m->getEditStatuses()
+                    'data' => $m->getEditStatuses(),
+                    'options' => ['options' => $m->getDisabledStatuses()]
                 ]);
             }
             $submit = $m->button(Module::BTN_SUBMIT_FORM, [], ['label' => Yii::t('user', 'Update')]);
