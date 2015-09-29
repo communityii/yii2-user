@@ -11,6 +11,7 @@ namespace comyii\user;
 
 use Yii;
 use DateTime;
+use yii\base\Model;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\FormatConverter;
@@ -149,7 +150,7 @@ class Module extends \kartik\base\Module
      * to assign formats. Formats prepended with `php:` will use PHP DateTime format, while others
      * will be parsed as ICU notation.
      */
-    public $datetimeSaveFormat = 'php:Y-m-d H:i:s';
+    public $datetimeSaveFormat = 'php:U';
 
     /**
      * @var string the datetime format in which timestamps are displayed. Use Yii notation to
@@ -161,7 +162,7 @@ class Module extends \kartik\base\Module
     /**
      * @var \Closure an anonymous function that will return current timestamp
      * for populating the timestamp fields. Defaults to
-     * `function() { return date("Y-m-d H:i:s"); }`
+     * `function() { return time(); }`
      */
     public $now;
 
@@ -462,7 +463,7 @@ class Module extends \kartik\base\Module
     /**
      * Return errors as bulleted list for model
      *
-     * @param \yii\base\Model $model
+     * @param Model $model
      *
      * @return string
      */
@@ -485,7 +486,7 @@ class Module extends \kartik\base\Module
     {
         if (empty($this->now) || !$this->now instanceof \Closure) {
             $this->now = function () {
-                return date('Y-m-d H:i:s');
+                return time();
             };
         }
         $this->statuses = array_replace_recursive([
@@ -1033,7 +1034,7 @@ HTML;
      */
     public function timestamp($source, $format = true)
     {
-        $fmtSource = !empty($this->datetimeSaveFormat) ? $this->datetimeSaveFormat : 'php:Y-m-d H:i:s';
+        $fmtSource = !empty($this->datetimeSaveFormat) ? $this->datetimeSaveFormat : 'php:U';
         $fmtSource = strncmp($fmtSource, 'php:', 4) === 0 ? substr($fmtSource, 4) : 
             FormatConverter::convertDateIcuToPhp($fmtSource, 'datetime');
         try {
@@ -1045,6 +1046,31 @@ HTML;
             ($format === false ? date_format($timestamp, 'U') : date_format($timestamp, $format));
     }
 
+    /**
+     * Displays a timestamp from an attribute in a model if valid - else null if empty or invalid
+     *
+     * @param Model $model the model
+     * @param string $attr the timestamp attribute
+     *
+     * @return int|string
+     */
+    public static function displayAttrTime($model, $attr)
+    {
+        return isset($model->$attr) ? static::displayTime($model->$attr) : null;
+    }
+
+    /**
+     * Displays a timestamp if valid - else null if empty or invalid
+     *
+     * @param int|string the timestamp
+     *
+     * @return int|string
+     */
+    public static function displayTime($timestamp)
+    {
+        return isset($timestamp) && strtotime($timestamp) ? $timestamp : null;
+    }
+    
     /**
      * Gets the default SocialConnect widget based on `socialSettings`
      * @return string

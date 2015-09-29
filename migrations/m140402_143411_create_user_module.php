@@ -19,7 +19,7 @@ class m140402_143411_create_user_module extends Migration
     public function up()
     {
         $tableOptions = null;
-        $timestamp = $this->datetime()->notNull();
+        $timestamp = $this->integer()->notNull();
 
         if ($this->db->driverName === 'mysql') {
             $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB';
@@ -39,10 +39,10 @@ class m140402_143411_create_user_module extends Migration
             'status' => $this->smallInteger()->notNull()->defaultValue(0),
             'status_sec' => $this->smallInteger(),
             'password_fail_attempts' => $this->smallInteger()->defaultValue(0),
-            'password_reset_on' => $this->datetime(),
+            'password_reset_on' => $this->integer(),
             'created_on' => $timestamp,
             'updated_on' => $timestamp,
-            'last_login_on' => $this->datetime(),
+            'last_login_on' => $this->integer(),
             'last_login_ip' => $this->string(50)
         ], $tableOptions);
         $this->createIndex('user_status_idx', '{{%user}}', 'status');

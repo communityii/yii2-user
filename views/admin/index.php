@@ -128,18 +128,18 @@ AdminAsset::register($this);
         ],
         [
             'attribute' => 'last_login_on',
-            'format' => ['date', 'php:d-M-y H:i'],
+            'format' => ['datetime', $m->datetimeDispFormat], 
             'hAlign' => 'center',
             'filter' => false,
             'mergeHeader' => true,
             'value' => function($model) {
-                return strtotime($model->last_login_on) ? $model->last_login_on : null;
+                return Module::displayAttrTime($model, 'last_login_on');
             }
         ],
         [
             'attribute' => 'created_on',
             'hAlign' => 'center',
-            'format' => ['date', 'php:d-M-y'],
+            'format' => 'date',
             'label' => Yii::t('user', 'Member Since'),
             'filter' => false,
             'mergeHeader' => true

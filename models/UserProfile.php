@@ -14,13 +14,13 @@ use yii\web\UploadedFile;
 /**
  * This is the model class for table {{%user_profile}}.
  *
- * @property string $id
- * @property string $first_name
- * @property string $last_name
- * @property string $gender
- * @property string $avatar
- * @property string $created_on
- * @property string $updated_on
+ * @property string  $id
+ * @property string  $first_name
+ * @property string  $last_name
+ * @property string  $gender
+ * @property string  $avatar
+ * @property integer $created_on
+ * @property integer $updated_on
  *
  * @property User   $user
  *

@@ -30,7 +30,7 @@ A superuser is the first user created by default on install. The superuser is vi
 - **Editing:** No users except admin or superuser can edit this status.
 - **Identifier:** `Module::STATUS_ADMIN`
 
-Admin users must be created by either by the superuser or other administrators. An existing active user can also be converted to an admin user. Administrators behave like superusers to some extent. The exception is that admin users can be inactivated or manipulated by the superuser or other administrators based on module level settings. Ability to modify an admin account is controlled by `Module::adminEditSettings`.
+Admin users must be created by either the superuser or other administrators. An existing active user can also be converted to an admin user. Administrators behave like superusers to some extent. The exception is that admin users can be inactivated or manipulated by the superuser or other administrators based on module level settings. Ability to modify an admin account is controlled by `Module::adminEditSettings`.
 
 ---
 

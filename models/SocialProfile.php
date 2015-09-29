@@ -7,12 +7,12 @@ use Yii;
 /**
  * This is the model class for table "{{%social_auth}}".
  *
- * @property string $id
- * @property string $source
- * @property string $source_id
- * @property string $user_id
- * @property string $created_on
- * @property string $updated_on
+ * @property string  $id
+ * @property string  $source
+ * @property string  $source_id
+ * @property string  $user_id
+ * @property integer $created_on
+ * @property integer $updated_on
  *
  * @property User $user
  */
