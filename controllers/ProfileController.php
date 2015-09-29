@@ -217,11 +217,12 @@ class ProfileController extends BaseController
             $profile = new $profileClass();
             $profile->id = $id;
         }
+        $social = null;
         if ($this->getConfig('socialSettings', 'enabled', false)) {
             $social = $socialClass::find()->where(['user_id' => $id])->all();
-        }
-        if (!$social) {
-            $social = [new $socialClass(['user_id' => $id])];
+            if (!$social) {
+                $social = [new $socialClass(['user_id' => $id])];
+            }
         }
         return ['model' => $model, 'profile' => $profile, 'social' => $social];
     }
