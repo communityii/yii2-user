@@ -27,8 +27,6 @@ $m = $this->context->module;
 $this->title = Yii::t('user', 'Manage Users');
 $this->params['breadcrumbs'][] = $this->title;
 $class = $m->modelSettings[Module::MODEL_USER];
-$allStatuses = $m->statuses;
-$statuses = $m->getEditStatuses();
 $config = Json::encode([
     'confirmMsg' => Yii::t('user', 'Batch update statuses for all selected users?'),
     'alert1' => Yii::t('user', 'No users have been selected for batch update of status.'),
@@ -48,7 +46,7 @@ AdminAsset::register($this);
 <?= Select2::widget([
     'name' => 'batch-status',
     'value' => '',
-    'data' => $statuses,
+    'data' => $m->getValidStatuses(),
     'addon' => [
         'append' => [
             'content' => Html::button(Html::icon('saved'),[

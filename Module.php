@@ -676,6 +676,24 @@ HTML;
      *
      * @return string
      */
+    public function getValidStatuses()
+    {
+        $statuses = [];
+        $exclude1 = array_flip($this->secondaryStatuses);
+        $exclude2 = array_flip($this->internalStatuses);
+        foreach ($this->statuses as $status => $name) {
+            if (!isset($exclude1[$status]) && !isset($exclude2[$status])) {
+                $statuses[$status] = $name;
+            }
+        }
+        return $statuses;
+    }
+
+    /**
+     * Get edit status list
+     *
+     * @return string
+     */
     public function getEditStatuses()
     {
         $statuses = [];
