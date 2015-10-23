@@ -125,6 +125,11 @@ class Module extends \kartik\base\Module
     const BTN_NEW_USER = 408;           // new user registration link
     const BTN_REGISTER = 409;           // registration submit button
     
+    // the list of events
+    const EVENT_BEFORE_ACTION = 'beforeAction';
+    const EVENT_REGISTER_BEGIN = 'beforeRegister';
+    const EVENT_REGISTER_COMPLETE = 'registerComplete';
+    
     // default layout
     const LAYOUT = 'install';
 
@@ -303,6 +308,8 @@ class Module extends \kartik\base\Module
         self::VIEW_REGISTER => self::LAYOUT,
         self::VIEW_RECOVERY => self::LAYOUT
     ];
+    
+    public $userTypes = [];
 
     /**
      * @var array the login settings for the module. The following options can be set:
@@ -419,6 +426,7 @@ class Module extends \kartik\base\Module
         'activate/<key:>' => 'account/activate',
         'reset/<key:>' => 'account/reset',
         'newemail/<key:>' => 'account/newemail',
+        'register/<type:>' => 'account/register',
         '<action>' => 'account/<action>',
     ];
     
@@ -630,8 +638,8 @@ HTML;
         ], $this->registrationSettings);
         $appName = \Yii::$app->name;
         $supportEmail = isset(\Yii::$app->params['supportEmail']) ? \Yii::$app->params['supportEmail'] :
-            'nobody@support.com';
-        $fromName = Yii::t('user', '{appname} Robot', ['appname' => $appName]);
+            'nobody@'.$_SERVER['HTTP_HOST'];
+        $fromName = Yii::t('user', '{appname}', ['appname' => $appName]);
         $this->viewSettings = array_replace_recursive([
             // views in AccountController
             self::VIEW_LOGIN => 'login',
@@ -1000,7 +1008,24 @@ HTML;
     {
         return $this->_defaultActionSettings;
     }
-
+    
+    /**
+     * Gets the layout file for the current view and user type.
+     * 
+     * @param type $view
+     * @return string the layout file
+     */
+    public function getLayout($view)
+    {
+        if(isset($this->layoutSettings[Yii::$app->user->type]) && is_array($this->layoutSettings[Yii::$app->user->type])) {
+            if(isset($this->layoutSettings[Yii::$app->user->type][$view]))
+                return $this->layoutSettings[Yii::$app->user->type][$view];
+        }
+        if(!isset($this->layoutSettings[$view]))
+            return null;
+        return $this->layoutSettings[$view];
+    }
+    
     /**
      * Helper to convert expiry time left from now
      *

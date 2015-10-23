@@ -57,7 +57,8 @@ class BaseController extends \yii\web\Controller
                 if ($url1 !== $url2) {
                     throw new ForbiddenHttpException('The requested url cannot be accessed.');
                 }
-            } 
+            }
+            $this->module->trigger(Module::EVENT_BEFORE_ACTION);
             return true;
         }
         else {
@@ -74,8 +75,8 @@ class BaseController extends \yii\web\Controller
      * @return string the rendering result
      */
     public function display($view, $params = []) {
-        if (!empty($this->_module->layoutSettings[$view])) {
-            $this->layout = $this->_module->layoutSettings[$view];
+        if (!empty($this->module->getLayout($view))) {
+            $this->layout = $this->module->getLayout($view);
             
         }
         $view = $this->fetchView($view);
@@ -164,6 +165,10 @@ class BaseController extends \yii\web\Controller
      */
     protected function fetchView($view)
     {
+        if(is_string($view)) return $view;
+        if(isset(Yii::$app->user->type) && isset($this->module->viewSettings[Yii::$app->user->type][$view])) {
+            return $this->module->viewSettings[Yii::$app->user->type][$view];
+        }
         return $this->getConfig('viewSettings', $view);
     }
 
