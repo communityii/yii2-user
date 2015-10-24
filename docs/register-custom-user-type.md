@@ -79,7 +79,7 @@ class RegistrationHandler extends \yii\base\Object
         }
         self::$model->type = \common\models\User::TYPE_VENDOR;
         self::$model->save();
-        Yii::$app->authManager->assign(Yii::$app->authManager->createRole(vendor'), self::$model->getId());
+        Yii::$app->authManager->assign(Yii::$app->authManager->createRole('vendor'), self::$model->getId());
     }
     
     public static function registerComplete($event)
