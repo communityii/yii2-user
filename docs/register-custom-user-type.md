@@ -18,7 +18,7 @@ Then create the handler class. Notice that we can attach events to the model cla
 of the event parameter.
 
 ```php
-namespace common\events;
+namespace common\handlers;
 
 use yii\db\ActiveRecord;
 use Yii;
