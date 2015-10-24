@@ -48,7 +48,7 @@ Run `$ php composer.phar update` from your console to get the latest version of 
 
 ## User Module Setup
 
-Setup the module in your configuration file as shown below. The module depends on and uses the [yii2-grid module](https://demos.krajee.com/grid), so you must also setup the `gridview` module also as shown below. You can set this within `common/config/main.php` if using with Yii 2 advanced app or within `config/web.php` for Yii 2 basic app. There are various settings available for configuring your user module. Read through the documentation to understand and set these carefully for your application. (DOCUMENTATION TBD).
+Setup the module in your configuration file as shown below. The module depends on and uses the [yii2-grid module](https://demos.krajee.com/grid), so you must also setup the `gridview` module also as shown below. You can set this within `common/config/main.php` if using with Yii 2 advanced app or within `config/web.php` for Yii 2 basic app. There are various settings available for configuring your user module. Read through the documentation to understand and set these carefully for your application.
 
 ```php
 'modules' => [

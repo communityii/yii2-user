@@ -1,8 +1,22 @@
+User Types
+===========
 
-## User Types
+- [User Types Setup](#user-types-setup)
+- [User Type Custom Layouts](#user-type-custom-layouts)
+- [User Type Custom Views](#user-type-custom-views)
+- [User Type Routes](#user-type-routes)
 
-To add custom user types extend the user class and add the user types as constants and then add them to the config.
-For example if you want two user types, one for customers, and another for vendors...
+---
+
+[:back: guide](index.md#key-concepts)
+
+User types allow you to control your application layout and view settings for different types of users. To add/configure the user types for your application, extend the `comyii\user\models\User` class. Then define your user types as constants and then add them to the module configuration.
+
+For example, let's consider if we want two user types, one for **customers**, and another for **vendors**. 
+
+## User Types Setup
+
+1. Extend the `User` model as shown below:
 
 ```php
 namespace common\models;
@@ -12,7 +26,9 @@ class User extends \comyii\user\models\User
     const TYPE_VENDOR = 2;
 }
 ```
-Then update your config.
+
+2. Then update your module configuration for the user types:
+
 ```php
     'modules' => [
         'user' => [
@@ -25,7 +41,9 @@ Then update your config.
     ],
 ```
 
-###Custom Layouts for User Types
+[:back: top](#user-types) | [:back: guide](index.md#key-concepts)
+
+## User Type Custom Layouts
 
 ```php
     'modules' => [
@@ -51,7 +69,9 @@ Then update your config.
     ],
 ```
 
-###Custom Views for User Types
+[:back: top](#user-types) | [:back: guide](index.md#key-concepts)
+
+## User Type Custom Views
 
 ```php
     'modules' => [
@@ -70,12 +90,15 @@ Then update your config.
     ],
 ```
 
+[:back: top](#user-types) | [:back: guide](index.md#key-concepts)
 
-##User Type Routes
+## User Type Routes
 Any custom user types defined in the config will have a registration page using the following url rule:
 
 ```
 'register/<type:>' => 'account/register',
 ```
 
-Which of course can also be customized by updating the 'urlRules' in the module config.
+Note that these can also be customized by updating the `urlRules` in the module configuration.
+
+[:back: top](#user-types) | [:back: guide](index.md#key-concepts)

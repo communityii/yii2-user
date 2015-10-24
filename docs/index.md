@@ -13,7 +13,8 @@ This tutorial will guide you through using the `communityii/yii2-user` module / 
 
 ## Key Concepts
 
-- [Understanding User Statuses](statuses.md)
+- [Understanding User Statuses](user-statuses.md)
+- [Understanding User Types](user-types.md)
 - [Module Configuration](configuration.md)
 - [Database Structure](database.md)
 - [Social Authentication](social.md)
