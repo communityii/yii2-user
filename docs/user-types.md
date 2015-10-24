@@ -79,3 +79,7 @@ Any custom user types defined in the config will have a registration page using 
 ```
 
 Which of course can also be customized by updating the 'urlRules' in the module config.
+
+##Examples
+
+[Registration Event and Custom User Types](register-custom-user-type.md)
