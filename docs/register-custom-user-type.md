@@ -9,21 +9,21 @@ You can add roles and other information to user accounts upon registration by us
     'modules' => [
         'user' => [
             'class' => 'comyii\user\Module',
-            // ... user types and other configs
-            'on beforeRegister' => ['\common\handlers\RegistrationHandler','beforeRegister'],
-            'on registerComplete' => ['\common\handlers\RegistrationHandler','registerComplete']
+            // ... user types and other configurations
+            'on beforeRegister' => ['\common\handlers\RegistrationHandler', 'beforeRegister'],
+            'on registerComplete' => ['\common\handlers\RegistrationHandler', 'registerComplete']
         ],
     ],
 ```
 
-Then create the handler class. Notice that we can attach events to the model class as well since it's passed in as a property
-of the event parameter.
+Next, you can create the handler class `\common\handlers\RegistrationHandler`. Notice that we can attach events to the model class as well since it is passed in as a property of the event parameter.
 
 ```php
 namespace common\handlers;
 
-use yii\db\ActiveRecord;
 use Yii;
+use yii\db\ActiveRecord;
+use comyii\user\events\RegistrationEvent;
 
 class RegistrationHandler extends \yii\base\Object
 {
@@ -31,14 +31,15 @@ class RegistrationHandler extends \yii\base\Object
     public static $vendorContact;
     public static $model;
     public static $event;
+
     /**
-     * 
-     * @param \comyii\user\events\RegistrationEvent $event
+     * Pre registration event handler
+     * @param RegistrationEvent $event
      */
     public static function beforeRegister($event)
     {
         self::$event = $event;
-        if($event->type=='vendor') {
+        if($event->type === 'vendor') {
             self::$vendor = new \common\models\Vendor;
             self::$vendorContact = new \common\models\VendorContact;
             $model = self::$event->model;
@@ -52,28 +53,38 @@ class RegistrationHandler extends \yii\base\Object
         }
     }
     
+    /**
+     * Pre insert/update vendor handler
+     * @param RegistrationEvent $event
+     */
     public static function beforeValidateVendor($event)
     {
-        
         $valid = true;
-        if(!self::$vendor->load(Yii::$app->request->post()) || !self::$vendor->validate())
+        if(!self::$vendor->load(Yii::$app->request->post()) || !self::$vendor->validate()) {
             $valid=false;
-        if(!self::$vendorContact->load(Yii::$app->request->post()) || !self::$vendorContact->validate())
+        }
+        if(!self::$vendorContact->load(Yii::$app->request->post()) || !self::$vendorContact->validate()) {
             $valid=false;
-        // .. validate other models here
-        
+            // ... validate other models here
+        }
         // tell the controller to stop
-        if(!$valid)
+        if(!$valid) {
             self::$event->error = true;
-        // you could also throw an exception to stop the script
-        // throw new InvalidRequestException();
+            // you could also throw an exception to stop the script
+            // throw new InvalidRequestException();
+        }
     }
     
+    /**
+     * Post vendor insert handler
+     * @param RegistrationEvent $event
+     */
     public static function afterInsertVendor($event)
     {
         self::$vendor->user_id = $event->sender->id;
-        if(!self::$vendor->save())
+        if(!self::$vendor->save()) {
             self::$event->error = true;
+        }
         self::$vendorContact->vendor_id = self::$vendor->id;
         if(!self::$vendorContact->save()) {
             self::$event->error = true;
@@ -84,6 +95,10 @@ class RegistrationHandler extends \yii\base\Object
         Yii::$app->authManager->assign(Yii::$app->authManager->createRole('vendor'), self::$model->getId());
     }
     
+    /**
+     * Post registration handler
+     * @param RegistrationEvent $event
+     */
     public static function registerComplete($event)
     {
         if($event->type=='vendor') {

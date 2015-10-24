@@ -1,12 +1,30 @@
 Events
 ======
 
+- [Event Triggers](#event-triggers)
 - [Registration Event](#registration-event)
-- [Login Event](#login-event)
+    - [Registration Event Triggers](#registration-event-triggers)
+    - [Registration Event Properties](#registration-event-properties)
 
 ---
 
 [:back: guide](index.md#key-concepts)
+
+## Event Triggers
+
+The module triggers a few Yii events for advanced programming. The following event triggers are available:
+
+### `Module::EVENT_BEFORE_ACTION`
+
+This event is triggered before any action is executed by any controller in the `communityii/yii2-user` module.
+
+### `Module::EVENT_REGISTER_BEGIN`
+
+This event is triggered when the `register` action is initiated for the user.
+
+### `Module::EVENT_REGISTER_COMPLETE` 
+
+This event is triggered after the `register` action is completed for the user.
 
 ## Registration Event
 
@@ -14,71 +32,72 @@ Events
 
 The `RegistrationEvent` allows you to programmatically control your application workflow before and after an user account registration. 
 
-[:back: guide](index.md#key-concepts)
+[:back: top](#events) | [:back: guide](index.md#key-concepts)
 
 ### Registration Event Triggers
 
-- Module::EVENT_REGISTER_BEGIN
-- Module::EVENT_REGISTER_COMPLETE
-
-[:back: top](#events) | 
-
-### Registration Event Properties
-
-|  **Property**   |        **Type**        | **Description**                                                                                                                                                             | **Default Value** |
-|:----------------|:----------------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------:|
-| **model**       | `ActiveRecord`         | the current user active record                                                                                                                                              | `NULL`            |
-| **type**        | `string`               | the type of registration. This is used if there are multiple registration types (i.e. different user types)                                                                 | `NULL`            |
-| **viewFile**    | `string`               | the main view file to be displayed.                                                                                                                                         | `NULL`            |
-| **error**       | `string`               | the current status for the controller. This is used so that event handlers can tell the controller whether to not to continue. If set to `true` the registration will fail. | `NULL`            |
-| **message**     | `string`               | the flash message for the controller. This is used so that event handlers can update the success messages for things like user registration.                                | `NULL`            |
-| **flashType**   | `string`               | the flash message type                                                                                                                                                      | `NULL`            |
-| **activate**    | `boolean`              | whether or not to activate the user account.                                                                                                                                | `false`           |
-| **isActivated** | `boolean`              | the current user activation status                                                                                                                                          | `false`           |
+- `Module::EVENT_REGISTER_BEGIN`
+- `Module::EVENT_REGISTER_COMPLETE`
 
 [:back: top](#events) | [:back: guide](index.md#key-concepts)
 
+### Registration Event Properties
 
-======
+#### model
 
+- **Data Type:** [_yii\db\ActiveRecord_](http://www.yiiframework.com/doc-2.0/yii-db-activerecord.html)
+- **Default Value:** `NULL`
 
----
+The current user active record
 
-[:back: guide](index.md#key-concepts)
+#### type
 
-## Login Event
+- **Data Type:** _string_
+- **Default Value:** `NULL`
 
-**Namespace:** `comyii\user\events\LoginEvent`
+The type of registration. This is used if there are multiple registration types (i.e. different [user types](user-types.md)).
 
-The `LoginEvent` allows you to programmatically control your application workflow before and after an user account login. 
+#### viewFile
 
-[:back: guide](index.md#key-concepts)
+- **Data Type:** _string_
+- **Default Value:** `NULL`
 
-### Login Event Triggers
+The main view file to be displayed.
 
-- Module::EVENT_LOGIN_BEGIN
-- Module::EVENT_LOGIN_COMPLETE
+#### error
 
-[:back: top](#events) | 
+- **Data Type:** _boolean_
+- **Default Value:** `false`
 
-### Login Event Properties
+The current status for the controller. This is necessary for event handlers to communicate to the controller whether to not abort the registration process. If set to `true`, the registration will fail.
 
-| property         | type           | description                                                                                                                                                                          | default              |
-|------------------|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------|
-| **user**         | `ActiveRecord` | the current user model                                                                                                                                                               |                      |
-| **redirect**     | `string/array` | the URL to be redirected to                                                                                                                                                          |                      |
-| **viewFile**     | `string`       | the view file to be rendered                                                                                                                                                         | `Module::VIEW_LOGIN` |
-| **hasSocial**    | `boolean`      | has social authentication                                                                                                                                                            |                      |
-| **authAction**   | `string`       | social authentication action                                                                                                                                                         |                      |
-| **newPassword**  | `boolean`      | whether the password has been reset (read only)                                                                                                                                      |                      |
-| **unlockExpiry** | `boolean`      | is account unlock attempt (read only)                                                                                                                                                |                      |
-| **status**       | `string`       | the account status (read only)                                                                                                                                                       |                      |
-| **result**       | `integer`      | the result of the login attempt (read only.) <br /> Set on Module::EVENT_LOGIN_COMPLETE<br /><ul><li>LoginEvent::RESULT_LOCKED</li><li>LoginEvent::RESULT_SUCCESS</li><li>LoginEvent::RESULT_FAIL</li><li>LoginEvent::RESULT_LOCKED</li><li>LoginEvent::RESULT_ALREADY_AUTH</li></ul> |                      |
-| **message**      | `string`       | the flash message                                                                                                                                                                                                       |                      |
-| **flashType**    | `string`       | the flash message type                                                                                                                                                                                                  |                      |
-| **transaction**  | `boolean`      | whether or not to use transactions.                                                                                                                                                                                     | `true`               |
-| **loginTitle**   | `string`       | login page title                                                                                                                                                                                                        |                      |
-| **authTitle**    | `string`       | social auth login title                                                                                                                                                                                                 |                      |
+#### message
+
+- **Data Type:** _string_
+- **Default Value:** `NULL`
+
+The session flash message for the controller passed via `Yii::$app->session->setFlash`. This is used so that event handlers can update the success messages for scenarios like user registration. 
+
+#### flashType
+
+- **Data Type:** _string_
+- **Default Value:** `NULL`
+
+The session flash message type as used by `Yii::$app->session->setFlash`.
+
+#### activate
+
+- **Data Type:** _boolean_
+- **Default Value:** `false`
+
+Whether or not to activate the user account.
+
+#### isActivated
+
+- **Data Type:** _boolean_
+- **Default Value:** `false`
+
+The current user activation status.
 
 [:back: top](#events) | [:back: guide](index.md#key-concepts)
 

@@ -5,6 +5,7 @@ User Types
 - [User Type Custom Layouts](#user-type-custom-layouts)
 - [User Type Custom Views](#user-type-custom-views)
 - [User Type Routes](#user-type-routes)
+- [Examples](#examples)
 
 ---
 
@@ -16,7 +17,7 @@ For example, let's consider if we want two user types, one for **customers**, an
 
 ## User Types Setup
 
-1. Extend the `User` model as shown below:
+**Step 1:** Extend the `User` model as shown below:
 
 ```php
 namespace common\models;
@@ -27,7 +28,7 @@ class User extends \comyii\user\models\User
 }
 ```
 
-2. Then update your module configuration for the user types:
+**Step 2:** Then update your module configuration for the user types:
 
 ```php
     'modules' => [
@@ -101,9 +102,11 @@ Any custom user types defined in the config will have a registration page using 
 
 Note that these can also be customized by updating the `urlRules` in the module configuration.
 
+[:back: top](#user-types) | [:back: guide](index.md#key-concepts)
+
 ## Examples
 
-- [Registration Event and Custom User Types](register-custom-user-type.md)
+- [Register Custom User Type](register-custom-user-type.md)
 
 [:back: top](#user-types) | [:back: guide](index.md#key-concepts)
 
