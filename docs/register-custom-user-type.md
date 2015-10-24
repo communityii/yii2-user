@@ -1,5 +1,7 @@
+Register Custom User Type
+=========================
 
-##Registration Events and Custom User Types
+[:back: guide](index.md#key-concepts)
 
 You can add roles and other information to user accounts upon registration by using events and user types.
 
@@ -91,3 +93,4 @@ class RegistrationHandler extends \yii\base\Object
     }
 }
 ```
+[:back: top](#register-custom-user-type) | [:back: guide](index.md#key-concepts)
