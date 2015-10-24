@@ -20,7 +20,7 @@ This tutorial will guide you through using the `communityii/yii2-user` module / 
 - [Social Authentication](social.md)
 - [Profile and Avatar Management](profile.md)
 - [Reusable Widgets](widgets.md)
-- [User Types](user-types.md)
+- [Events](events.md)
 
 ## Advanced Customization
 
@@ -30,4 +30,4 @@ This tutorial will guide you through using the `communityii/yii2-user` module / 
 - [Override Layouts](override-layouts.md)
 - [Override Actions](override-actions.md)
 - [Override Controllers](override-controllers.md)
-- [Registration Event and Custom User Types](register-custom-user-type.md)
+- [Register Custom User Type](register-custom-user-type.md)
