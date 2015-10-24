@@ -233,7 +233,6 @@ class AccountController extends BaseController
         $event->authAction = $authAction;
         $event->hasSocial = $hasSocialAuth;
         $m->trigger(Module::EVENT_LOGIN_BEGIN, $event);
-        $viewFile = $event->viewFile? $event->viewFile : Module::VIEW_REGISTER;
         try {
             if ($event->transaction) {
                 $transaction = Yii::$app->db->beginTransaction();
@@ -304,17 +303,22 @@ class AccountController extends BaseController
                     $event->message
                 );
             }
-            $m->trigger(Module::EVENT_LOGIN_COMPLETE, $event);
+            if($post) {
+                $event->result = LoginEvent::RESULT_FAIL;
+                $m->trigger(Module::EVENT_LOGIN_COMPLETE, $event);
+            }
         } catch (Exception $e) {
-            $transaction->rollBack();
+            if($event->transaction) {
+                $transaction->rollBack();
+            }
         }
-        return $this->display($viewFile, [
+        return $this->display($event->viewFile? $event->viewFile : Module::VIEW_REGISTER, [
             'model' => $model,
-            'hasSocialAuth' => $hasSocialAuth,
-            'authAction' => $authAction,
-            'loginTitle' => $model->scenario === Module::SCN_EXPIRY ? Yii::t('user', 'Change Password') :
+            'hasSocialAuth' => $event->hasSocialAuth,
+            'authAction' => $event->authAction,
+            'loginTitle' => $event->loginTitle ? $event->loginTitle : $model->scenario === Module::SCN_EXPIRY ? Yii::t('user', 'Change Password') :
                 Yii::t('user', 'Login'),
-            'authTitle' => Yii::t('user', 'Or Login Using')
+            'authTitle' => $event->authTitle ? $event->authTitle : Yii::t('user', 'Or Login Using')
         ]);
     }
 
