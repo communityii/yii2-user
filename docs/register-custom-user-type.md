@@ -14,8 +14,8 @@ You can add roles and other information to user accounts upon registration by us
     ],
 ```
 
-Then create the handler class. Notice that we can attach events to the model class as well since it's passed in as a parameter
-to event handler.
+Then create the handler class. Notice that we can attach events to the model class as well since it's passed in as a property
+of the event parameter.
 
 ```php
 namespace common\events;
