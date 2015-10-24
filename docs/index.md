@@ -29,3 +29,4 @@ This tutorial will guide you through using the `communityii/yii2-user` module / 
 - [Override Layouts](override-layouts.md)
 - [Override Actions](override-actions.md)
 - [Override Controllers](override-controllers.md)
+- [Registration Event and Custom User Types](register-custom-user-type.md)
