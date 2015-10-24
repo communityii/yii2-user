@@ -4,7 +4,7 @@ User Guide: `communityii/yii2-user`
 This tutorial will guide you through using the `communityii/yii2-user` module / extension. The tutorial is released under [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/).
 
 > All Rights Reserved.  
-> © [Kartik Visweswaran, communityii](http://github.com/kartik-v/) 2014 - 2015 
+> Â© [Kartik Visweswaran, communityii](http://github.com/kartik-v/) 2014 - 2015 
 
 ## Getting Started
 
@@ -20,6 +20,7 @@ This tutorial will guide you through using the `communityii/yii2-user` module / 
 - [Social Authentication](social.md)
 - [Profile and Avatar Management](profile.md)
 - [Reusable Widgets](widgets.md)
+- [User Types](user-types.md)
 
 ## Advanced Customization
 
@@ -29,3 +30,4 @@ This tutorial will guide you through using the `communityii/yii2-user` module / 
 - [Override Layouts](override-layouts.md)
 - [Override Actions](override-actions.md)
 - [Override Controllers](override-controllers.md)
+- [Registration Event and Custom User Types](register-custom-user-type.md)
