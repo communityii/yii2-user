@@ -40,6 +40,7 @@ use comyii\user\Module;
  * @property string           $password_new write-only password
  * @property string           $password_confirm write-only password
  * @property string           $captcha the captcha for registration
+ * @property string           $type the type of user or null if not implementing user types.
  *
  * @property UserProfile      $userProfile
  *

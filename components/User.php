@@ -92,4 +92,9 @@ class User extends \yii\web\User
     {
         return $this->identity ? $this->identity->isActive() : false;
     }
+    
+    public function getType()
+    {
+        return $this->identity ? $this->identity->type : '';
+    }
 }

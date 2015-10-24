@@ -66,7 +66,11 @@ class ProfileController extends BaseController
      */
     public function actionIndex()
     {
-        return $this->display(Module::VIEW_PROFILE_INDEX, $this->findModel());
+        $data = $this->findModel();
+        if(Yii::$app->request->post()) {
+            $this->update($data);
+        }
+        return $this->display(Module::VIEW_PROFILE_INDEX, $data);
     }
 
     /**
@@ -78,7 +82,11 @@ class ProfileController extends BaseController
      */
     public function actionView($id)
     {
-        return $this->display(Module::VIEW_PROFILE_VIEW, $this->findModel($id));
+        $data = $this->findModel($id);
+        if(Yii::$app->request->post()) {
+            $this->update($data);
+        }
+        return $this->display(Module::VIEW_PROFILE_VIEW, $data);
     }
 
     /**
@@ -95,50 +103,10 @@ class ProfileController extends BaseController
          * @var SocialProfile $social
          */
         $data = $this->findModel();
-        $model = $profile = $social = null;
-        extract($data);
-        $model->scenario = Module::SCN_PROFILE;
-        $post = Yii::$app->request->post();
-        $hasProfile = $this->getConfig('profileSettings', 'enabled');
-        $emailOld = $model->email;
-        if ($hasProfile) {
-            $validate = $model->load($post) && $profile->load($post) && Model::validateMultiple([$model, $profile]);
-        } else {
-            $validate = $model->load($post) && $model->validate();
+        if(Yii::$app->request->post()) {
+            $this->update($data);
         }
-        if ($validate) {
-            $timeLeft = Module::timeLeft('email change confirmation', $model->emailChangeKeyExpiry);
-            $emailSent = $emailNew = null;
-            if ($model->validateEmailChange($emailOld)) {
-                $emailNew = $model->email_new;
-                $emailSent = $model->sendEmail('newemail', $timeLeft);
-            }
-            $model->save();
-            if ($hasProfile) {
-                $profile->uploadAvatar();
-                $profile->save();
-            }
-            $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
-            Yii::$app->session->setFlash('success', Yii::t('user', 'The user profile was updated successfully.'));
-            if ($emailSent === true) {
-                Yii::$app->session->setFlash('info', Yii::t(
-                    'user',
-                    'Instructions to confirm the new email has been sent to your new email address <b>{email}</b>. {timeLeft}',
-                    ['email' => $emailNew, 'timeLeft' => $timeLeft]
-                ));
-                return $this->redirect([$action]);
-            } elseif ($emailSent === false) {
-                Yii::$app->session->setFlash('warning', Yii::t(
-                    'user',
-                    'Your email change to <b>{email}</b> could not be processed. Please contact the system administrator or try again later.',
-                    ['email' => $emailNew]
-                ));
-            }
-        }
-        return $this->display(Module::VIEW_PROFILE_UPDATE, [
-            'model' => $model,
-            'profile' => $profile
-        ]);
+        return $this->display(Module::VIEW_PROFILE_UPDATE, $data);
     }
 
     /**
@@ -210,9 +178,7 @@ class ProfileController extends BaseController
         }
         $profileClass = $this->fetchModel(Module::MODEL_PROFILE);
         $socialClass = $this->fetchModel(Module::MODEL_SOCIAL_PROFILE);
-        if ($this->getConfig('profileSettings', 'enabled', false)) {
-            $profile = $profileClass::findOne($id);
-        }
+        $profile = $profileClass::findOne($id);
         if ($profile === null) {
             $profile = new $profileClass();
             $profile->id = $id;
@@ -225,5 +191,49 @@ class ProfileController extends BaseController
             }
         }
         return ['model' => $model, 'profile' => $profile, 'social' => $social];
+    }
+    
+    public function update($data)
+    {
+        $model = $profile = $social = null;
+        extract($data);
+        $model->scenario = Module::SCN_PROFILE;
+        $post = Yii::$app->request->post();
+        $hasProfile = $this->getConfig('profileSettings', 'enabled');
+        $emailOld = $model->email;
+        if ($hasProfile || isset($post['UserProfile'])) {
+            $validate = $model->load($post) && $profile->load($post) && Model::validateMultiple([$model, $profile]);
+        } else {
+            $validate = $model->load($post) && $model->validate();
+        }
+        if ($validate) {
+            $timeLeft = Module::timeLeft('email change confirmation', $model->emailChangeKeyExpiry);
+            $emailSent = $emailNew = null;
+            if ($model->validateEmailChange($emailOld)) {
+                $emailNew = $model->email_new;
+                $emailSent = $model->sendEmail('newemail', $timeLeft);
+            }
+            $model->save();
+            if ($hasProfile || isset($post['UserProfile'])) {
+                $profile->uploadAvatar();
+                $profile->save();
+            }
+            $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
+            Yii::$app->session->setFlash('success', Yii::t('user', 'The user profile was updated successfully.'));
+            if ($emailSent === true) {
+                Yii::$app->session->setFlash('info', Yii::t(
+                    'user',
+                    'Instructions to confirm the new email has been sent to your new email address <b>{email}</b>. {timeLeft}',
+                    ['email' => $emailNew, 'timeLeft' => $timeLeft]
+                ));
+                return $this->redirect([$action]);
+            } elseif ($emailSent === false) {
+                Yii::$app->session->setFlash('warning', Yii::t(
+                    'user',
+                    'Your email change to <b>{email}</b> could not be processed. Please contact the system administrator or try again later.',
+                    ['email' => $emailNew]
+                ));
+            }
+        }
     }
 }
