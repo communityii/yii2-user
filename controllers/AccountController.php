@@ -312,7 +312,7 @@ class AccountController extends BaseController
                 $transaction->rollBack();
             }
         }
-        return $this->display($event->viewFile? $event->viewFile : Module::VIEW_REGISTER, [
+        return $this->display($event->viewFile? $event->viewFile : Module::VIEW_LOGIN, [
             'model' => $model,
             'hasSocialAuth' => $event->hasSocialAuth,
             'authAction' => $event->authAction,
