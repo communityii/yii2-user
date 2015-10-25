@@ -138,6 +138,8 @@ class Module extends \kartik\base\Module
     const EVENT_RECOVERY_COMPLETE = 'recoveryComplete';
     const EVENT_RESET_BEGIN = 'resetBegin';
     const EVENT_RESET_COMPLETE = 'resetComplete';
+    const EVENT_ACTIVATE_BEGIN = 'activateBegin';
+    const EVENT_ACTIVATE_COMPLETE = 'activateComplete';
     
     // default layout
     const LAYOUT = 'install';

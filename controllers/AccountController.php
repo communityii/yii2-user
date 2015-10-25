@@ -28,6 +28,7 @@ use comyii\user\events\LoginEvent;
 use comyii\user\events\LogoutEvent;
 use comyii\user\events\RecoveryEvent;
 use comyii\user\events\ResetEvent;
+use comyii\user\events\ActivateEvent;
 
 
 
@@ -569,15 +570,42 @@ class AccountController extends BaseController
         $model->password_reset_on = call_user_func($this->_module->now);
         $model->reset_key = null;
         $session = Yii::$app->session;
-        if ($model->save()) {
+        $event = new ActivateEvent;
+        $event->model = $model;
+        $this->_module->trigger(Module::EVENT_ACTIVATE_BEGIN, $event);
+        $event->handled = false;
+        if ($event->transaction) {
+            $transaction = Yii::$app->db->beginTransaction();
+        }
+        try {
+            if ($model->save()) {
+                $event->result = true;
+                $event->flashType = 'success';
+                $event->message = Yii::t('user', 'The account was activated successfully. You can proceed to login.');
+                $this->_module->trigger(Module::EVENT_ACTIVATE_COMPLETE, $event);
+                if(!$event->redirect) {
+                    $event->redirect = [$this->fetchAction(Module::ACTION_LOGIN)];
+                }
+            } else {
+                $event->result = false;
+                $event->flashType = 'error';
+                $event->message = Yii::t('user', 'Could not activate the account. Please try again later or contact us.');
+                $this->_module->trigger(Module::EVENT_ACTIVATE_COMPLETE, $event);
+                throw new Exception();
+            }
+        } catch (Exception $e) {
+            if ($event->transaction) {
+                $transaction->rollBack();
+            }
+        }
+        if ($event->message) {
             $session->setFlash(
-                'success',
-                Yii::t('user', 'The account was activated successfully. You can proceed to login.')
+                $event->flashType,
+                $event->message
             );
-            $action = $this->fetchAction(Module::ACTION_LOGIN);
-            return $this->redirect([$action]);
-        } else {
-            $session->setFlash('error', Yii::t('user', 'Could not activate the account. Please try again later or contact us.'));
+        }
+        if ($event->redirect) {
+            return $this->redirect($event->redirect ? $event->redirect : [$this->fetchAction(Module::ACTION_LOGIN)]);
         }
         return $this->goHome();
     }
@@ -620,6 +648,9 @@ class AccountController extends BaseController
                     $this->_module->trigger(Module::EVENT_RESET_COMPLETE, $event);
                     if (!$event->redirect) {
                         $event->redirect = [$this->fetchAction(Module::ACTION_LOGIN)];
+                    }
+                    if ($event->transaction) {
+                        $transaction->commit();
                     }
                 } else {
                     $event->result = false;
