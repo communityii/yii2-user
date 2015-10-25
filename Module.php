@@ -129,6 +129,17 @@ class Module extends \kartik\base\Module
     const EVENT_BEFORE_ACTION = 'beforeAction';
     const EVENT_REGISTER_BEGIN = 'beforeRegister';
     const EVENT_REGISTER_COMPLETE = 'registerComplete';
+    const EVENT_LOGIN_BEGIN = 'loginBegin';
+    const EVENT_LOGIN_COMPLETE = 'loginComplete';
+    const EVENT_LOGOUT = 'logout';
+    const EVENT_PASSWORD_BEGIN = 'passwordBegin';
+    const EVENT_PASSWORD_COMPLETE = 'passwordComplete';
+    const EVENT_RECOVERY_BEGIN = 'recoveryBegin';
+    const EVENT_RECOVERY_COMPLETE = 'recoveryComplete';
+    const EVENT_RESET_BEGIN = 'resetBegin';
+    const EVENT_RESET_COMPLETE = 'resetComplete';
+    const EVENT_ACTIVATE_BEGIN = 'activateBegin';
+    const EVENT_ACTIVATE_COMPLETE = 'activateComplete';
     
     // default layout
     const LAYOUT = 'install';
