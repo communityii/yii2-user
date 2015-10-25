@@ -488,6 +488,7 @@ class AccountController extends BaseController
                 $model->save(false);
                 $event->flashType = 'success';
                 $event->message = Yii::t('user', 'The password was changed successfully.');
+                $event->handled = false;
                 $this->_module->trigger(Module::EVENT_PASSWORD_COMPLETE, $event);
                 if ($event->message) {
                     Yii::$app->session->setFlash(
