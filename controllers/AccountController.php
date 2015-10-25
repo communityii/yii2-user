@@ -47,7 +47,7 @@ class AccountController extends BaseController
      */
     public function behaviors()
     {
-        return [
+        $default = [
             'access' => [
                 'class' => AccessControl::className(),
                 'only' => ['logout', 'register', 'recovery', 'password'],
@@ -69,9 +69,13 @@ class AccountController extends BaseController
                 'actions' => [
                     'logout' => ['post'],
                 ],
-            ],
+            ]
         ];
+        
+        $behaviors = $this->_module->getControllerBehaviors($this->id);
+        return Module::mergeDefault($behaviors,$default);
     }
+    
 
     /**
      * @inheritdoc
