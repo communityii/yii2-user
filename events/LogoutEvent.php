@@ -1,7 +1,7 @@
 <?php
 
 
-namespace commyii\user\events;
+namespace comyii\user\events;
 
 class LogoutEvent extends \yii\base\Event
 {   

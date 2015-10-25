@@ -520,6 +520,7 @@ class Module extends \kartik\base\Module
      */
     public function setConfig()
     {
+        
         if (empty($this->now) || !$this->now instanceof \Closure) {
             $this->now = function () {
                 return time();
@@ -704,6 +705,10 @@ HTML;
                 'subject' => Yii::t('user', Yii::t('user', 'Email change for {appname}', ['appname' => $appName]))
             ]
         ], $this->notificationSettings);
+        
+        if (Yii::$app instanceof \yii\console\Application) {
+            return;
+        }
         $this->buttons = array_replace_recursive(static::getDefaultButtonConfig(), $this->buttons);
     }
 

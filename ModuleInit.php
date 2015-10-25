@@ -27,14 +27,18 @@ class ModuleInit implements BootstrapInterface
      */
     public function bootstrap($app)
     {
-        if (!$app instanceof \yii\web\Application || !$app->hasModule('user')) {
-            return;
-        }
         /**
          * @var Module $m
          */
         $m = $app->getModule('user');
         if (!$m instanceof Module) {
+            return;
+        }
+        if ($app instanceof \yii\console\Application && $app->hasModule('user')) {
+            $m->controllerNamespace = 'comyii\user\commands';
+            return;
+        }
+        if (!$app instanceof \yii\web\Application || !$app->hasModule('user')) {
             return;
         }
         $config = ['prefix' => $m->urlPrefix, 'rules' => $m->urlRules];

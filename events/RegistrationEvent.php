@@ -9,7 +9,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-namespace commyii\user\events;
+namespace comyii\user\events;
 
 use yii\base\Model;
 use yii\base\Event;
