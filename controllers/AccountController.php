@@ -25,6 +25,7 @@ use comyii\user\models\User;
 use comyii\user\models\SocialProfile;
 use comyii\user\events\RegistrationEvent;
 use comyii\user\events\LoginEvent;
+use comyii\user\events\LogoutEvent;
 
 
 /**
@@ -331,7 +332,17 @@ class AccountController extends BaseController
     {
         $url = $this->getConfig('loginSettings', 'logoutRedirectUrl');
         Yii::$app->user->logout();
-        return ($url == null) ? $this->goHome() : $this->redirect($url);
+        
+        $event = new LogoutEvent;
+        $event->redirect = $url;
+        $this->_module->trigger(Module::EVENT_LOGOUT, $event);
+        if($event->message) {
+            Yii::$app->session->setFlash(
+                $event->flashType,
+                $event->message
+            );
+        }
+        return ($event->redirect == null) ? $this->goHome() : $this->redirect($event->redirect);
     }
 
     /**
