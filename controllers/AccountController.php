@@ -30,6 +30,7 @@ use comyii\user\events\RecoveryEvent;
 use comyii\user\events\ResetEvent;
 use comyii\user\events\ActivateEvent;
 use comyii\user\events\AuthEvent;
+use comyii\user\events\NewemailEvent;
 
 
 
@@ -752,23 +753,49 @@ class AccountController extends BaseController
             throw new NotFoundHttpException(Yii::t('user', 'The email change confirmation link is invalid or expired'));
         }
         $model->scenario = Module::SCN_NEWEMAIL;
+        $event = new NewemailEvent;
+        $event->model = $model;
+        $this->_module->trigger(Module::EVENT_NEWMAIL_BEGIN, $event);
+        $session = Yii::$app->session;
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $model->email = $model->email_new;
-            $model->email_new = null;
-            $model->email_change_key = null;
-            $session = Yii::$app->session;
-            if ($model->save()) {
-                $session->setFlash('success', Yii::t('user', 'The email address was changed successfully.'));
-                $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
-                return $this->redirect([$action]);
-            } else {
-                $session->setFlash(
-                    'error',
-                    Yii::t('user', 'Could not confirm the new email address. Please try again later or contact us.')
-                );
+            if ($event->transaction) {
+                $transaction = Yii::$app->db->beginTransaction();
             }
+            try {
+                $model->email = $model->email_new;
+                $model->email_new = null;
+                $model->email_change_key = null;
+                if ($model->save()) {
+                    $event->result = true;
+                    $event->flashType = 'success';
+                    $event->message = Yii::t('user', 'The email address was changed successfully.');
+                    $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
+                    $this->_module->trigger(Module::EVENT_NEWMAIL_COMPLETE, $event);
+                    $event->redirect = $event->redirect ? $event->redirect : [$action];
+                } else {
+                    $event->result = false;
+                    $event->flashType = 'error';
+                    $event->message = Yii::t('user', 'Could not confirm the new email address. Please try again later or contact us.');
+                    throw new Exception;
+                }
+            } catch (Exception $ex) {
+                if ($event->transaction) {
+                    $transaction->rollBack();
+                }
+                $this->exception($ex, $event);
+            }
+            $this->_module->trigger(Module::EVENT_NEWMAIL_COMPLETE, $event);
         }
-        return $this->display(Module::VIEW_NEWEMAIL, [
+        if ($event->message) {
+            $session->setFlash(
+                $event->flashType,
+                $event->message
+            );
+        }
+        if ($event->redirect) {
+            return $this->redirect($event->redirect);
+        }
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_NEWEMAIL, [
             'model' => $model,
         ]);
     }
