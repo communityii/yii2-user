@@ -29,6 +29,7 @@ use comyii\user\events\LogoutEvent;
 use comyii\user\events\RecoveryEvent;
 use comyii\user\events\ResetEvent;
 use comyii\user\events\ActivateEvent;
+use comyii\user\events\AuthEvent;
 
 
 
@@ -103,103 +104,141 @@ class AccountController extends BaseController
          * @var User          $userClass
          * @var SocialProfile $auth
          * @var User          $user
+         * @var AuthEvent     $event
          */
         $attributes = $client->getUserAttributes();
         $clientId = $client->getId();
         $clientTitle = $client->getTitle();
         $session = Yii::$app->session;
-        $userClass = $this->fetchModel(Module::MODEL_USER);
         $socialClass = $this->fetchModel(Module::MODEL_SOCIAL_PROFILE);
+        $userClass = $this->fetchModel(Module::MODEL_USER);
+        $event = new AuthEvent;
+        $event->client = $client;
+        $event->userClass = $userClass;
+        $event->socialClass = $socialClass;
         $auth = $socialClass::find()->where([
             'source' => $clientId,
             'source_id' => $attributes['id'],
         ])->one();
-
-        if (Yii::$app->user->isGuest) {
-            if ($auth) { // login
-                $user = $auth->user;
-                Yii::$app->user->login($user);
-                $session->setFlash('success', Yii::t(
-                    'user',
-                    'Logged in successfully with your <b>{client}</b> account.',
-                    ['client' => $clientTitle]
-                ));
-            } else { // signup
-                if (isset($attributes['email']) && isset($attributes['username']) &&
-                    $userClass::find()->where(['email' => $attributes['email']])->exists()
-                ) {
-                    $session->setFlash('error', Yii::t(
+        $event->auth = $auth;
+        $this->_module->trigger(Module::EVENT_AUTH_BEGIN, $event);
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if (Yii::$app->user->isGuest) {
+                if ($auth) { // login
+                    $user = $auth->user;
+                    Yii::$app->user->login($user);
+                    $event->flashType = 'success';
+                    $event->message = Yii::t(
                         'user',
-                        'User with the same email as in <b>{client}</b> account already exists but is not linked to it. Login using email first to link it.',
+                        'Logged in successfully with your <b>{client}</b> account.',
                         ['client' => $clientTitle]
-                    ));
-                } else {
-                    $password = Yii::$app->security->generateRandomString(6);
-                    $user = new $userClass([
-                        'username' => $attributes['login'],
-                        'email' => $attributes['email'],
-                        'password' => $password,
-                    ]);
-                    $user->generateAuthKey();
-                    $success = false;
-                    $transaction = $user->getDb()->beginTransaction();
-                    if ($user->save()) {
-                        $auth = new $socialClass([
-                            'user_id' => $user->id,
-                            'source' => $clientId,
-                            'source_id' => (string)$attributes['id'],
+                    );
+                    $event->result = AuthEvent::RESULT_LOGGED_IN;
+                } else { // signup
+                    if (isset($attributes['email']) && isset($attributes['username']) &&
+                        $userClass::find()->where(['email' => $attributes['email']])->exists()
+                    ) {
+                        $event->flashType = 'error';
+                        $event->message = Yii::t(
+                            'user',
+                            'User with the same email as in <b>{client}</b> account already exists but is not linked to it. Login using email first to link it.',
+                            ['client' => $clientTitle]
+                        );
+                        $event->result = AuthEvent::RESULT_DUPLICATE_EMAIL;
+                    } else {
+                        $password = Yii::$app->security->generateRandomString(6);
+                        $user = new $userClass([
+                            'username' => $attributes['login'],
+                            'email' => $attributes['email'],
+                            'password' => $password,
                         ]);
-                        if ($auth->save()) {
-                            $transaction->commit();
-                            $success = true;
-                            Yii::$app->user->login($user);
+                        $user->generateAuthKey();
+                        $success = false;
+                        if ($user->save()) {
+                            $auth = new $socialClass([
+                                'user_id' => $user->id,
+                                'source' => $clientId,
+                                'source_id' => (string)$attributes['id'],
+                            ]);
+                            if ($auth->save()) {
+                                $transaction->commit();
+                                $success = true;
+                                Yii::$app->user->login($user);
+                            }
+                        }
+                        if (!$success) {
+                            $event->result = AuthEvent::RESULT_SIGNUP_ERROR;
+                            $event->flashType = 'error';
+                            $event->message = Yii::t(
+                                'user',
+                                'Error while authenticating <b>{client}</b> account.<pre>{errors}</pre>',
+                                ['client' => $clientTitle, 'errors' => print_r($user->getErrors(), true)]
+                            );
+                            throw new Exception;
+                        } else {
+                            $event->result = AuthEvent::RESULT_SIGNUP_SUCCESS;
+                            $event->flashType = 'success';
+                            $event->message = Yii::t(
+                                'user',
+                                'Logged in successfully with your <b>{client}</b> account.',
+                                ['client' => $clientTitle]
+                            );
                         }
                     }
-                    if (!$success) {
-                        $transaction->rollBack();
-                        $session->setFlash('error', Yii::t(
+                }
+            } else { // user already logged in
+                if (!$auth) { // add auth provider
+                    $user = Yii::$app->user;
+                    $id = $user->id;
+                    $auth = new $socialClass([
+                        'user_id' => $id,
+                        'source' => $clientId,
+                        'source_id' => $attributes['id'],
+                    ]);
+                    $event->auth = $auth;
+                    if ($auth->save()) {
+                        $transaction->commit();
+                        $event->result = AuthEvent::RESULT_LOGGED_IN;
+                        $event->flashType = 'success';
+                        $event->message = Yii::t(
                             'user',
-                            'Error while authenticating <b>{client}</b> account.<pre>{errors}</pre>',
-                            ['client' => $clientTitle, 'errors' => print_r($user->getErrors(), true)]
-                        ));
+                            'Successfully authenticated <b>{client}</b> account for <b>{user}</b>.',
+                            ['client' => $clientTitle, 'user' => $user->username]
+                        );
                     } else {
-                        $session->setFlash('success', Yii::t(
+                        $event->result = AuthEvent::RESULT_AUTH_ERROR;
+                        $event->flashType = 'error';
+                        $event->message = Yii::t(
                             'user',
-                            'Logged in successfully with your <b>{client}</b> account.',
-                            ['client' => $clientTitle]
-                        ));
+                            'Error while authenticating <b>{client}</b> account for <b>{user}</b>.<pre>{errors}</pre>',
+                            ['client' => $clientTitle, 'errors' => print_r($auth->getErrors(), true)]
+                        );
+                        throw new Exception;
                     }
-                }
-            }
-        } else { // user already logged in
-            if (!$auth) { // add auth provider
-                $user = Yii::$app->user;
-                $id = $user->id;
-                $auth = new $socialClass([
-                    'user_id' => $id,
-                    'source' => $clientId,
-                    'source_id' => $attributes['id'],
-                ]);
-                if ($auth->save()) {
-                    $session->setFlash('success', Yii::t(
-                        'user',
-                        'Successfully authenticated <b>{client}</b> account for <b>{user}</b>.',
-                        ['client' => $clientTitle, 'user' => $user->username]
-                    ));
                 } else {
-                    $session->setFlash('error', Yii::t(
+                    $event->result = AuthEvent::RESULT_LOGGED_IN;
+                    $event->flashType = 'success';
+                    $event->message = Yii::t(
                         'user',
-                        'Error while authenticating <b>{client}</b> account for <b>{user}</b>.<pre>{errors}</pre>',
-                        ['client' => $clientTitle, 'errors' => print_r($auth->getErrors(), true)]
-                    ));
+                        'You have already connected your <b>{client}</b> account previously. Logged in successfully.',
+                        ['client' => $clientTitle]
+                    );
                 }
-            } else {
-                 $session->setFlash('success', Yii::t(
-                    'user',
-                    'You have already connected your <b>{client}</b> account previously. Logged in successfully.',
-                    ['client' => $clientTitle]
-                ));
             }
+        } catch (Exception $ex) {
+            $transaction->rollBack();
+            $this->exception($ex, $event);
+        } 
+        $this->_module->trigger(Module::EVENT_AUTH_COMPLETE, $event);
+        if ($event->message) {
+            $session->setFlash(
+                $event->flashType,
+                $event->message
+            );
+        }
+        if ($event->redirect) {
+            return $this->redirect($event->redirect);
         }
     }
 
@@ -234,14 +273,14 @@ class AccountController extends BaseController
         $event->unlockExpiry = !empty($post) && !empty($post['unlock-account']);
         $model->scenario = $event->unlockExpiry ? Module::SCN_EXPIRY : Module::SCN_LOGIN;
         $event->model = $model;
-        $event->redirect = $this->getConfig('loginSettings', 'loginRedirectUrl');
+        $event->redirect = [$this->getConfig('loginSettings', 'loginRedirectUrl')];
         $event->authAction = $authAction;
         $event->hasSocial = $hasSocialAuth;
         $m->trigger(Module::EVENT_LOGIN_BEGIN, $event);
+        if ($event->transaction) {
+            $transaction = Yii::$app->db->beginTransaction();
+        }
         try {
-            if ($event->transaction) {
-                $transaction = Yii::$app->db->beginTransaction();
-            }
             if ($model->load($post) && $model->validate() && !$event->error) {
                 $event->handled = false;
                 $session = $app->session;
@@ -250,7 +289,14 @@ class AccountController extends BaseController
                 if ($event->unlockExpiry) {
                     $user->setPassword($model->password_new);
                     $user->status_sec = null;
-                    $user->save(false);
+                    if(!$user->save(false)) {
+                        $event->flashType = 'error';
+                        $event->message = Yii::t('user', 'Error while authenticating account for <b>{user}</b>.<pre>{errors}</pre>.',[
+                            'user' => $user->getUsername(),
+                            'errors' => print_r($user->getErrors(), true),
+                        ]);
+                        throw new Exception;
+                    }
                     $event->flashType = 'success';
                     $event->message = Yii::t('user', 'Your password has been changed successfully and you have been logged in.');
                     $model->login($user);
@@ -266,7 +312,7 @@ class AccountController extends BaseController
                         $event->message
                     );
                     if ($event->redirect) {
-                        return $this->redirect([$event->redirect]);
+                        return $this->redirect($event->redirect);
                     } else {
                         return $this->safeRedirect();
                     }
@@ -296,7 +342,7 @@ class AccountController extends BaseController
                     $event->result = LoginEvent::RESULT_SUCCESS;
                     $m->trigger(Module::EVENT_LOGIN_COMPLETE, $event);
                     if ($event->redirect) {
-                        return $this->redirect([$event->redirect]);
+                        return $this->redirect($event->redirect);
                     } else {
                         return $this->safeRedirect();
                     }
@@ -312,10 +358,11 @@ class AccountController extends BaseController
                 $event->result = LoginEvent::RESULT_FAIL;
                 $m->trigger(Module::EVENT_LOGIN_COMPLETE, $event);
             }
-        } catch (Exception $e) {
-            if($event->transaction) {
+        } catch (Exception $ex) {
+            if(isset($transaction)) {
                 $transaction->rollBack();
             }
+            $this->exception($ex, $event);
         }
         return $this->display($event->viewFile? $event->viewFile : Module::VIEW_LOGIN, [
             'model' => $model,
@@ -335,11 +382,16 @@ class AccountController extends BaseController
     public function actionLogout()
     {
         $url = $this->getConfig('loginSettings', 'logoutRedirectUrl');
-        Yii::$app->user->logout();
-        
         $event = new LogoutEvent;
         $event->redirect = $url;
         $this->_module->trigger(Module::EVENT_LOGOUT, $event);
+        try{
+            if (!Yii::$app->user->logout()) {
+                throw new Exception;
+            }
+        } catch (Exception $ex) {
+            $this->exception($ex, $event);
+        }
         if($event->message) {
             Yii::$app->session->setFlash(
                 $event->flashType,
@@ -387,8 +439,9 @@ class AccountController extends BaseController
                     $transaction->commit();
                     $valid=true;
                 }
-            } catch (Exception $e) {
+            } catch (Exception $ex) {
                 $transaction->rollBack();
+                $this->exception($ex, $event);
             }
             if ($valid) {
                 $event->flashType = 'success';
@@ -408,6 +461,7 @@ class AccountController extends BaseController
                         $event->flashType = 'warning';
                         $event->message = Yii::t('user','Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
                             ['email' => $model->email]);
+                        $this->exception(new Exception, $event);
                     }
                 }
                 $event->handled = false; // reuse event object
@@ -486,10 +540,11 @@ class AccountController extends BaseController
                     throw new Exception();
                 }
                 
-            } catch (Exception $e) {
+            } catch (Exception $ex) {
                 if ($event->transaction) {
                     $transaction->rollBack();
                 }
+                $this->exception($ex, $event);
             }
         }
         if ($event->message) {
@@ -540,10 +595,11 @@ class AccountController extends BaseController
                 }
                 $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
                 return $this->redirect($event->redirect ? $event->redirect : [$action]);
-            } catch (Exception $e) {
+            } catch (Exception $ex) {
                 if ($event->transaction) {
                     $transaction->rollBack();
                 }
+                $this->exception($ex, $event);
             }
         }
         return $this->display($event->viewFile? $event->viewFile : Module::VIEW_PASSWORD, [
@@ -593,10 +649,11 @@ class AccountController extends BaseController
                 $this->_module->trigger(Module::EVENT_ACTIVATE_COMPLETE, $event);
                 throw new Exception();
             }
-        } catch (Exception $e) {
+        } catch (Exception $ex) {
             if ($event->transaction) {
                 $transaction->rollBack();
             }
+            $this->exception($ex, $event);
         }
         if ($event->message) {
             $session->setFlash(
@@ -658,10 +715,11 @@ class AccountController extends BaseController
                     $event->message = Yii::t('user', 'Could not reset the password. Please try again later or contact us.');
                     $this->_module->trigger(Module::EVENT_RESET_COMPLETE, $event);
                 }
-            } catch (Exception $e) {
+            } catch (Exception $ex) {
                 if ($event->transaction) {
                     $transaction->rollBack();
                 }
+                $this->exception($ex, $event);
             }
         }
         if ($event->message) {
