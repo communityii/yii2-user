@@ -10,8 +10,11 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use comyii\user\Module;
 
-/* @var $this yii\web\View */
-/* @var $user common\models\User */
+/**
+ * @var yii\web\View            $this
+ * @var comyii\user\models\User $user
+ * @var comyii\user\Module      $m
+ */
 $m = Yii::$app->getModule('user');
 $action = $m->actionSettings[Module::ACTION_ACTIVATE];
 $activateLink = Url::to([$action, 'key' => $user->auth_key], true);

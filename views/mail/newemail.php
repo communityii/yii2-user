@@ -10,8 +10,12 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use comyii\user\Module;
 
-/* @var $this yii\web\View */
-/* @var $user common\models\User */
+/**
+ * @var yii\web\View            $this
+ * @var comyii\user\models\User $user
+ * @var comyii\user\Module      $m
+ */
+
 $m = Yii::$app->getModule('user');
 $action = $m->actionSettings[Module::ACTION_NEWEMAIL];
 $changeLink = Url::to([$action, 'key' => $user->email_change_key], true);
@@ -24,7 +28,7 @@ $changeLink = Url::to([$action, 'key' => $user->email_change_key], true);
 <blockquote><?= Html::a(Html::encode($changeLink), $changeLink) ?></blockquote>
 
 <?php if (!empty($timeLeft)): ?>
-<p><em><b>Note</b>: <?= $timeLeft ?></em></p>
+    <p><em><b>Note</b>: <?= $timeLeft ?></em></p>
 <?php endif;?>
 
 <p>Regards,

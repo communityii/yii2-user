@@ -8,23 +8,25 @@
 
 
 use comyii\user\widgets\UserMenu;
+use comyii\user\widgets\ProfileView;
 
 /**
- * @var yii\web\View $this
+ * @var yii\web\View            $this
  * @var comyii\user\models\User $model
+ * @var comyii\user\models\UserProfile $profile
+ * @var comyii\user\models\SocialProfile $social
  */
 
-$m = $this->context->module;
-$this->title =  Yii::t('user', 'Profile') . ' (' . $model->username . ')';
+$this->title = Yii::t('user', 'Profile') . ' (' . $model->username . ')';
 $this->params['breadcrumbs'][] = $model->username;
 ?>
-<div class="page-header">
-    <div class="pull-right"><?= UserMenu::widget(['ui' => 'view', 'user' => $model->id]) ?></div>
-    <h1><?= $this->title ?></h1>
-</div>
+    <div class="page-header">
+        <div class="pull-right"><?= UserMenu::widget(['ui' => 'view', 'user' => $model->id]) ?></div>
+        <h1><?= $this->title ?></h1>
+    </div>
 <?php
-echo comyii\user\widgets\ProfileView::widget([
-    'model'=>$model,
-    'social'=>$social,
-    'profile'=>$profile,
+echo ProfileView::widget([
+    'model' => $model,
+    'social' => $social,
+    'profile' => $profile,
 ]);

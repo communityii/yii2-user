@@ -15,12 +15,12 @@ This tutorial will guide you through using the `communityii/yii2-user` module / 
 
 - [Understanding User Statuses](user-statuses.md)
 - [Understanding User Types](user-types.md)
+- [Understanding Events](events.md)
 - [Module Configuration](configuration.md)
 - [Database Structure](database.md)
 - [Social Authentication](social.md)
 - [Profile and Avatar Management](profile.md)
 - [Reusable Widgets](widgets.md)
-- [Events](events.md)
 
 ## Advanced Customization
 
@@ -31,3 +31,4 @@ This tutorial will guide you through using the `communityii/yii2-user` module / 
 - [Override Actions](override-actions.md)
 - [Override Controllers](override-controllers.md)
 - [Register Custom User Type](register-custom-user-type.md)
+- [Setup RBAC](setup-rbac.md)

@@ -1,71 +1,64 @@
 <?php
 
+/**
+ * @copyright Copyright &copy; Kartik Visweswaran, communityii, 2014 - 2015
+ * @package communityii/yii2-user
+ * @version 1.0.0
+ *
+ * @author derekisbusy https://github.com/derekisbusy
+ * @author kartik-v https://github.com/kartik-v
+ */
 
-namespace commyii\user\events;
+namespace comyii\user\events;
 
-class LoginEvent extends \yii\base\Event
+class LoginEvent extends Event
 {
     const RESULT_SUCCESS = 1;
     const RESULT_FAIL = 2;
     const RESULT_LOCKED = 3;
     const RESULT_ALREADY_AUTH = 4;
-    
+    const RESULT_EXPIRED = 5;
+
     /**
-     * @var string|array the URL to be redirected to.
+     * @var boolean has social authentication
      */
-    public $redirect;
+    public $hasSocialAuth = false;
+
     /**
-     * @var string|null the main view file to be rendered. If null then the default view file is used.
-     */
-    public $viewFile;
-    /**
-     * @var boolean has social authentication 
-     */
-    public $hasSocial = false;
-    /**
-     * @var string is social authentication.
+     * @var string|array the social authentication action. If not set, defaults to `Module::ACTION_SOCIAL_AUTH` set
+     * within `Module::actionSettings`.
+     * 
      */
     public $authAction;
+
     /**
-     * @var boolean whether the password has been reset. 
+     * @var boolean is an account unlock attempt after expiry.
+     */
+    public $unlockExpiry = false;
+
+    /**
+     * @var boolean whether the password has been reset.
      */
     public $newPassword = false;
+
     /**
-     * @var boolean is account unlock attempt.
-     */
-    public $unlockExpiry;
-    /**
-     * @var \commyii\user\models\User the user model 
-     */
-    public $user;
-    /**
-     * @var string the account status.
+     * @var string the account status. Should be one of the `Module::STATUS` constants.
      * @see \commyii\user\Module
      */
     public $status;
+
     /**
-     * @var integer result of the login attempt.
-     */
-    public $result;
-    /**
-     * @var string the flash message 
-     */
-    public $message;
-    /**
-     * @var string the flash message type
-     */
-    public $flashType;
-    /**
-     * @var boolean whether or not to use transactions. 
-     */
-    public $transaction;
-    /**
-     * @var string login page title
+     * @var string the login section title
      */
     public $loginTitle;
+
     /**
-     * @var string social auth login title
+     * @var string the social auth login section title
      */
     public $authTitle;
-    
+
+    /**
+     * @var integer result of the login attempt. Should be one of the `LoginEvent::RESULT` constants.
+     */
+    public $result;
 }

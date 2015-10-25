@@ -1,32 +1,19 @@
 <?php
 
+/**
+ * @copyright Copyright &copy; Kartik Visweswaran, communityii, 2014 - 2015
+ * @package communityii/yii2-user
+ * @version 1.0.0
+ *
+ * @author derekisbusy https://github.com/derekisbusy
+ * @author kartik-v https://github.com/kartik-v
+ */
+namespace comyii\user\events;
 
-namespace commyii\user\events;
-
-class ActivateEvent extends \yii\base\Event
-{   
-    /**
-     * @var Model the user model
-     */
-    public $model;
-    /**
-     * @var string|array the URL to be redirected to. Defaults to $controller->goHome().
-     */
-    public $redirect;
-    /**
-     * @var string the flash message 
-     */
-    public $message;
-    /**
-     * @var string the flash message type
-     */
-    public $flashType;
+class ActivateEvent extends Event
+{
     /**
      * @var boolean the result of the activation attempt
      */
     public $result;
-    /**
-     * @var boolean whether or not to use transactions.
-     */
-    public $transaction = false;
 }

@@ -12,8 +12,6 @@ use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\models\UserProfile;
 use comyii\user\models\SocialProfile;
-use comyii\user\models\UserProfileSearch;
-use comyii\user\controllers\BaseController;
 use yii\base\Model;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
@@ -67,8 +65,11 @@ class ProfileController extends BaseController
     public function actionIndex()
     {
         $data = $this->findModel();
-        if(Yii::$app->request->post()) {
-            $this->update($data);
+        if (Yii::$app->request->post()) {
+            $out = $this->update($data);
+            if ($out !== null) {
+                return $out;
+            }
         }
         return $this->display(Module::VIEW_PROFILE_INDEX, $data);
     }
@@ -83,8 +84,11 @@ class ProfileController extends BaseController
     public function actionView($id)
     {
         $data = $this->findModel($id);
-        if(Yii::$app->request->post()) {
-            $this->update($data);
+        if (Yii::$app->request->post()) {
+            $out = $this->update($data);
+            if ($out !== null) {
+                return $out;
+            }
         }
         return $this->display(Module::VIEW_PROFILE_VIEW, $data);
     }
@@ -103,8 +107,11 @@ class ProfileController extends BaseController
          * @var SocialProfile $social
          */
         $data = $this->findModel();
-        if(Yii::$app->request->post()) {
-            $this->update($data);
+        if (Yii::$app->request->post()) {
+            $out = $this->update($data);
+            if ($out !== null) {
+                return $out;
+            }
         }
         return $this->display(Module::VIEW_PROFILE_UPDATE, $data);
     }
@@ -164,7 +171,6 @@ class ProfileController extends BaseController
          * @var UserProfile   $profileClass
          * @var SocialProfile $socialClass
          */
-        $profile = $social = null;
         if ($id === null) {
             $user = Yii::$app->user;
             $model = $user->identity;
@@ -178,12 +184,12 @@ class ProfileController extends BaseController
         }
         $profileClass = $this->fetchModel(Module::MODEL_PROFILE);
         $socialClass = $this->fetchModel(Module::MODEL_SOCIAL_PROFILE);
+        $social = null;
         $profile = $profileClass::findOne($id);
         if ($profile === null) {
             $profile = new $profileClass();
             $profile->id = $id;
         }
-        $social = null;
         if ($this->getConfig('socialSettings', 'enabled', false)) {
             $social = $socialClass::find()->where(['user_id' => $id])->all();
             if (!$social) {
@@ -192,9 +198,21 @@ class ProfileController extends BaseController
         }
         return ['model' => $model, 'profile' => $profile, 'social' => $social];
     }
-    
-    public function update($data)
+
+    /**
+     * Updates an user profile
+     *
+     * @param array $data the profile data attributes
+     *
+     * @return \yii\web\Response
+     */
+    protected function update($data)
     {
+        /**
+         * @var User $model
+         * @var UserProfile $profile
+         * @var SocialProfile $social
+         */
         $model = $profile = $social = null;
         extract($data);
         $model->scenario = Module::SCN_PROFILE;
@@ -207,7 +225,7 @@ class ProfileController extends BaseController
             $validate = $model->load($post) && $model->validate();
         }
         if ($validate) {
-            $timeLeft = Module::timeLeft('email change confirmation', $model->emailChangeKeyExpiry);
+            $timeLeft = Module::timeLeft('email change confirmation', $model->getEmailChangeKeyExpiry());
             $emailSent = $emailNew = null;
             if ($model->validateEmailChange($emailOld)) {
                 $emailNew = $model->email_new;
@@ -235,5 +253,6 @@ class ProfileController extends BaseController
                 ));
             }
         }
+        return null;
     }
 }

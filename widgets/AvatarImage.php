@@ -3,25 +3,36 @@
 namespace comyii\user\widgets;
 
 use Yii;
-use yii\bootstrap\Widget;
 use yii\helpers\Html;
+use comyii\user\models\UserProfile;
 
 class AvatarImage extends Widget
 {
+    /**
+     * @var UserProfile the user profile model
+     */
     public $profile;
-    public $imageOptions = [];
-    
-    public function init() {
-        parent::init();
-        if(!Yii::$app->getModule('user')->profileSettings['enabled']) return;
-    }
-    
-    public function run() {
-        if(!Yii::$app->getModule('user')->profileSettings['enabled']) return;
-        echo Html::img($this->profile->avatarUrl, [
-            'alt' => Yii::t('user', 'Avatar'), 
-            'style' => 'width:160px;margin-bottom:20px',
-            'class' => 'img-thumbnail'
-        ]);
+
+    /**
+     * @var array the HTML attributes for the image
+     */
+    public $imageOptions = [
+        'style' => 'width:160px;margin-bottom:20px',
+        'class' => 'img-thumbnail'
+    ];
+
+    /**
+     * @inheritdoc
+     */
+    public function run()
+    {
+        if (!$this->_module->profileSettings['enabled'] || !$this->profile) {
+            echo '';
+            return;
+        }
+        if (!isset($this->imageOptions['alt'])) {
+            $this->imageOptions['alt'] = Yii::t('user', 'Avatar');
+        }
+        echo Html::img($this->profile->getAvatarUrl(), $this->imageOptions);
     }
 }

@@ -17,7 +17,7 @@ use yii\authclient\widgets\AuthChoice;
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class SocialConnects extends AuthChoice
+class SocialConnectChoice extends AuthChoice
 {
     /**
      * @var array the HTML attributes for the container

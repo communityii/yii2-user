@@ -20,7 +20,7 @@ use comyii\user\assets\UserAsset;
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class Logo extends \yii\base\Widget
+class Logo extends Widget
 {
     const LOGO_IMAGE = '/img/communityii.png';
 
@@ -56,7 +56,7 @@ class Logo extends \yii\base\Widget
      */
     public function run()
     {
-        $view = $this->view;
+        $view = $this->getView();
         if (!isset($this->url)) {
             $this->url = Url::home();
         }

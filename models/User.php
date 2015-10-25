@@ -30,6 +30,7 @@ use comyii\user\Module;
  * @property string           $reset_key
  * @property string           $email_change_key
  * @property integer          $status
+ * @property integer          $status_sec
  * @property integer          $created_on
  * @property integer          $updated_on
  * @property string           $last_login_ip

@@ -1,9 +1,17 @@
 <?php
 
+/**
+ * @copyright Copyright &copy; Kartik Visweswaran, communityii, 2014 - 2015
+ * @package communityii/yii2-user
+ * @version 1.0.0
+ *
+ * @author derekisbusy https://github.com/derekisbusy
+ * @author kartik-v https://github.com/kartik-v
+ */
 
-namespace commyii\user\events;
+namespace comyii\user\events;
 
-class AuthEvent extends \yii\base\Event
+class AuthEvent extends Event
 {
     const RESULT_LOGGED_IN = 1;
     const RESULT_DUPLICATE_EMAIL = 2;
@@ -15,32 +23,19 @@ class AuthEvent extends \yii\base\Event
      * @var \yii\authclient\BaseClient the client
      */
     public $client;
-    /**
-     * @var \yii\db\ActiveRecord the current social auth
-     */
-    public $auth;
+
     /**
      * @var string the user class
      */
     public $userClass;
+
     /**
      * @var string the social class
      */
     public $socialClass;
+    
     /**
-     * @var string|array the URL to be redirected to. Defaults to $controller->goHome().
-     */
-    public $redirect;
-    /**
-     * @var string the flash message 
-     */
-    public $message;
-    /**
-     * @var string the flash message type
-     */
-    public $flashType;
-    /**
-     * @var boolean the result of the activation attempt
+     * @var boolean the result of the authorization attempt. Should be one of the `AuthEvent::RESULT` constants.
      */
     public $result;
 }

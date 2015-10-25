@@ -9,15 +9,16 @@
 
 namespace comyii\user\assets;
 
+use kartik\base\AssetBundle;
+
 /**
  * Asset bundle for user module
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class UserAsset extends \kartik\base\AssetBundle
+class UserAsset extends AssetBundle
 {
-
     /**
      * @inheritdoc
      */
@@ -27,5 +28,4 @@ class UserAsset extends \kartik\base\AssetBundle
         $this->setupAssets('css', ['css/user']);
         parent::init();
     }
-
 }
