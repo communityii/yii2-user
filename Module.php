@@ -134,6 +134,8 @@ class Module extends \kartik\base\Module
     const EVENT_LOGOUT = 'logout';
     const EVENT_PASSWORD_BEGIN = 'passwordBegin';
     const EVENT_PASSWORD_COMPLETE = 'passwordComplete';
+    const EVENT_RECOVERY_BEGIN = 'recoveryBegin';
+    const EVENT_RECOVERY_COMPLETE = 'recoveryComplete';
     
     // default layout
     const LAYOUT = 'install';

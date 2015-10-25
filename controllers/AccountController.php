@@ -26,6 +26,7 @@ use comyii\user\models\SocialProfile;
 use comyii\user\events\RegistrationEvent;
 use comyii\user\events\LoginEvent;
 use comyii\user\events\LogoutEvent;
+use comyii\user\events\RecoveryEvent;
 
 
 /**
@@ -436,31 +437,64 @@ class AccountController extends BaseController
         $class = $this->fetchModel(Module::MODEL_RECOVERY);
         $model = new $class();
         $session = Yii::$app->session;
+        $event = new RecoveryEvent;
+        $this->_module->trigger(Module::EVENT_RECOVERY_BEGIN, $event);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $class = $this->fetchModel(Module::MODEL_USER);
-            $user = $class::findByEmail($model->email);
-            $proceed = true;
-            if (!$class::isKeyValid($user->reset_key, $user->resetKeyExpiry)) {
-                $user->scenario = Module::SCN_RECOVERY;
-                $user->generateResetKey();
-                $proceed = $user->save();
+            if ($event->transaction) {
+                $transaction = Yii::$app->db->beginTransaction();
             }
-            $timeLeft = Module::timeLeft('reset', $user->resetKeyExpiry);
-            if ($proceed && $user->sendEmail('recovery', $timeLeft)) {
-                $session->setFlash('success', Yii::t(
-                    'user',
-                    'Check your email for further instructions to reset your password. {timeLeft}',
-                    ['timeLeft' => $timeLeft]
-                ));
-                return $this->goHome();
-            } else {
-                $session->setFlash('error', Yii::t(
-                    'user',
-                    'Sorry, the password cannot be reset for the email provided. Retry again later.'
-                ));
+            try {
+                $class = $this->fetchModel(Module::MODEL_USER);
+                $user = $class::findByEmail($model->email);
+                $proceed = true;
+                if (!$class::isKeyValid($user->reset_key, $user->resetKeyExpiry)) {
+                    $user->scenario = Module::SCN_RECOVERY;
+                    $user->generateResetKey();
+                    $proceed = $user->save();
+                }
+                $timeLeft = Module::timeLeft('reset', $user->resetKeyExpiry);
+                if ($proceed && $user->sendEmail('recovery', $timeLeft)) {
+                    $event->flashType = 'success';
+                    $event->message = Yii::t(
+                        'user',
+                        'Check your email for further instructions to reset your password. {timeLeft}',
+                        ['timeLeft' => $timeLeft]
+                    );
+                    $event->handled = false;
+                    $this->_module->trigger(Module::EVENT_RECOVERY_COMPLETE, $event);
+                    if ($event->message) {
+                        $session->setFlash(
+                            $event->flashType,
+                            $event->message
+                        );
+                    }
+                    if ($event->transaction) {
+                        $transaction->commit();
+                    }
+                    return $event->redirect ? $this->redirect($event->redirect) : $this->goHome();
+                } else {
+                    $event->flashType = 'error';
+                    $event->message = Yii::t(
+                        'user',
+                        'Sorry, the password cannot be reset for the email provided. Retry again later.'
+                    );
+                    $this->_module->trigger(Module::EVENT_RECOVERY_COMPLETE, $event);
+                    throw new Exception();
+                }
+                
+            } catch (Exception $e) {
+                if ($event->transaction) {
+                    $transaction->rollBack();
+                }
             }
         }
-        return $this->display(Module::VIEW_RECOVERY, [
+        if ($event->message) {
+            $session->setFlash(
+                $event->flashType,
+                $event->message
+            );
+        }
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_RECOVERY, [
             'model' => $model,
         ]);
     }
@@ -490,6 +524,9 @@ class AccountController extends BaseController
                 $event->message = Yii::t('user', 'The password was changed successfully.');
                 $event->handled = false;
                 $this->_module->trigger(Module::EVENT_PASSWORD_COMPLETE, $event);
+                if ($event->transaction) {
+                    $transaction->commit();
+                }
                 if ($event->message) {
                     Yii::$app->session->setFlash(
                         $event->flashType,
