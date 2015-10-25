@@ -16,6 +16,7 @@ use yii\helpers\Url;
 use comyii\user\Module;
 use comyii\user\models\User;
 use yii\web\ForbiddenHttpException;
+use comyii\user\events\ExceptionEvent;
 
 /**
  * Base controller for all controllers in the user module
@@ -192,5 +193,20 @@ class BaseController extends \yii\web\Controller
     protected function fetchModel($model)
     {
         return $this->getConfig('modelSettings', $model);
+    }
+    
+    /**
+     * Triggers new Module::EVENT_EXCEPTION
+     * 
+     * @param Exception $ex
+     * @param Event $event the event that threw an exception
+     */
+    protected function exception($ex,$event)
+    {
+        $e = new ExceptionEvent;
+        $e->ex = $ex;
+        $e->event = $event;
+        $e->contoller = $this;
+        $this->_module->trigger(Module::EVENT_EXCEPTION, $e);
     }
 }
