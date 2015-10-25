@@ -477,14 +477,33 @@ class AccountController extends BaseController
          */
         $model = Yii::$app->user->identity;
         $model->scenario = Module::SCN_CHANGEPASS;
+        $event = new LogoutEvent;
+        $this->_module->trigger(Module::EVENT_PASSWORD_BEGIN, $event);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $model->setPassword($model->password_new);
-            $model->save(false);
-            Yii::$app->session->setFlash('success', Yii::t('user', 'The password was changed successfully.'));
-            $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
-            return $this->redirect([$action]);
+            if ($event->transaction) {
+                $transaction = Yii::$app->db->beginTransaction();
+            }
+            try {
+                $model->setPassword($model->password_new);
+                $model->save(false);
+                $event->flashType = 'success';
+                $event->message = Yii::t('user', 'The password was changed successfully.');
+                $this->_module->trigger(Module::EVENT_PASSWORD_COMPLETE, $event);
+                if ($event->message) {
+                    Yii::$app->session->setFlash(
+                        $event->flashType,
+                        $event->message
+                    );
+                }
+                $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
+                return $this->redirect($event->redirect ? $event->redirect : [$action]);
+            } catch (Exception $e) {
+                if ($event->transaction) {
+                    $transaction->rollBack();
+                }
+            }
         }
-        return $this->display(Module::VIEW_PASSWORD, [
+        return $this->display($event->viewFile? $event->viewFile : Module::VIEW_PASSWORD, [
             'model' => $model,
         ]);
     }
