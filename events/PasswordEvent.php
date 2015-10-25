@@ -6,6 +6,10 @@ namespace commyii\user\events;
 class PasswordEvent extends \yii\base\Event
 {   
     /**
+     * @var Model the user model
+     */
+    public $model;
+    /**
      * @var string|array the URL to be redirected to.
      */
     public $redirect;
