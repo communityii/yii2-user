@@ -474,6 +474,17 @@ class Module extends \kartik\base\Module
         self::ACTION_ADMIN_UPDATE => 'admin/update',
         self::ACTION_ADMIN_CREATE => 'admin/create',
     ];
+    
+    /**
+     * @var array default behaviors for the controllers. Behaviors defined here will be applied to all the controllers
+     * except install and default.
+     */
+    public $defaultControllerBehaviors = [];
+    
+    /**
+     * @var array behaviors for the controllers with the key set to the controller id and value as an array of behaviors.
+     */
+    public $controllerBehaviors = [];
 
     /**
      * Initialize the module
@@ -1041,6 +1052,36 @@ HTML;
         if(!isset($this->layoutSettings[$view]))
             return null;
         return $this->layoutSettings[$view];
+    }
+    
+    public function getControllerBehaviors($id)
+    {
+        if(isset($this->controllerBehaviors[$id])) {
+            $behaviors = $this->controllerBehaviors[$id];
+            if(!is_array($behaviors)) {
+                throw new InvalidConfigException("Controller behaviors must be an array");
+            }
+            return self::mergeDefault($behaviors, $this->defaultControllerBehaviors);
+        }
+        return $this->defaultControllerBehaviors;
+    }
+    
+    /**
+     * Merge class configs.
+     * @param type $config
+     * @param type $defaults
+     * @return array the merged array
+     */
+    public static function mergeDefault($config,$defaults)
+    {
+        foreach($defaults as $key => $default) {
+            if (!isset($config[$key])) {
+                $config[$key] = $default;
+            } elseif (!isset($config[$key]['class'])) {
+                $config[$key] = array_replace_recursive($config[$key], $default);
+            }
+        }
+        return $config;
     }
     
     /**
