@@ -47,7 +47,7 @@ class AccountController extends BaseController
      */
     public function behaviors()
     {
-        return [
+        return $this->mergeBehaviors([
             'access' => [
                 'class' => AccessControl::className(),
                 'only' => ['logout', 'register', 'recovery', 'password'],
@@ -70,7 +70,7 @@ class AccountController extends BaseController
                     'logout' => ['post'],
                 ],
             ],
-        ];
+        ]);
     }
 
     /**

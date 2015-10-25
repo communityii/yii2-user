@@ -475,6 +475,18 @@ class Module extends \kartik\base\Module
     ];
 
     /**
+     * @var array default behaviors for the controllers. Behaviors defined here will be applied to all the controllers
+     * except install and default.
+     */
+    public $defaultControllerBehaviors = [];
+
+    /**
+     * @var array behaviors for the controllers with the key set to the controller id and value as an array of
+     *     behaviors.
+     */
+    public $controllerBehaviors = [];
+
+    /**
      * Initialize the module
      */
     public function init()
@@ -1031,6 +1043,46 @@ HTML;
     }
 
     /**
+     * Merge class configurations
+     *
+     * @param array $config
+     * @param array $defaults
+     *
+     * @return array the merged array
+     */
+    public static function mergeDefault($config, $defaults)
+    {
+        foreach ($defaults as $key => $default) {
+            if (!isset($config[$key])) {
+                $config[$key] = $default;
+            } elseif (!isset($config[$key]['class'])) {
+                $config[$key] = array_replace_recursive($config[$key], $default);
+            }
+        }
+        return $config;
+    }
+
+    /**
+     * Gets the controller behaviors configuration
+     *
+     * @param string $id the controller identifier
+     *
+     * @return array
+     * @throws InvalidConfigException
+     */
+    public function getControllerBehaviors($id)
+    {
+        if (isset($this->controllerBehaviors[$id])) {
+            $behaviors = $this->controllerBehaviors[$id];
+            if (!is_array($behaviors)) {
+                throw new InvalidConfigException("Controller behaviors must be an array");
+            }
+            return self::mergeDefault($behaviors, $this->defaultControllerBehaviors);
+        }
+        return $this->defaultControllerBehaviors;
+    }
+
+    /**
      * Gets the layout file for the current view and user type.
      *
      * @param string $view
@@ -1053,7 +1105,7 @@ HTML;
      * Helper to convert expiry time left from now
      *
      * @param string $type the expiry time type
-     * @param int $seconds the time left in seconds
+     * @param int    $seconds the time left in seconds
      *
      * @return string
      */

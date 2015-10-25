@@ -25,16 +25,9 @@ class LoginEvent extends Event
     public $hasSocialAuth = false;
 
     /**
-     * @var string|array the social authentication action. If not set, defaults to `Module::ACTION_SOCIAL_AUTH` set
-     * within `Module::actionSettings`.
-     * 
+     * @var string is social authentication.
      */
     public $authAction;
-
-    /**
-     * @var boolean is an account unlock attempt after expiry.
-     */
-    public $unlockExpiry = false;
 
     /**
      * @var boolean whether the password has been reset.
@@ -42,13 +35,17 @@ class LoginEvent extends Event
     public $newPassword = false;
 
     /**
+     * @var boolean is account unlock attempt.
+     */
+    public $unlockExpiry = false;
+
+    /**
      * @var string the account status. Should be one of the `Module::STATUS` constants.
      * @see \commyii\user\Module
      */
     public $status;
-
     /**
-     * @var string the login section title
+     * @var string the login page title
      */
     public $loginTitle;
 

@@ -43,7 +43,6 @@ class BaseController extends Controller
         $this->_module = Yii::$app->getModule('user');
     }
 
-
     /**
      * @inheritdoc
      */
@@ -262,6 +261,17 @@ class BaseController extends Controller
         $this->_module->trigger(Module::EVENT_EXCEPTION, $event);
     }
 
+    /**
+     * @param array $behaviors
+     *
+     * @return array
+     * @throws InvalidConfigException
+     */
+    protected function mergeBehaviors($behaviors = [])
+    {
+        return Module::mergeDefault($this->_module->getControllerBehaviors($this->id), $behaviors);
+    }
+    
     /**
      * Initiates a DB transaction based on event's `useTransaction` property
      *

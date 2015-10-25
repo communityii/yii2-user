@@ -41,15 +41,15 @@ class Event extends \yii\base\Event
     public $error = false;
 
     /**
-     * @var string the flash message type parsed by `Yii::$app->session->setFlash`.
-     */
-    public $flashType;
-
-    /**
      * @var string|null the flash message for the controller. This is used so that event handlers can update the
      *     success messages for things like user registration.
      */
     public $message;
+
+    /**
+     * @var string the flash message type parsed by `Yii::$app->session->setFlash`.
+     */
+    public $flashType;
 
     /**
      * @var boolean whether or not to use database transactions.

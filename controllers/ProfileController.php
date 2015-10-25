@@ -32,7 +32,7 @@ class ProfileController extends BaseController
     public function behaviors()
     {
         $user = Yii::$app->user;
-        return [
+        return $this->mergeBehaviors([
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -54,7 +54,7 @@ class ProfileController extends BaseController
                     'avatar-delete' => ['POST'],
                 ],
             ],
-        ];
+        ]);
     }
 
     /**
