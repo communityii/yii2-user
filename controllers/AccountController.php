@@ -27,6 +27,8 @@ use comyii\user\events\RegistrationEvent;
 use comyii\user\events\LoginEvent;
 use comyii\user\events\LogoutEvent;
 use comyii\user\events\RecoveryEvent;
+use comyii\user\events\ResetEvent;
+
 
 
 /**
@@ -438,6 +440,7 @@ class AccountController extends BaseController
         $model = new $class();
         $session = Yii::$app->session;
         $event = new RecoveryEvent;
+        $event->model = $model;
         $this->_module->trigger(Module::EVENT_RECOVERY_BEGIN, $event);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             if ($event->transaction) {
@@ -512,6 +515,7 @@ class AccountController extends BaseController
         $model = Yii::$app->user->identity;
         $model->scenario = Module::SCN_CHANGEPASS;
         $event = new LogoutEvent;
+        $event->model = $model;
         $this->_module->trigger(Module::EVENT_PASSWORD_BEGIN, $event);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             if ($event->transaction) {
@@ -593,22 +597,52 @@ class AccountController extends BaseController
             throw new NotFoundHttpException(Yii::t('user', 'The password reset link is invalid or expired'));
         }
         $model->scenario = Module::SCN_RESET;
+        $session = Yii::$app->session;
+        $event = new ResetEvent;
+        $event->model = $model;
+        $this->_module->trigger(Module::EVENT_PASSWORD_BEGIN, $event);
+        $event->handled = false;
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $model->setPassword($model->password_new);
-            $model->unlock();
-            $model->reset_key = null;
-            $session = Yii::$app->session;
-            if ($model->save()) {
-                $session->setFlash('success', Yii::t(
-                    'user',
-                    'The password was reset successfully. You can proceed to login with your new password.'
-                ));
-                return $this->redirect([$this->fetchAction(Module::ACTION_LOGIN)]);
-            } else {
-                $session->setFlash('error', Yii::t('user', 'Could not reset the password. Please try again later or contact us.'));
+            if ($event->transaction) {
+                $transaction = Yii::$app->db->beginTransaction();
+            }
+            try {
+                $model->setPassword($model->password_new);
+                $model->unlock();
+                $model->reset_key = null;
+                if ($model->save()) {
+                    $event->result = true;
+                    $event->flashType = 'success';
+                    $event->message = Yii::t(
+                        'user',
+                        'The password was reset successfully. You can proceed to login with your new password.'
+                    );
+                    $this->_module->trigger(Module::EVENT_RESET_COMPLETE, $event);
+                    if (!$event->redirect) {
+                        $event->redirect = [$this->fetchAction(Module::ACTION_LOGIN)];
+                    }
+                } else {
+                    $event->result = false;
+                    $event->flashType = 'error';
+                    $event->message = Yii::t('user', 'Could not reset the password. Please try again later or contact us.');
+                    $this->_module->trigger(Module::EVENT_RESET_COMPLETE, $event);
+                }
+            } catch (Exception $e) {
+                if ($event->transaction) {
+                    $transaction->rollBack();
+                }
             }
         }
-        return $this->display(Module::VIEW_RESET, [
+        if ($event->message) {
+            $session->setFlash(
+                $event->flashType,
+                $event->message
+            );
+        }
+        if ($event->redirect) {
+            return $this->redirect($event->redirect ? $event->redirect : [$this->fetchAction(Module::ACTION_LOGIN)]);
+        }
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_RESET, [
             'model' => $model,
         ]);
     }

@@ -3,8 +3,8 @@
 
 namespace commyii\user\events;
 
-class PasswordEvent extends \yii\base\Event
-{
+class ResetEvent extends \yii\base\Event
+{   
     /**
      * @var Model the user model
      */
@@ -14,7 +14,7 @@ class PasswordEvent extends \yii\base\Event
      */
     public $redirect;
     /**
-     * @var string|array the view file to be rendered.
+     * @var string|null the main view file to be rendered. If null then the default view file is used.
      */
     public $viewFile;
     /**
@@ -25,4 +25,8 @@ class PasswordEvent extends \yii\base\Event
      * @var string the flash message type
      */
     public $flashType;
+    /**
+     * @var boolean the result of the reset attempt
+     */
+    public $result;
 }
