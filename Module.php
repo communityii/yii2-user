@@ -20,7 +20,7 @@ use kartik\helpers\Html;
 use kartik\helpers\Enum;
 use yii\authclient\Collection;
 use comyii\user\models\User;
-use comyii\user\widgets\SocialConnects;
+use comyii\user\widgets\SocialConnectChoice;
 
 /**
  * User module with inbuilt social authentication for Yii framework 2.0.
@@ -124,7 +124,7 @@ class Module extends \kartik\base\Module
     const BTN_LOGOUT = 407;             // logout link
     const BTN_NEW_USER = 408;           // new user registration link
     const BTN_REGISTER = 409;           // registration submit button
-    
+
     // the list of events
     const EVENT_BEFORE_ACTION = 'beforeAction';
     const EVENT_REGISTER_BEGIN = 'beforeRegister';
@@ -145,8 +145,7 @@ class Module extends \kartik\base\Module
     const EVENT_NEWEMAIL_BEGIN = 'newemailBegin';
     const EVENT_NEWEMAIL_COMPLETE = 'newemailComplete';
     const EVENT_EXCEPTION = 'exception';
-    
-    
+
     // default layout
     const LAYOUT = 'install';
 
@@ -325,7 +324,7 @@ class Module extends \kartik\base\Module
         self::VIEW_REGISTER => self::LAYOUT,
         self::VIEW_RECOVERY => self::LAYOUT
     ];
-    
+
     public $userTypes = [];
 
     /**
@@ -398,12 +397,12 @@ class Module extends \kartik\base\Module
      * @var array the social authorization settings for the module. The following options should be set:
      * - enabled: bool, whether the social authorization is enabled for the module. Defaults to `true`. If set
      *   to `false`, the remote authentication through social providers will be disabled.
-     * - widgetEnabled: bool, whether the display of the widget is enabled in login form, registration form, and 
-     *   the user profile view. Defaults to `true`. For most cases, you may not need to set this. You can override 
-     *   the clients displayed by setting the `widgetSocialClass` to use your own AuthChoice widget. But if you need 
+     * - widgetEnabled: bool, whether the display of the widget is enabled in login form, registration form, and
+     *   the user profile view. Defaults to `true`. For most cases, you may not need to set this. You can override
+     *   the clients displayed by setting the `widgetSocialClass` to use your own AuthChoice widget. But if you need
      *   to totally hide the social connections for some reason, then set this to `false`.
      * - widgetSocial: array, the settings for the yii\authclient\widgets\AuthChoice widget.
-     * - widgetSocialClass: string, the classname to use. Will default to `comyii\user\widgets\SocialConnects`,
+     * - widgetSocialClass: string, the classname to use. Will default to `comyii\user\widgets\SocialConnectChoice`,
      *   which extends from `yii\authclient\widgets\AuthChoice` widget.
      * @see `setConfig()` method for the default settings
      */
@@ -446,9 +445,9 @@ class Module extends \kartik\base\Module
         'register/<type:>' => 'account/register',
         '<action>' => 'account/<action>',
     ];
-    
+
     /**
-     * @var the default action settings
+     * @var array the default action settings
      */
     private $_defaultActionSettings = [
         // the list of account actions
@@ -483,6 +482,18 @@ class Module extends \kartik\base\Module
     
     /**
      * @var array behaviors for the controllers with the key set to the controller id and value as an array of behaviors.
+     */
+    public $controllerBehaviors = [];
+
+    /**
+     * @var array default behaviors for the controllers. Behaviors defined here will be applied to all the controllers
+     * except install and default.
+     */
+    public $defaultControllerBehaviors = [];
+
+    /**
+     * @var array behaviors for the controllers with the key set to the controller id and value as an array of
+     *     behaviors.
      */
     public $controllerBehaviors = [];
 
@@ -579,7 +590,7 @@ class Module extends \kartik\base\Module
             'widgetSocial' => [
                 'baseAuthUrl' => [$this->actionSettings[Module::ACTION_SOCIAL_AUTH]]
             ],
-            'widgetSocialClass' => SocialConnects::classname()
+            'widgetSocialClass' => SocialConnectChoice::classname()
         ], $this->socialSettings);
         $this->superuserEditSettings = array_replace_recursive([
             'createUser' => true,
@@ -667,7 +678,7 @@ HTML;
         ], $this->registrationSettings);
         $appName = \Yii::$app->name;
         $supportEmail = isset(\Yii::$app->params['supportEmail']) ? \Yii::$app->params['supportEmail'] :
-            'nobody@'.$_SERVER['HTTP_HOST'];
+            'nobody@' . $_SERVER['HTTP_HOST'];
         $fromName = Yii::t('user', '{appname}', ['appname' => $appName]);
         $this->viewSettings = array_replace_recursive([
             // views in AccountController
@@ -857,7 +868,10 @@ HTML;
     /**
      * Checks superuser and admin settings and returns if valid
      *
-     * @return bool
+     * @param array $settings
+     * @param mixed $key
+     *
+     * @return bool|mixed
      */
     public function checkSettings($settings, $key)
     {
@@ -886,6 +900,7 @@ HTML;
         }
         return $this->userEditSettings;
     }
+
     /**
      * Generates an action button
      *
@@ -1032,54 +1047,28 @@ HTML;
             ],
         ];
     }
-    
+
     /**
      * Return the default action settings
+     *
      * @return array
      */
     public function getDefaultActionSettings()
     {
         return $this->_defaultActionSettings;
     }
-    
+
     /**
-     * Gets the layout file for the current view and user type.
-     * 
-     * @param type $view
-     * @return string the layout file
-     */
-    public function getLayout($view)
-    {
-        if(isset($this->layoutSettings[Yii::$app->user->type]) && is_array($this->layoutSettings[Yii::$app->user->type])) {
-            if(isset($this->layoutSettings[Yii::$app->user->type][$view]))
-                return $this->layoutSettings[Yii::$app->user->type][$view];
-        }
-        if(!isset($this->layoutSettings[$view]))
-            return null;
-        return $this->layoutSettings[$view];
-    }
-    
-    public function getControllerBehaviors($id)
-    {
-        if(isset($this->controllerBehaviors[$id])) {
-            $behaviors = $this->controllerBehaviors[$id];
-            if(!is_array($behaviors)) {
-                throw new InvalidConfigException("Controller behaviors must be an array");
-            }
-            return self::mergeDefault($behaviors, $this->defaultControllerBehaviors);
-        }
-        return $this->defaultControllerBehaviors;
-    }
-    
-    /**
-     * Merge class configs.
-     * @param type $config
-     * @param type $defaults
+     * Merge class configurations
+     *
+     * @param array $config
+     * @param array $defaults
+     *
      * @return array the merged array
      */
-    public static function mergeDefault($config,$defaults)
+    public static function mergeDefault($config, $defaults)
     {
-        foreach($defaults as $key => $default) {
+        foreach ($defaults as $key => $default) {
             if (!isset($config[$key])) {
                 $config[$key] = $default;
             } elseif (!isset($config[$key]['class'])) {
@@ -1088,11 +1077,51 @@ HTML;
         }
         return $config;
     }
-    
+
+    /**
+     * Gets the controller behaviors configuration
+     *
+     * @param string $id the controller identifier
+     *
+     * @return array
+     * @throws InvalidConfigException
+     */
+    public function getControllerBehaviors($id)
+    {
+        if (isset($this->controllerBehaviors[$id])) {
+            $behaviors = $this->controllerBehaviors[$id];
+            if (!is_array($behaviors)) {
+                throw new InvalidConfigException("Controller behaviors must be an array");
+            }
+            return self::mergeDefault($behaviors, $this->defaultControllerBehaviors);
+        }
+        return $this->defaultControllerBehaviors;
+    }
+
+    /**
+     * Gets the layout file for the current view and user type.
+     *
+     * @param string $view
+     *
+     * @return string the layout file
+     */
+    public function getLayout($view)
+    {
+        $userType = isset($this->layoutSettings[Yii::$app->user->type]) ? $this->layoutSettings[Yii::$app->user->type] : null;
+        if ($userType && is_array($userType) && isset($userType[$view])) {
+            return $userType[$view];
+        }
+        if (!isset($this->layoutSettings[$view])) {
+            return null;
+        }
+        return $this->layoutSettings[$view];
+    }
+
     /**
      * Helper to convert expiry time left from now
      *
-     * @param int $seconds the time left in seconds
+     * @param string $type the expiry time type
+     * @param int    $seconds the time left in seconds
      *
      * @return string
      */
@@ -1115,8 +1144,8 @@ HTML;
         if (!$this->socialSettings['enabled']) {
             return false;
         }
-        $valid = true;
         try {
+            /** @noinspection PhpUndefinedFieldInspection */
             $valid = Yii::$app->authClientCollection instanceof Collection;
         } catch (\Exception $e) {
             $valid = false;
@@ -1126,7 +1155,7 @@ HTML;
         }
         return true;
     }
-    
+
     /**
      * Get timestamp as integer or date time object or as a specific format
      *
@@ -1141,7 +1170,7 @@ HTML;
     public function timestamp($source, $format = true)
     {
         $fmtSource = !empty($this->datetimeSaveFormat) ? $this->datetimeSaveFormat : 'php:U';
-        $fmtSource = strncmp($fmtSource, 'php:', 4) === 0 ? substr($fmtSource, 4) : 
+        $fmtSource = strncmp($fmtSource, 'php:', 4) === 0 ? substr($fmtSource, 4) :
             FormatConverter::convertDateIcuToPhp($fmtSource, 'datetime');
         try {
             $timestamp = DateTime::createFromFormat($fmtSource, $source);
@@ -1155,7 +1184,7 @@ HTML;
     /**
      * Displays a timestamp from an attribute in a model if valid - else null if empty or invalid
      *
-     * @param Model $model the model
+     * @param Model  $model the model
      * @param string $attr the timestamp attribute
      *
      * @return int|string
@@ -1176,9 +1205,10 @@ HTML;
     {
         return isset($timestamp) && strtotime($timestamp) ? $timestamp : null;
     }
-    
+
     /**
      * Gets the default SocialConnect widget based on `socialSettings`
+     *
      * @return string
      */
     public function getSocialWidget()
@@ -1186,6 +1216,7 @@ HTML;
         $config = $this->socialSettings;
         $class = $config['widgetSocialClass'];
         $settings = $config['widgetSocial'];
+        /** @var \comyii\user\widgets\SocialConnectChoice $class */
         return $class::widget($settings);
     }
 

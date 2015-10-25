@@ -64,6 +64,16 @@ class User extends \yii\web\User
     }
 
     /**
+     * Gets the user type if available
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->identity && isset($this->identity->type) ? $this->identity->type : '';
+    }
+
+    /**
      * Is the user an admin
      *
      * @return bool
@@ -91,10 +101,5 @@ class User extends \yii\web\User
     public function getIsActive()
     {
         return $this->identity ? $this->identity->isActive() : false;
-    }
-    
-    public function getType()
-    {
-        return $this->identity ? $this->identity->type : '';
     }
 }

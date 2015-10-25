@@ -10,6 +10,7 @@
 namespace comyii\user\controllers;
 
 use Yii;
+use yii\filters\AccessControl;
 use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\models\InstallForm;
@@ -32,7 +33,7 @@ class InstallController extends BaseController
     {
         return [
             'access' => [
-                'class' => \yii\filters\AccessControl::className(),
+                'class' => AccessControl::className(),
                 'rules' => [
                     [
                         'actions' => ['index'],

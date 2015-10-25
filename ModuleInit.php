@@ -10,9 +10,9 @@
 namespace comyii\user;
 
 use Yii;
+use yii\web\Application;
 use yii\base\BootstrapInterface;
 use yii\web\GroupUrlRule;
-use comyii\user\Module;
 
 /**
  * Module initialization bootstrap class for yii2-user module. This class assigns and enables module specific URL rules.

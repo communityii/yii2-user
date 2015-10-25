@@ -33,7 +33,7 @@ class AdminController extends BaseController
     public function behaviors()
     {
         $user = Yii::$app->user;
-        $default = [
+        return $this->mergeBehaviors([
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -49,10 +49,7 @@ class AdminController extends BaseController
                     'batch-update' => ['post'],
                 ],
             ],
-        ];
-        
-        $behaviors = $this->_module->getControllerBehaviors($this->id);
-        return Module::mergeDefault($behaviors,$default);
+        ]);
     }
 
     /**

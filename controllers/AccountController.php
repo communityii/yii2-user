@@ -9,8 +9,10 @@
 
 namespace comyii\user\controllers;
 
+use Exception;
 use Yii;
 use yii\base\InvalidConfigException;
+use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
@@ -32,8 +34,6 @@ use comyii\user\events\ActivateEvent;
 use comyii\user\events\AuthEvent;
 use comyii\user\events\NewemailEvent;
 
-
-
 /**
  * Account controller for authentication of various user actions.
  *
@@ -47,7 +47,7 @@ class AccountController extends BaseController
      */
     public function behaviors()
     {
-        $default = [
+        return $this->mergeBehaviors([
             'access' => [
                 'class' => AccessControl::className(),
                 'only' => ['logout', 'register', 'recovery', 'password'],
@@ -69,11 +69,8 @@ class AccountController extends BaseController
                 'actions' => [
                     'logout' => ['post'],
                 ],
-            ]
-        ];
-        
-        $behaviors = $this->_module->getControllerBehaviors($this->id);
-        return Module::mergeDefault($behaviors,$default);
+            ],
+        ]);
     }
     
 
@@ -101,6 +98,9 @@ class AccountController extends BaseController
      * Social client authorization callback
      *
      * @param \yii\authclient\BaseClient $client
+     *
+     * @return \yii\web\Response
+     * @throws BadRequestHttpException
      */
     public function onAuthSuccess($client)
     {
@@ -114,7 +114,6 @@ class AccountController extends BaseController
         $attributes = $client->getUserAttributes();
         $clientId = $client->getId();
         $clientTitle = $client->getTitle();
-        $session = Yii::$app->session;
         $socialClass = $this->fetchModel(Module::MODEL_SOCIAL_PROFILE);
         $userClass = $this->fetchModel(Module::MODEL_USER);
         $event = new AuthEvent;
@@ -125,9 +124,9 @@ class AccountController extends BaseController
             'source' => $clientId,
             'source_id' => $attributes['id'],
         ])->one();
-        $event->auth = $auth;
+        $event->model = $auth;
         $this->_module->trigger(Module::EVENT_AUTH_BEGIN, $event);
-        $transaction = Yii::$app->db->beginTransaction();
+        $transaction = static::tranInit($event);
         try {
             if (Yii::$app->user->isGuest) {
                 if ($auth) { // login
@@ -180,7 +179,7 @@ class AccountController extends BaseController
                                 'Error while authenticating <b>{client}</b> account.<pre>{errors}</pre>',
                                 ['client' => $clientTitle, 'errors' => print_r($user->getErrors(), true)]
                             );
-                            throw new Exception;
+                            throw new Exception('Error authenticating social client');
                         } else {
                             $event->result = AuthEvent::RESULT_SIGNUP_SUCCESS;
                             $event->flashType = 'success';
@@ -201,7 +200,7 @@ class AccountController extends BaseController
                         'source' => $clientId,
                         'source_id' => $attributes['id'],
                     ]);
-                    $event->auth = $auth;
+                    $event->model = $auth;
                     if ($auth->save()) {
                         $transaction->commit();
                         $event->result = AuthEvent::RESULT_LOGGED_IN;
@@ -219,7 +218,7 @@ class AccountController extends BaseController
                             'Error while authenticating <b>{client}</b> account for <b>{user}</b>.<pre>{errors}</pre>',
                             ['client' => $clientTitle, 'errors' => print_r($auth->getErrors(), true)]
                         );
-                        throw new Exception;
+                        throw new Exception('Error authenticating social client');
                     }
                 } else {
                     $event->result = AuthEvent::RESULT_LOGGED_IN;
@@ -231,20 +230,16 @@ class AccountController extends BaseController
                     );
                 }
             }
-        } catch (Exception $ex) {
-            $transaction->rollBack();
-            $this->exception($ex, $event);
-        } 
+        } catch (Exception $e) {
+            static::tranRollback($transaction);
+            $this->raise($e, $event);
+        }
         $this->_module->trigger(Module::EVENT_AUTH_COMPLETE, $event);
-        if ($event->message) {
-            $session->setFlash(
-                $event->flashType,
-                $event->message
-            );
+        static::setFlash($event);
+        if (!isset($event->redirectUrl)) {
+            throw new BadRequestHttpException('Could not redirect after social authentication');
         }
-        if ($event->redirect) {
-            return $this->redirect($event->redirect);
-        }
+        return $this->redirect($event->redirectUrl);
     }
 
     /**
@@ -265,74 +260,59 @@ class AccountController extends BaseController
         if (!$app->user->isGuest) {
             $event->result = LoginEvent::RESULT_ALREADY_AUTH;
             $m->trigger(Module::EVENT_LOGIN_COMPLETE, $event);
-            if ($app->user->returnUrl == Url::to([$this->fetchAction(Module::ACTION_LOGOUT)])) {
-                return $event->redirect ? $this->redirect($event->redirect) : $this->goHome();
+            if ($app->user->returnUrl == Url::to($this->fetchUrl(Module::ACTION_LOGOUT))) {
+                return $this->eventRedirect($event, $this->goHome());
             }
-            return $event->redirect ? $this->redirect($event->redirect) : $this->goBack();
+            return $this->eventRedirect($event, $this->goBack());
         }
-        $hasSocialAuth = $m->hasSocialAuth();
-        $authAction = $this->fetchAction(Module::ACTION_SOCIAL_AUTH);
         $class = $this->fetchModel(Module::MODEL_LOGIN);
         $post = $app->request->post();
         $model = new $class();
         $event->unlockExpiry = !empty($post) && !empty($post['unlock-account']);
         $model->scenario = $event->unlockExpiry ? Module::SCN_EXPIRY : Module::SCN_LOGIN;
         $event->model = $model;
-        $event->redirect = [$this->getConfig('loginSettings', 'loginRedirectUrl')];
-        $event->authAction = $authAction;
-        $event->hasSocial = $hasSocialAuth;
+        $event->redirectUrl = $this->fetchUrl('loginSettings', 'loginRedirectUrl');
+        $event->authAction = $this->fetchUrl(Module::ACTION_SOCIAL_AUTH);
+        $event->hasSocialAuth = $m->hasSocialAuth();
         $m->trigger(Module::EVENT_LOGIN_BEGIN, $event);
-        if ($event->transaction) {
-            $transaction = Yii::$app->db->beginTransaction();
-        }
+        $transaction = static::tranInit($event);
         try {
             if ($model->load($post) && $model->validate() && !$event->error) {
                 $event->handled = false;
-                $session = $app->session;
                 $user = $model->getUser();
-                $event->user = $user;
+                $event->model = $user;
                 if ($event->unlockExpiry) {
                     $user->setPassword($model->password_new);
                     $user->status_sec = null;
-                    if(!$user->save(false)) {
-                        $event->flashType = 'error';
-                        $event->message = Yii::t('user', 'Error while authenticating account for <b>{user}</b>.<pre>{errors}</pre>.',[
-                            'user' => $user->getUsername(),
-                            'errors' => print_r($user->getErrors(), true),
-                        ]);
-                        throw new Exception;
-                    }
+                    $user->save(false);
                     $event->flashType = 'success';
-                    $event->message = Yii::t('user', 'Your password has been changed successfully and you have been logged in.');
+                    $event->message = Yii::t(
+                        'user',
+                        'Your password has been changed successfully and you have been logged in.'
+                    );
                     $model->login($user);
                     $user->setLastLogin();
-                    if($event->transaction) {
-                        $transaction->commit();
-                    }
+                    static::tranCommit($transaction);
                     $event->newPassword = true;
                     $event->result = LoginEvent::RESULT_SUCCESS;
                     $m->trigger(Module::EVENT_LOGIN_COMPLETE, $event);
-                    $session->setFlash(
-                        $event->flashType,
-                        $event->message
-                    );
-                    if ($event->redirect) {
-                        return $this->redirect($event->redirect);
-                    } else {
-                        return $this->safeRedirect();
-                    }
+                    static::setFlash($event);
+                    return $this->eventRedirect($event, $this->safeRedirect());
                 }
                 $event->status = $model->login($user);
                 if ($event->status === Module::STATUS_EXPIRED) {
                     $event->result = LoginEvent::RESULT_EXPIRED;
                     $event->flashType = 'error';
-                    $event->message = Yii::t('user', 'Your password has expired. Change your password by completing the details below.');
+                    $event->message = Yii::t(
+                        'user',
+                        'Your password has expired. Change your password by completing the details below.'
+                    );
                     $model->scenario = Module::SCN_EXPIRY;
                 } elseif ($event->status === Module::STATUS_LOCKED) {
                     $event->result = LoginEvent::RESULT_LOCKED;
                     $event->flashType = 'error';
                     $link = Yii::t('user', 'Click {link} to reset your password and unlock your account.', [
-                        'link' => Html::a(Yii::t('user', 'here'), $this->fetchAction(Module::ACTION_RECOVERY))
+                        'link' => Html::a(Yii::t('user', 'here'), $this->fetchUrl(Module::ACTION_RECOVERY))
                     ]);
                     $event->message = Yii::t(
                         'user',
@@ -341,39 +321,26 @@ class AccountController extends BaseController
                     );
                 } elseif ($event->status) {
                     $user->setLastLogin();
-                    if ($event->transaction) {
-                        $transaction->commit();
-                    }
+                    static::tranCommit($transaction);
                     $event->result = LoginEvent::RESULT_SUCCESS;
                     $m->trigger(Module::EVENT_LOGIN_COMPLETE, $event);
-                    if ($event->redirect) {
-                        return $this->redirect($event->redirect);
-                    } else {
-                        return $this->safeRedirect();
-                    }
+                    return $this->eventRedirect($event, $this->safeRedirect());
                 }
             }
-            if($event->message) {
-                $session->setFlash(
-                    $event->flashType,
-                    $event->message
-                );
-            }
-            if($post) {
+            static::setFlash($event);
+            if ($post) {
                 $event->result = LoginEvent::RESULT_FAIL;
                 $m->trigger(Module::EVENT_LOGIN_COMPLETE, $event);
             }
-        } catch (Exception $ex) {
-            if(isset($transaction)) {
-                $transaction->rollBack();
-            }
-            $this->exception($ex, $event);
+        } catch (Exception $e) {
+            static::tranRollback($transaction);
         }
-        return $this->display($event->viewFile? $event->viewFile : Module::VIEW_LOGIN, [
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_LOGIN, [
             'model' => $model,
             'hasSocialAuth' => $event->hasSocialAuth,
             'authAction' => $event->authAction,
-            'loginTitle' => $event->loginTitle ? $event->loginTitle : $model->scenario === Module::SCN_EXPIRY ? Yii::t('user', 'Change Password') :
+            'loginTitle' => $event->loginTitle ? $event->loginTitle : $model->scenario === Module::SCN_EXPIRY ?
+                Yii::t('user', 'Change Password') :
                 Yii::t('user', 'Login'),
             'authTitle' => $event->authTitle ? $event->authTitle : Yii::t('user', 'Or Login Using')
         ]);
@@ -386,33 +353,23 @@ class AccountController extends BaseController
      */
     public function actionLogout()
     {
-        $url = $this->getConfig('loginSettings', 'logoutRedirectUrl');
+        Yii::$app->user->logout();
         $event = new LogoutEvent;
-        $event->redirect = $url;
+        $event->redirectUrl = $this->fetchUrl('loginSettings', 'logoutRedirectUrl');
         $this->_module->trigger(Module::EVENT_LOGOUT, $event);
-        try{
-            if (!Yii::$app->user->logout()) {
-                throw new Exception;
-            }
-        } catch (Exception $ex) {
-            $this->exception($ex, $event);
-        }
-        if($event->message) {
-            Yii::$app->session->setFlash(
-                $event->flashType,
-                $event->message
-            );
-        }
-        return ($event->redirect == null) ? $this->goHome() : $this->redirect($event->redirect);
+        static::setFlash($event);
+        return $this->eventRedirect($event, $this->goHome());
     }
 
     /**
      * User registration action
      *
+     * @param string $type the user type
+     *
      * @return string|\yii\web\Response
      * @throws InvalidConfigException
      */
-    public function actionRegister($type='user')
+    public function actionRegister($type = 'user')
     {
         /**
          * @var User   $model
@@ -423,30 +380,28 @@ class AccountController extends BaseController
         if (!$config['enabled']) {
             return $this->goBack();
         }
-        $session = Yii::$app->session;
         $hasSocialAuth = $m->hasSocialAuth();
-        $authAction = $this->fetchAction(Module::ACTION_SOCIAL_AUTH);
+        $authAction = $this->fetchUrl(Module::ACTION_SOCIAL_AUTH);
         $class = $this->fetchModel(Module::MODEL_USER);
         $model = new $class(['scenario' => Module::SCN_REGISTER]);
         $event = new RegistrationEvent;
         $event->type = $type;
         $event->model = $model;
         $m->trigger(Module::EVENT_REGISTER_BEGIN, $event);
-        $viewFile = $event->viewFile? $event->viewFile : Module::VIEW_REGISTER;
+        $viewFile = $event->viewFile ? $event->viewFile : Module::VIEW_REGISTER;
         if ($model->load(Yii::$app->request->post()) && !$event->error) {
             $model->setPassword($model->password);
             $model->generateAuthKey();
             $model->status = Module::STATUS_PENDING;
-            $transaction = Yii::$app->db->beginTransaction();
+            $transaction = static::tranInit($event);
+            $valid = false;
             try {
-                $valid = false;
-                if($model->save() && !$event->error) {
-                    $transaction->commit();
-                    $valid=true;
+                if ($model->save() && !$event->error) {
+                    static::tranCommit($transaction);
+                    $valid = true;
                 }
-            } catch (Exception $ex) {
-                $transaction->rollBack();
-                $this->exception($ex, $event);
+            } catch (Exception $e) {
+                static::tranRollback($transaction);
             }
             if ($valid) {
                 $event->flashType = 'success';
@@ -455,24 +410,32 @@ class AccountController extends BaseController
                     $model->status = Module::STATUS_ACTIVE;
                     $model->setLastLogin();
                     $event->isActivated = true;
-                    $event->message = Yii::t('user','The user <b>{user}</b> was registered successfully. You have been logged in.',
-                        ['user' => $model->username]);
+                    $event->message = Yii::t(
+                        'user',
+                        'The user <b>{user}</b> was registered successfully. You have been logged in.',
+                        ['user' => $model->username]
+                    );
                 } else {
-                    $timeLeft = Module::timeLeft('activation', $model->activationKeyExpiry);
+                    $timeLeft = Module::timeLeft('activation', $model->getActivationKeyExpiry());
                     if ($model->sendEmail('activation', $timeLeft)) {
-                        $event->message = Yii::t('user','Instructions for activating your account has been sent to your email <b>{email}</b>. {timeLeft}',
-                            ['email' => $model->email, 'timeLeft' => $timeLeft]);
+                        $event->message = Yii::t(
+                            'user',
+                            'Instructions for activating your account has been sent to your email <b>{email}</b>. {timeLeft}',
+                            ['email' => $model->email, 'timeLeft' => $timeLeft]
+                        );
                     } else {
                         $event->flashType = 'warning';
-                        $event->message = Yii::t('user','Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
-                            ['email' => $model->email]);
-                        $this->exception(new Exception, $event);
+                        $event->message = Yii::t(
+                            'user',
+                            'Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
+                            ['email' => $model->email]
+                        );
                     }
                 }
                 $event->handled = false; // reuse event object
-                $m->trigger(Module::EVENT_REGISTER_COMPLETE,$event);
-                $session->setFlash($event->flashType ? $event->flashType : '', $event->message);
-                return $event->redirect ? $this->redirect($event->redirect) : $this->goHome();
+                $m->trigger(Module::EVENT_REGISTER_COMPLETE, $event);
+                static::setFlash($event);
+                return $this->eventRedirect($event, $this->goHome());
             }
         }
         return $this->display($viewFile, [
@@ -498,24 +461,22 @@ class AccountController extends BaseController
          */
         $class = $this->fetchModel(Module::MODEL_RECOVERY);
         $model = new $class();
-        $session = Yii::$app->session;
         $event = new RecoveryEvent;
         $event->model = $model;
         $this->_module->trigger(Module::EVENT_RECOVERY_BEGIN, $event);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($event->transaction) {
-                $transaction = Yii::$app->db->beginTransaction();
-            }
+            $transaction = static::tranInit($event);
             try {
                 $class = $this->fetchModel(Module::MODEL_USER);
                 $user = $class::findByEmail($model->email);
                 $proceed = true;
-                if (!$class::isKeyValid($user->reset_key, $user->resetKeyExpiry)) {
+                $expiry = $user->getResetKeyExpiry();
+                if (!$class::isKeyValid($user->reset_key, $expiry)) {
                     $user->scenario = Module::SCN_RECOVERY;
                     $user->generateResetKey();
                     $proceed = $user->save();
                 }
-                $timeLeft = Module::timeLeft('reset', $user->resetKeyExpiry);
+                $timeLeft = Module::timeLeft('reset', $expiry);
                 if ($proceed && $user->sendEmail('recovery', $timeLeft)) {
                     $event->flashType = 'success';
                     $event->message = Yii::t(
@@ -525,16 +486,9 @@ class AccountController extends BaseController
                     );
                     $event->handled = false;
                     $this->_module->trigger(Module::EVENT_RECOVERY_COMPLETE, $event);
-                    if ($event->message) {
-                        $session->setFlash(
-                            $event->flashType,
-                            $event->message
-                        );
-                    }
-                    if ($event->transaction) {
-                        $transaction->commit();
-                    }
-                    return $event->redirect ? $this->redirect($event->redirect) : $this->goHome();
+                    static::setFlash($event);
+                    static::tranCommit($transaction);
+                    return $this->eventRedirect($event, $this->goHome());
                 } else {
                     $event->flashType = 'error';
                     $event->message = Yii::t(
@@ -542,22 +496,15 @@ class AccountController extends BaseController
                         'Sorry, the password cannot be reset for the email provided. Retry again later.'
                     );
                     $this->_module->trigger(Module::EVENT_RECOVERY_COMPLETE, $event);
-                    throw new Exception();
+                    throw new Exception('Error resetting password');
                 }
-                
-            } catch (Exception $ex) {
-                if ($event->transaction) {
-                    $transaction->rollBack();
-                }
-                $this->exception($ex, $event);
+
+            } catch (Exception $e) {
+                static::tranRollback($transaction);
+                $this->raise($e, $event);
             }
         }
-        if ($event->message) {
-            $session->setFlash(
-                $event->flashType,
-                $event->message
-            );
-        }
+        static::setFlash($event);
         return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_RECOVERY, [
             'model' => $model,
         ]);
@@ -579,9 +526,7 @@ class AccountController extends BaseController
         $event->model = $model;
         $this->_module->trigger(Module::EVENT_PASSWORD_BEGIN, $event);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($event->transaction) {
-                $transaction = Yii::$app->db->beginTransaction();
-            }
+            $transaction = static::tranInit($event);
             try {
                 $model->setPassword($model->password_new);
                 $model->save(false);
@@ -589,25 +534,14 @@ class AccountController extends BaseController
                 $event->message = Yii::t('user', 'The password was changed successfully.');
                 $event->handled = false;
                 $this->_module->trigger(Module::EVENT_PASSWORD_COMPLETE, $event);
-                if ($event->transaction) {
-                    $transaction->commit();
-                }
-                if ($event->message) {
-                    Yii::$app->session->setFlash(
-                        $event->flashType,
-                        $event->message
-                    );
-                }
-                $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
-                return $this->redirect($event->redirect ? $event->redirect : [$action]);
-            } catch (Exception $ex) {
-                if ($event->transaction) {
-                    $transaction->rollBack();
-                }
-                $this->exception($ex, $event);
+                static::tranCommit($transaction);
+                static::setFlash($event);
+                return $this->eventRedirect($event, $this->fetchUrl(Module::ACTION_PROFILE_INDEX, false));
+            } catch (Exception $e) {
+                static::tranRollback($transaction);
             }
         }
-        return $this->display($event->viewFile? $event->viewFile : Module::VIEW_PASSWORD, [
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_PASSWORD, [
             'model' => $model,
         ]);
     }
@@ -630,44 +564,38 @@ class AccountController extends BaseController
         $model->status = Module::STATUS_ACTIVE;
         $model->password_reset_on = call_user_func($this->_module->now);
         $model->reset_key = null;
-        $session = Yii::$app->session;
         $event = new ActivateEvent;
         $event->model = $model;
         $this->_module->trigger(Module::EVENT_ACTIVATE_BEGIN, $event);
         $event->handled = false;
-        if ($event->transaction) {
-            $transaction = Yii::$app->db->beginTransaction();
-        }
+        $transaction = static::tranInit($event);
         try {
             if ($model->save()) {
                 $event->result = true;
                 $event->flashType = 'success';
                 $event->message = Yii::t('user', 'The account was activated successfully. You can proceed to login.');
                 $this->_module->trigger(Module::EVENT_ACTIVATE_COMPLETE, $event);
-                if(!$event->redirect) {
-                    $event->redirect = [$this->fetchAction(Module::ACTION_LOGIN)];
+                if (!$event->redirectUrl) {
+                    $event->redirectUrl = $this->fetchUrl(Module::ACTION_LOGIN);
                 }
+                static::tranCommit($transaction);
             } else {
                 $event->result = false;
                 $event->flashType = 'error';
-                $event->message = Yii::t('user', 'Could not activate the account. Please try again later or contact us.');
+                $event->message = Yii::t(
+                    'user',
+                    'Could not activate the account. Please try again later or contact us.'
+                );
                 $this->_module->trigger(Module::EVENT_ACTIVATE_COMPLETE, $event);
-                throw new Exception();
+                throw new Exception('Error activating account');
             }
-        } catch (Exception $ex) {
-            if ($event->transaction) {
-                $transaction->rollBack();
-            }
-            $this->exception($ex, $event);
+        } catch (Exception $e) {
+            static::tranRollback($transaction);
+            $this->raise($e, $event);
         }
-        if ($event->message) {
-            $session->setFlash(
-                $event->flashType,
-                $event->message
-            );
-        }
-        if ($event->redirect) {
-            return $this->redirect($event->redirect ? $event->redirect : [$this->fetchAction(Module::ACTION_LOGIN)]);
+        static::setFlash($event);
+        if ($event->redirectUrl) {
+            return $this->eventRedirect($event, $this->fetchUrl(Module::ACTION_LOGIN), false);
         }
         return $this->goHome();
     }
@@ -687,15 +615,12 @@ class AccountController extends BaseController
             throw new NotFoundHttpException(Yii::t('user', 'The password reset link is invalid or expired'));
         }
         $model->scenario = Module::SCN_RESET;
-        $session = Yii::$app->session;
         $event = new ResetEvent;
         $event->model = $model;
         $this->_module->trigger(Module::EVENT_PASSWORD_BEGIN, $event);
         $event->handled = false;
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($event->transaction) {
-                $transaction = Yii::$app->db->beginTransaction();
-            }
+            $transaction = static::tranInit($event);
             try {
                 $model->setPassword($model->password_new);
                 $model->unlock();
@@ -708,33 +633,26 @@ class AccountController extends BaseController
                         'The password was reset successfully. You can proceed to login with your new password.'
                     );
                     $this->_module->trigger(Module::EVENT_RESET_COMPLETE, $event);
-                    if (!$event->redirect) {
-                        $event->redirect = [$this->fetchAction(Module::ACTION_LOGIN)];
+                    if (!$event->redirectUrl) {
+                        $event->redirectUrl = $this->fetchUrl(Module::ACTION_LOGIN);
                     }
-                    if ($event->transaction) {
-                        $transaction->commit();
-                    }
+                    static::tranCommit($transaction);
                 } else {
                     $event->result = false;
                     $event->flashType = 'error';
-                    $event->message = Yii::t('user', 'Could not reset the password. Please try again later or contact us.');
+                    $event->message = Yii::t(
+                        'user',
+                        'Could not reset the password. Please try again later or contact us.'
+                    );
                     $this->_module->trigger(Module::EVENT_RESET_COMPLETE, $event);
                 }
-            } catch (Exception $ex) {
-                if ($event->transaction) {
-                    $transaction->rollBack();
-                }
-                $this->exception($ex, $event);
+            } catch (Exception $e) {
+                static::tranRollback($transaction);
             }
         }
-        if ($event->message) {
-            $session->setFlash(
-                $event->flashType,
-                $event->message
-            );
-        }
-        if ($event->redirect) {
-            return $this->redirect($event->redirect ? $event->redirect : [$this->fetchAction(Module::ACTION_LOGIN)]);
+        static::setFlash($event);
+        if ($event->redirectUrl) {
+            return $this->eventRedirect($event, $this->fetchUrl(Module::ACTION_LOGIN), false);
         }
         return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_RESET, [
             'model' => $model,
@@ -759,12 +677,9 @@ class AccountController extends BaseController
         $model->scenario = Module::SCN_NEWEMAIL;
         $event = new NewemailEvent;
         $event->model = $model;
-        $this->_module->trigger(Module::EVENT_NEWMAIL_BEGIN, $event);
-        $session = Yii::$app->session;
+        $this->_module->trigger(Module::EVENT_NEWEMAIL_BEGIN, $event);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($event->transaction) {
-                $transaction = Yii::$app->db->beginTransaction();
-            }
+            $transaction = static::tranInit($event);
             try {
                 $model->email = $model->email_new;
                 $model->email_new = null;
@@ -773,35 +688,31 @@ class AccountController extends BaseController
                     $event->result = true;
                     $event->flashType = 'success';
                     $event->message = Yii::t('user', 'The email address was changed successfully.');
-                    $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
-                    $this->_module->trigger(Module::EVENT_NEWMAIL_COMPLETE, $event);
-                    $event->redirect = $event->redirect ? $event->redirect : [$action];
+                    $this->_module->trigger(Module::EVENT_NEWEMAIL_COMPLETE, $event);
+                    $event->redirectUrl = $event->redirectUrl ? $event->redirectUrl :
+                        $this->fetchUrl(Module::ACTION_PROFILE_INDEX);
                 } else {
                     $event->result = false;
                     $event->flashType = 'error';
-                    $event->message = Yii::t('user', 'Could not confirm the new email address. Please try again later or contact us.');
-                    throw new Exception;
+                    $event->message = Yii::t(
+                        'user',
+                        'Could not confirm the new email address. Please try again later or contact us.'
+                    );
+                    throw new Exception('Error saving new email');
                 }
-            } catch (Exception $ex) {
-                if ($event->transaction) {
-                    $transaction->rollBack();
-                }
-                $this->exception($ex, $event);
+            } catch (Exception $e) {
+                static::tranRollback($transaction);
+                $this->raise($e, $event);
             }
-            $this->_module->trigger(Module::EVENT_NEWMAIL_COMPLETE, $event);
+            $this->_module->trigger(Module::EVENT_NEWEMAIL_COMPLETE, $event);
         }
-        if ($event->message) {
-            $session->setFlash(
-                $event->flashType,
-                $event->message
-            );
-        }
-        if ($event->redirect) {
-            return $this->redirect($event->redirect);
-        }
-        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_NEWEMAIL, [
-            'model' => $model,
-        ]);
+        static::setFlash($event);
+        return $this->eventRedirect(
+            $event,
+            $this->display($event->viewFile ? $event->viewFile : Module::VIEW_NEWEMAIL, [
+                'model' => $model,
+            ])
+        );
     }
 
     /**

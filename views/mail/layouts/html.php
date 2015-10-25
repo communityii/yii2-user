@@ -26,4 +26,4 @@ use yii\helpers\Html;
     <?php $this->endBody() ?>
 </body>
 </html>
-<?php $this->endPage() ?>
+<?php $this->endPage(); ?>

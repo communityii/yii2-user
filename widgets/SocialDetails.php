@@ -3,43 +3,64 @@
 namespace comyii\user\widgets;
 
 use Yii;
-use yii\bootstrap\Widget;
 use kartik\detail\DetailView;
+use comyii\user\models\UserProfile;
 
 class SocialDetails extends Widget
 {
+    /**
+     * @var array the array of social profile models
+     */
     public $social;
+
+    /**
+     * @var UserProfile the user profile model
+     */
     public $profile;
+
+    /**
+     * @var array the attributes configuration that will be used by DetailView
+     */
     public $attributes = [];
+
+    /**
+     * @var array the widget configuration options for DetailView
+     */
     public $widgetOptions = [];
-    
-    
-    public function init() {
+
+    /**
+     * @inheritdoc
+     */
+    public function init()
+    {
         parent::init();
-        $m = Yii::$app->getModule('user');
-        if(!$m->socialSettings['enabled']) return;
-        
+        $m = $this->_module;
+        if (!$m->socialSettings['enabled']) {
+            return;
+        }
         $attributes = [
             [
                 'group' => true,
                 'label' => $m->icon('globe') . Yii::t('user', 'Social Details'),
-                'rowOptions' => ['class'=>'info']
+                'rowOptions' => ['class' => 'info']
             ],
         ];
         if (count($this->social) === 1 && $this->social[0]->isNewRecord) {
             $attributes[] = [
                 'group' => true,
-                'label' => '<span class="not-set" style="font-weight:normal">' . Yii::t('user', 'No social profiles linked yet') . '</span>'
+                'label' => '<span class="not-set" style="font-weight:normal">' .
+                    Yii::t('user', 'No social profiles linked yet') . '</span>'
             ];
         } else {
-            foreach($this->social as $record) {
-                $provider = empty($record->source) ? Yii::t('user', 'Unknown') : '<span class="auth-icon ' . $record->source . '"></span>' .
+            foreach ($this->social as $record) {
+                $provider = empty($record->source) ? Yii::t('user', 'Unknown') :
+                    '<span class="auth-icon ' . $record->source . '"></span>' .
                     '<span class="auth-title">' . ucfirst($record->source) . '</span>';
                 $attributes[] = [
                     'label' => Yii::t('user', 'Source'),
                     'value' => '<b>' . Yii::t('user', 'Connected On') . '</b>',
                     'format' => 'raw',
-                    'rowOptions' => ['class'=>'active'],
+                    'rowOptions' => ['class' => 'active'],
                     'labelColOptions' => ['style' => 'width:90px;text-align:center']
                 ];
                 $attributes[] = [
@@ -51,22 +72,28 @@ class SocialDetails extends Widget
                 ];
             }
         }
-        
+
         $this->attributes = array_replace_recursive($attributes, $this->attributes);
-        
+
         $this->widgetOptions = array_replace_recursive([
             'striped' => false,
-            'hover' => true, 
+            'hover' => true,
             'enableEditMode' => false,
             'attributes' => $this->attributes
-        ],$this->widgetOptions);
-        
+        ], $this->widgetOptions);
+
         $this->widgetOptions['model'] = $this->profile;
     }
-    
-    public function run() {
-        if(!Yii::$app->getModule('user')->socialSettings['enabled']) return;
-        echo DetailView::widget($this->widgetOptions);
 
+    /**
+     * @inheritdoc
+     * @throws \Exception
+     */
+    public function run()
+    {
+        if (!$this->_module->socialSettings['enabled']) {
+            return;
+        }
+        echo DetailView::widget($this->widgetOptions);
     }
 }

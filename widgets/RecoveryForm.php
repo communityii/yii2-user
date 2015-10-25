@@ -11,8 +11,6 @@ namespace comyii\user\widgets;
 
 use Yii;
 use kartik\builder\Form;
-use kartik\helpers\Html;
-use yii\helpers\Url;
 use comyii\user\Module;
 
 /**

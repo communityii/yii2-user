@@ -6,12 +6,14 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-use comyii\user\Module;
-use comyii\user\widgets\Logo;
 use kartik\helpers\Html;
 use kartik\alert\AlertBlock;
+
+/**
+ * @var string $content
+ */
+$this->beginPage();
 ?>
-<?php $this->beginPage(); ?>
 <!DOCTYPE html>
 <html lang="<?= Yii::$app->language ?>">
 <head>
@@ -28,4 +30,5 @@ use kartik\alert\AlertBlock;
     </div>
 </body>
     </html>
-<?php $this->endPage(); ?>
+<?php
+$this->endPage();

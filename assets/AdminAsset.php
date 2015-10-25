@@ -9,15 +9,16 @@
 
 namespace comyii\user\assets;
 
+use kartik\base\AssetBundle;
+
 /**
  * Asset bundle for user module
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class AdminAsset extends \kartik\base\AssetBundle
+class AdminAsset extends AssetBundle
 {
-
     /**
      * @inheritdoc
      */
@@ -27,5 +28,4 @@ class AdminAsset extends \kartik\base\AssetBundle
         $this->setupAssets('js', ['js/admin']);
         parent::init();
     }
-
 }

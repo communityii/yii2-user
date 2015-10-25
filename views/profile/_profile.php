@@ -8,9 +8,14 @@
 
 use kartik\select2\Select2;
 use yii\widgets\MaskedInput;
+
+/**
+ * @var comyii\user\models\UserProfile $profile
+ */
+
+echo $form->field($profile, 'first_name')->textInput(['maxlength' => true]);
+echo $form->field($profile, 'last_name')->textInput(['maxlength' => true]);
 ?>
-<?= $form->field($profile, 'first_name')->textInput(['maxlength' => true]) ?>
-<?= $form->field($profile, 'last_name')->textInput(['maxlength' => true]) ?>
 <div class="row">
     <div class="col-md-4">
         <?= $form->field($profile, 'gender')->widget(Select2::classname(), ['data' => $profile->genderList]) ?>
