@@ -140,6 +140,10 @@ class Module extends \kartik\base\Module
     const EVENT_RESET_COMPLETE = 'resetComplete';
     const EVENT_ACTIVATE_BEGIN = 'activateBegin';
     const EVENT_ACTIVATE_COMPLETE = 'activateComplete';
+    const EVENT_AUTH_BEGIN = 'authBegin';
+    const EVENT_AUTH_COMPLETE = 'authComplete';
+    const EVENT_EXCEPTION = 'exception';
+    
     
     // default layout
     const LAYOUT = 'install';
