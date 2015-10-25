@@ -34,7 +34,7 @@ class ProfileController extends BaseController
     public function behaviors()
     {
         $user = Yii::$app->user;
-        return [
+        $default = [
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -57,6 +57,9 @@ class ProfileController extends BaseController
                 ],
             ],
         ];
+        
+        $behaviors = $this->_module->getControllerBehaviors($this->id);
+        return Module::mergeDefault($behaviors,$default);
     }
 
     /**
