@@ -9,10 +9,17 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\user\events;
+namespace comyii\user\events\account;
+
+use comyii\user\events\Event;
+use comyii\user\events\ViewEventTrait;
+use comyii\user\events\RecordEventTrait;
 
 class LoginEvent extends Event
 {
+    use ViewEventTrait;
+    use RecordEventTrait;
+    
     const RESULT_SUCCESS = 1;
     const RESULT_FAIL = 2;
     const RESULT_LOCKED = 3;

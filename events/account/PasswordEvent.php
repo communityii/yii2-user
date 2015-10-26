@@ -9,8 +9,14 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\user\events;
+namespace comyii\user\events\account;
+
+use comyii\user\events\Event;
+use comyii\user\events\ViewEventTrait;
+use comyii\user\events\RecordEventTrait;
 
 class PasswordEvent extends Event
 {
+    use ViewEventTrait;
+    use RecordEventTrait;
 }

@@ -9,8 +9,12 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\user\events;
+namespace comyii\user\events\admin;
 
-class RecoveryEvent extends Event
+use comyii\user\events\Event;
+use comyii\user\events\ViewEventTrait;
+
+class ViewEvent extends Event
 {
+    use ViewEventTrait;
 }

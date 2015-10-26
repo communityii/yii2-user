@@ -8,12 +8,15 @@
  * @author derekisbusy https://github.com/derekisbusy
  * @author kartik-v https://github.com/kartik-v
  */
-namespace comyii\user\events;
 
-class ActivateEvent extends Event
+namespace comyii\user\events\account;
+
+use comyii\user\events\Event;
+use comyii\user\events\ViewEventTrait;
+use comyii\user\events\RecordEventTrait;
+
+class RecoveryEvent extends Event
 {
-    /**
-     * @var boolean the result of the activation attempt
-     */
-    public $result;
+    use ViewEventTrait;
+    use RecordEventTrait;
 }

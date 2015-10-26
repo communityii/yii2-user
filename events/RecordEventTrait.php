@@ -11,14 +11,20 @@
 
 namespace comyii\user\events;
 
+use yii\base\Model;
+
 /**
  * Base event for all events in communityii/yii2-user module
  */
-class Event extends \yii\base\Event
+trait RecordEventTrait
 {
     /**
-     * @var boolean the current status for the controller. This is used so that event handlers can tell the controller
-     *     whether to not to continue.
+     * @var Model the user model (or auth model for AuthEvent).
      */
-    public $error = false;
+    public $model;
+    
+    /**
+     * @var boolean whether or not to use database transactions.
+     */
+    public $useTransaction = true;
 }

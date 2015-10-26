@@ -25,14 +25,14 @@ use comyii\user\models\LoginForm;
 use comyii\user\models\RecoveryForm;
 use comyii\user\models\User;
 use comyii\user\models\SocialProfile;
-use comyii\user\events\RegistrationEvent;
-use comyii\user\events\LoginEvent;
-use comyii\user\events\LogoutEvent;
-use comyii\user\events\RecoveryEvent;
-use comyii\user\events\ResetEvent;
-use comyii\user\events\ActivateEvent;
-use comyii\user\events\AuthEvent;
-use comyii\user\events\NewemailEvent;
+use comyii\user\events\account\RegistrationEvent;
+use comyii\user\events\account\LoginEvent;
+use comyii\user\events\account\LogoutEvent;
+use comyii\user\events\account\RecoveryEvent;
+use comyii\user\events\account\ResetEvent;
+use comyii\user\events\account\ActivateEvent;
+use comyii\user\events\account\AuthEvent;
+use comyii\user\events\account\NewemailEvent;
 
 /**
  * Account controller for authentication of various user actions.
@@ -72,6 +72,7 @@ class AccountController extends BaseController
             ],
         ]);
     }
+    
 
     /**
      * @inheritdoc
@@ -236,7 +237,7 @@ class AccountController extends BaseController
         $this->_module->trigger(Module::EVENT_AUTH_COMPLETE, $event);
         static::setFlash($event);
         if (!isset($event->redirectUrl)) {
-            throw new BadRequestHttpException('Could not redirect after social authentication');
+            $event->redirectUrl = $this->fetchUrl('loginSettings', 'loginRedirectUrl');
         }
         return $this->redirect($event->redirectUrl);
     }

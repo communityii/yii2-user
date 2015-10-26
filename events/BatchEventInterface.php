@@ -8,13 +8,10 @@
  * @author derekisbusy https://github.com/derekisbusy
  * @author kartik-v https://github.com/kartik-v
  */
-
 namespace comyii\user\events;
 
-class NewemailEvent extends Event
+interface BatchEventInterface
 {
-    /**
-     * @var boolean the result of the reset attempt
-     */
-    public $result;
+    public function batch();
+    public function updateModel($model);
 }

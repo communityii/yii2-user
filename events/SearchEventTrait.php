@@ -11,14 +11,14 @@
 
 namespace comyii\user\events;
 
-/**
- * Base event for all events in communityii/yii2-user module
- */
-class Event extends \yii\base\Event
-{
+trait SearchEventTrait {
     /**
-     * @var boolean the current status for the controller. This is used so that event handlers can tell the controller
-     *     whether to not to continue.
+     * @var \yii\db\ActiveQuery the search model
      */
-    public $error = false;
+    public $searchModel;
+    /**
+     *
+     * @var \yii\data\DataProvider the data provider
+     */
+    public $dataProvider;
 }
