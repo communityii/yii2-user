@@ -126,6 +126,7 @@ class Module extends \kartik\base\Module
     const BTN_REGISTER = 409;           // registration submit button
 
     // the list of events
+    const EVENT_EXCEPTION = 'exception';
     const EVENT_BEFORE_ACTION = 'beforeAction';
     const EVENT_REGISTER_BEGIN = 'beforeRegister';
     const EVENT_REGISTER_COMPLETE = 'registerComplete';
@@ -144,8 +145,20 @@ class Module extends \kartik\base\Module
     const EVENT_AUTH_COMPLETE = 'authComplete';
     const EVENT_NEWEMAIL_BEGIN = 'newemailBegin';
     const EVENT_NEWEMAIL_COMPLETE = 'newemailComplete';
-    const EVENT_EXCEPTION = 'exception';
-
+    const EVENT_PROFILE_INDEX = 'profileIndex';
+    const EVENT_PROFILE_VIEW = 'profileView';
+    const EVENT_PROFILE_UPDATE = 'profileUpdate';
+    const EVENT_PROFILE_UPDATE_BEGIN = 'profileUpdateBegin';
+    const EVENT_PROFILE_UPDATE_COMPLETE = 'profileUpdateComplete';
+    const EVENT_ADMIN_INDEX = 'adminIndex';
+    const EVENT_ADMIN_VIEW = 'adminView';
+    const EVENT_ADMIN_UPDATE_BEGIN = 'adminUpdateBegin';
+    const EVENT_ADMIN_UPDATE_COMPLETE = 'adminUpdateComplete';
+    const EVENT_ADMIN_BATCH_UPDATE_BEGIN = 'adminBatchBegin';
+    const EVENT_ADMIN_BATCH_UPDATE_COMPLETE = 'adminBatchComplete';
+    const EVENT_CREATE_USER_BEGIN = 'createBegin';
+    const EVENT_CREATE_USER_COMPLETE = 'createComplete';
+    
     // default layout
     const LAYOUT = 'install';
 

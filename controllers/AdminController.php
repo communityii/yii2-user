@@ -18,6 +18,10 @@ use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\models\UserSearch;
 use comyii\user\controllers\BaseController;
+use comyii\user\events\admin\IndexEvent;
+use comyii\user\events\admin\ViewEvent;
+use comyii\user\events\admin\CreateEvent;
+use comyii\user\events\admin\BatchUpdateEvent;
 
 /**
  * AdminController implements the CRUD actions for User model for an admin and superuser
@@ -59,11 +63,13 @@ class AdminController extends BaseController
      */
     public function actionIndex()
     {
-        $searchModel = new UserSearch;
-        $dataProvider = $searchModel->search(Yii::$app->request->getQueryParams());
-        return $this->display(Module::VIEW_ADMIN_INDEX, [
-            'dataProvider' => $dataProvider,
-            'searchModel' => $searchModel,
+        $event = new IndexEvent;
+        $event->searchModel = new UserSearch;
+        $event->dataProvider = $event->searchModel->search(Yii::$app->request->getQueryParams());
+        $this->_module->trigger(Module::EVENT_ADMIN_INDEX, $event);
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_ADMIN_INDEX, [
+            'dataProvider' => $event->dataProvider,
+            'searchModel' => $event->searchModel,
         ]);
     }
 
@@ -93,21 +99,29 @@ class AdminController extends BaseController
                 'message' => Yii::t('user', 'No valid user or status was selected for update.')
             ];
         }
-        $keys = $post['keys'];
-        $status = $post['status'];
+        $event = new BatchUpdateEvent;
+        $event->keys = $post['keys'];
+        $event->status = $post['status'];
         $class = $this->fetchModel(Module::MODEL_USER);
-        $app->db->createCommand()->update(
+        $event->command = $app->db->createCommand()->update(
             $class::tableName(),
-            ['status' => $status],
-            ['and', ['id' => $keys], 'status <> ' . Module::STATUS_SUPERUSER]
-        )->execute();
+            ['status' => $event->status],
+            ['and', ['id' => $event->keys], 'status <> ' . Module::STATUS_SUPERUSER]
+        );
+        $this->_module->trigger(Module::EVENT_BATCH_UPDATE_BEGIN, $event);
+        try {
+            $event->batch();
+        } catch(yii\db\Exception $e) {
+            $this->raise($e, $event);
+        }
+        $this->_module->trigger(Module::EVENT_BATCH_UPDATE_COMPLETE, $event);
         return [
             'status' => 'success',
-            'keys' => $keys,
+            'keys' => $event->keys,
             'message' => Yii::t(
                 'user',
                 'The status was updated successfully for {n, plural, one{one user} other{# users}}.',
-                ['n' => count($keys)]
+                ['n' => count($event->keys)]
             )
         ];
     }
@@ -121,19 +135,28 @@ class AdminController extends BaseController
      */
     public function actionView($id)
     {
-        $model = $this->findModel($id);
-        $model->setScenario(Module::SCN_ADMIN);
+        $event = new ViewEvent;
+        $event->id = $id;
+        $event->model = $this->findModel($id);
+        $event->model->setScenario(Module::SCN_ADMIN);
+        $this->_module->trigger(Module::EVENT_ADMIN_VIEW, $event);
         $post = Yii::$app->request->post();
-        if ($model->load($post)) {
-            if ($model->save()) {
-                Yii::$app->session->setFlash('success', Yii::t('user', 'The user details were saved successfully', [
-                    'id' => $model->id,
-                    'user' => $model->username,
-                ]));
+        if(!empty($post)) {
+            $this->_module->trigger(Module::EVENT_ADMIN_UPDATE_BEGIN, $event);
+        }
+        if ($event->model->load($post)) {
+            if ($event->model->save()) {
+                $event->flashType = 'success';
+                $event->message = Yii::t('user', 'The user details were saved successfully', [
+                    'id' => $event->model->id,
+                    'user' => $event->model->username,
+                ]);
+                $this->_module->trigger(Module::EVENT_ADMIN_UPDATE_COMPLETE, $event);
+                static::setFlash($event);
             }
         }
-        return $this->display(Module::VIEW_ADMIN_VIEW, [
-            'model' => $model,
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_ADMIN_VIEW, [
+            'model' => $event->model,
         ]);
     }
 
@@ -151,14 +174,17 @@ class AdminController extends BaseController
          * @var Module $m
          */
         $m = $this->_module;
-        $model = $this->findModel($id);
-        $model->setScenario(Module::SCN_ADMIN);
-        $settings = $m->getEditSettingsAdmin($model);
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        $event = new UpdateEvent;
+        $event->model = $this->findModel($id);
+        $event->model->setScenario(Module::SCN_ADMIN);
+        $settings = $m->getEditSettingsAdmin($event->model);
+        $this->_module->trigger(Module::EVENT_ADMIN_UPDATE_BEGIN, $event);
+        if ($event->model->load(Yii::$app->request->post()) && $event->model->save()) {
+            $this->_module->trigger(Module::EVENT_ADMIN_UPDATE_COMPLETE, $event);
+            return $this->redirect($event->redirectUrl ? $event->redirectUrl : ['view', 'id' => $event->model->id]);
         } else {
-            return $this->display(Module::VIEW_ADMIN_UPDATE, [
-                'model' => $model,
+            return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_ADMIN_UPDATE, [
+                'model' => $event->model,
                 'settings' => $settings
             ]);
         }
@@ -182,18 +208,25 @@ class AdminController extends BaseController
         if (!$m->checkSettings($settings, 'createUser')) {
             throw new ForbiddenHttpException(Yii::t('user', 'This operation is not allowed'));
         }
+        $event = new CreateEvent;
+        $event->model = $class = $this->fetchModel(Module::MODEL_USER);
+        $this->_module->trigger(Module::EVENT_CREATE_USER_BEGIN, $event);
         $class = $this->fetchModel(Module::MODEL_USER);
         $model = new $class(['scenario' => Module::SCN_ADMIN_CREATE]);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $model->setPassword($model->password);
             $model->generateAuthKey();
             if ($model->save()) {
-                Yii::$app->session->setFlash('success', Yii::t('user', 'The user was created successfully.'));
-                return $this->redirect(['view', 'id' => $model->id]);
+                $event->flashType = 'success';
+                $event->message = Yii::t('user', 'The user was created successfully.');
+                $this->_module->trigger(Module::EVENT_CREATE_USER_COMPLETE, $event);
+                if($event->redirect !== false) {
+                    return $this->redirect($event->redirect ? $event->redirect : ['view', 'id' => $model->id]);
+                }
             }
         }
-        return $this->display(Module::VIEW_ADMIN_CREATE, [
-            'model' => $model
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_ADMIN_CREATE, [
+            'model' => $event->model
         ]);
     }
 

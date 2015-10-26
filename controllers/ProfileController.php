@@ -12,6 +12,10 @@ use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\models\UserProfile;
 use comyii\user\models\SocialProfile;
+use comyii\user\events\profile\IndexEvent;
+use comyii\user\events\profile\ViewEvent;
+use comyii\user\events\profile\UpdateEvent;
+use comyii\user\events\profile\AvatarDeleteEvent;
 use yii\base\Model;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
@@ -64,14 +68,17 @@ class ProfileController extends BaseController
      */
     public function actionIndex()
     {
-        $data = $this->findModel();
+        $event = new IndexEvent;
+        $event->extract($this->findModel());
+        $this->_module->trigger(Module::EVENT_PROFILE_INDEX, $event);
         if (Yii::$app->request->post()) {
-            $out = $this->update($data);
+            $out = $this->update($event->model);
             if ($out !== null) {
                 return $out;
             }
         }
-        return $this->display(Module::VIEW_PROFILE_INDEX, $data);
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_PROFILE_INDEX, 
+                ['model' => $event->model, 'profile' => $event->profile, 'social' => $event->social]);
     }
 
     /**
@@ -83,14 +90,17 @@ class ProfileController extends BaseController
      */
     public function actionView($id)
     {
-        $data = $this->findModel($id);
+        $event = new ViewEvent;
+        $event->extract($this->findModel($id));
+        $this->_module->trigger(Module::EVENT_PROFILE_INDEX, $event);
         if (Yii::$app->request->post()) {
-            $out = $this->update($data);
+            $out = $this->update($event);
             if ($out !== null) {
                 return $out;
             }
         }
-        return $this->display(Module::VIEW_PROFILE_VIEW, $data);
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_PROFILE_VIEW,
+                ['model' => $event->model, 'profile' => $event->profile, 'social' => $event->social]);
     }
 
     /**
@@ -101,19 +111,17 @@ class ProfileController extends BaseController
      */
     public function actionUpdate()
     {
-        /**
-         * @var User          $model
-         * @var UserProfile   $profile
-         * @var SocialProfile $social
-         */
-        $data = $this->findModel();
+        $event = new UpdateEvent;
+        $event->extract($this->findModel());
+        $this->_module->trigger(Module::EVENT_PROFILE_UPDATE, $event);
         if (Yii::$app->request->post()) {
-            $out = $this->update($data);
+            $out = $this->update($event);
             if ($out !== null) {
                 return $out;
             }
         }
-        return $this->display(Module::VIEW_PROFILE_UPDATE, $data);
+        return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_PROFILE_UPDATE, 
+                ['model' => $event->model, 'profile' => $event->profile, 'social' => $event->social]);
     }
 
     /**
@@ -132,27 +140,33 @@ class ProfileController extends BaseController
          * @var UserProfile $class
          * @var UserProfile $profile
          */
+        $event = AvatarDeleteEvent;
         $userClass = $this->fetchModel(Module::MODEL_USER);
-        $model = $userClass::findByUsername($user);
+        $event->model = $userClass::findByUsername($user);
         $id = null;
-        if ($model !== null) {
-            $id = $model->id;
+        if ($event->model !== null) {
+            $id = $event->model->id;
         }
         if ($id === null || $id != Yii::$app->user->id) {
             throw new ForbiddenHttpException(Yii::t('user', 'This operation is not allowed'));
         }
         $class = $this->fetchModel(Module::MODEL_PROFILE);
-        $profile = $class::findOne($id);
-        $session = Yii::$app->session;
-        if ($profile !== null && $profile->deleteAvatar()) {
-            if ($profile->save()) {
-                $session->setFlash('info', Yii::t('user', 'The profile avatar was deleted successfully'));
+        $event->profile = $class::findOne($id);
+        $this->_module->trigger(Module::EVENT_DELETE_AVATAR_BEGIN, $event);
+        if ($event->profile !== null && $event->profile->deleteAvatar()) {
+            if ($event->profile->save()) {
+                $event->flashType = 'info';
+                $event->message = Yii::t('user', 'The profile avatar was deleted successfully');
             } else {
-                $session->setFlash('error', Yii::t('user', 'Error deleting the profile avatar'));
+                $event->flashType = 'error';
+                $event->message = Yii::t('user', 'Error deleting the profile avatar');
             }
         }
+        
+        $this->_module->trigger(Module::EVENT_DELETE_AVATAR_COMPLETE, $event);
+        static::setFlash($event);
         $action = $this->fetchAction(Module::ACTION_PROFILE_UPDATE);
-        return $this->redirect([$action]);
+        return $this->eventRedirect($event, [$action]);
     }
 
     /**
@@ -208,43 +222,45 @@ class ProfileController extends BaseController
      */
     protected function update($data)
     {
-        /**
-         * @var User $model
-         * @var UserProfile $profile
-         * @var SocialProfile $social
-         */
-        $model = $profile = $social = null;
-        extract($data);
-        $model->scenario = Module::SCN_PROFILE;
+        $event = new UpdateEvent;
+        $event->model = $data->model;
+        $event->profile = $data->profile;
+        $event->social = $data->social;
+        $event->model->scenario = Module::SCN_PROFILE;
         $post = Yii::$app->request->post();
         $hasProfile = $this->getConfig('profileSettings', 'enabled');
-        $emailOld = $model->email;
+        $emailOld = $event->model->email;
+        
+        $this->_module->trigger(Module::EVENT_PROFILE_UPDATE_BEGIN, $event);
         if ($hasProfile || isset($post['UserProfile'])) {
-            $validate = $model->load($post) && $profile->load($post) && Model::validateMultiple([$model, $profile]);
+            $validate = $event->model->load($post) && $event->profile->load($post) && Model::validateMultiple([$event->model, $event->profile]);
         } else {
-            $validate = $model->load($post) && $model->validate();
+            $validate = $event->model->load($post) && $event->model->validate();
         }
         if ($validate) {
-            $timeLeft = Module::timeLeft('email change confirmation', $model->getEmailChangeKeyExpiry());
+            $timeLeft = Module::timeLeft('email change confirmation', $event->model->getEmailChangeKeyExpiry());
             $emailSent = $emailNew = null;
-            if ($model->validateEmailChange($emailOld)) {
-                $emailNew = $model->email_new;
-                $emailSent = $model->sendEmail('newemail', $timeLeft);
+            if ($event->model->validateEmailChange($emailOld)) {
+                $emailNew = $event->model->email_new;
+                $emailSent = $event->model->sendEmail('newemail', $timeLeft);
             }
-            $model->save();
+            $event->model->save();
             if ($hasProfile || isset($post['UserProfile'])) {
-                $profile->uploadAvatar();
-                $profile->save();
+                $event->profile->uploadAvatar();
+                $event->profile->save();
             }
+            $event->flashType = 'success';
+            $event->message = Yii::t('user', 'The user profile was updated successfully.');
+            $this->_module->trigger(Module::EVENT_PROFILE_UPDATE_COMPLETE, $event);
             $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
-            Yii::$app->session->setFlash('success', Yii::t('user', 'The user profile was updated successfully.'));
+            self::setFlash($event);
             if ($emailSent === true) {
                 Yii::$app->session->setFlash('info', Yii::t(
                     'user',
                     'Instructions to confirm the new email has been sent to your new email address <b>{email}</b>. {timeLeft}',
                     ['email' => $emailNew, 'timeLeft' => $timeLeft]
                 ));
-                return $this->redirect([$action]);
+                return $this->redirect($event->redirect ? $event->redirect : [$action]);
             } elseif ($emailSent === false) {
                 Yii::$app->session->setFlash('warning', Yii::t(
                     'user',
