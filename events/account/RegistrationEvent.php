@@ -9,12 +9,17 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\user\events;
+namespace comyii\user\events\account;
 
-use yii\base\Model;
+use comyii\user\events\Event;
+use comyii\user\events\ViewEventTrait;
+use comyii\user\events\RecordEventTrait;
 
 class RegistrationEvent extends Event
 {
+    use ViewEventTrait;
+    use RecordEventTrait;
+    
     /**
      * @var string the type of registration. This is used if there are multiple registration types 
      *     (i.e. different user types)

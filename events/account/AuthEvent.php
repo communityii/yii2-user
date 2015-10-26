@@ -9,10 +9,17 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\user\events;
+namespace comyii\user\events\account;
+
+use comyii\user\events\Event;
+use comyii\user\events\ViewEventTrait;
+use comyii\user\events\RecordEventTrait;
 
 class AuthEvent extends Event
 {
+    use ViewEventTrait;
+    use RecordEventTrait;
+    
     const RESULT_LOGGED_IN = 1;
     const RESULT_DUPLICATE_EMAIL = 2;
     const RESULT_SIGNUP_ERROR = 3;

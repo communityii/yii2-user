@@ -9,8 +9,12 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\user\events;
+namespace comyii\user\events\admin;
 
-class PasswordEvent extends Event
+use comyii\user\events\Event;
+use comyii\user\events\ViewEventTrait;
+
+class UpdateEvent extends Event
 {
+    use ViewEventTrait;
 }
