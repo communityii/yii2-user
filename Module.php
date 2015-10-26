@@ -486,17 +486,6 @@ class Module extends \kartik\base\Module
         self::ACTION_ADMIN_UPDATE => 'admin/update',
         self::ACTION_ADMIN_CREATE => 'admin/create',
     ];
-    
-    /**
-     * @var array default behaviors for the controllers. Behaviors defined here will be applied to all the controllers
-     * except install and default.
-     */
-    public $defaultControllerBehaviors = [];
-    
-    /**
-     * @var array behaviors for the controllers with the key set to the controller id and value as an array of behaviors.
-     */
-    public $controllerBehaviors = [];
 
     /**
      * @var array default behaviors for the controllers. Behaviors defined here will be applied to all the controllers
