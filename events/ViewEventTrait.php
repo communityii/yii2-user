@@ -30,12 +30,6 @@ trait ViewEventTrait
     public $viewFile;
 
     /**
-     * @var boolean the current status for the controller. This is used so that event handlers can tell the controller
-     *     whether to not to continue.
-     */
-    public $error = false;
-
-    /**
      * @var string|null the flash message for the controller. This is used so that event handlers can update the
      *     success messages for things like user registration.
      */
