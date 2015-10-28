@@ -15,7 +15,6 @@ use comyii\user\Module;
 use kartik\helpers\Html;
 use kartik\form\ActiveForm;
 use kartik\builder\Form;
-use kartik\base\Widget;
 
 /**
  * Base form widget for the yii2-user module
