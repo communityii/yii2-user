@@ -12,7 +12,6 @@
 namespace comyii\user\events;
 
 use Exception;
-use yii\base\Event;
 use yii\web\Controller;
 
 class ExceptionEvent extends Event
