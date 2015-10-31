@@ -9,7 +9,7 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\clients;
+namespace comyii\user\clients;
 
 use yii\authclient\clients\GoogleOAuth;
 
