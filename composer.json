@@ -22,7 +22,7 @@
         "kartik-v/yii2-password": "*",
         "kartik-v/yii2-builder": "*",
         "kartik-v/yii2-detail-view": "*",
-        "comyii/yii2-common": "*",
+        "communityii/yii2-common": "*",
         "derekisbusy/yii2-haikunator": "*"
     },
     "autoload": {
