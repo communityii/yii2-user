@@ -13,8 +13,12 @@ namespace comyii\user\events\admin;
 
 use comyii\user\events\Event;
 use comyii\user\events\ViewEventTrait;
+use comyii\user\events\RecordEventTrait;
+use comyii\user\events\ProfileEventTrait;
 
 class UpdateEvent extends Event
 {
     use ViewEventTrait;
+    use RecordEventTrait;
+    use ProfileEventTrait;
 }
