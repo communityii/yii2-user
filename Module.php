@@ -401,6 +401,18 @@ class Module extends \kartik\base\Module
      *   Defaults to `/^[A-Za-z0-9_\-]+$/u`.
      * - userNameValidMsg: string, the error message to display if the username pattern validation fails.
      *   Defaults to `"{attribute} can contain only letters, numbers, hyphen, and underscore."`.
+     * - randomPasswords: bool, hide the password input in registration form and generate random password.
+     *   Defaults to `false`.
+     * - randomPasswordMinLength: integer, minimum length of a random generated password. Must be 8 or more.
+     *   Note that this value is used for social auth sign ups. Should be at least 8. Defaults to 10.
+     * - randomPasswordMaxLength: integer, maximum length of a random generated password. Note that this 
+     *   value is used for social auth sign ups. Should be greater than minimum password length above.
+     *   Defaults to 14.
+     * - randomUsernames: bool, hide the username input in registration form and generate random username.
+     *   Note that random usernames are generated for social auth sign ups when a nickname or handle is not available.
+     *   Defaults to `false`.
+     * - randomUsernameGenerator: callable|array, if set to a callable then the callable will be used to generate
+     * the random username. If set to array, use as Haikunator config.
      *
      * @see `setConfig()` method for the default settings
      */
@@ -676,8 +688,14 @@ HTML;
             'userNameValidMsg' => Yii::t(
                 'user',
                 '{attribute} can contain only letters, numbers, hyphen, and underscore.'
-            )
+            ),
+            'randomPasswords' => false,
+            'randomPasswordMinLength' => 10,
+            'randomPasswordMaxLength' => 14,
+            'randomUsernames' => false,
+            'randomUsernameGenerator' => []
         ], $this->registrationSettings);
+        
         $appName = \Yii::$app->name;
         $supportEmail = isset(\Yii::$app->params['supportEmail']) ? \Yii::$app->params['supportEmail'] :
             'nobody@' . $_SERVER['HTTP_HOST'];
@@ -1117,6 +1135,14 @@ HTML;
             return null;
         }
         return $this->layoutSettings[$view];
+    }
+    
+    public function getRegistrationSetting($setting, $userType = null)
+    {
+        if($userType && isset($this->registrationSettings['userTypes'][$userType][$setting])) {
+            return $this->registrationSettings['userTypes'][$userType][$setting];
+        }
+        return $this->registrationSettings[$setting];
     }
 
     /**
