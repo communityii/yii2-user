@@ -16,6 +16,7 @@ use yii\helpers\Html;
 use yii\web\IdentityInterface;
 use kartik\password\StrengthValidator;
 use comyii\user\Module;
+use derekisbusy\haikunator\Haikunator;
 
 /**
  * This is the model class for table {{%user}}.
@@ -575,6 +576,37 @@ class User extends BaseModel implements IdentityInterface
     {
         $this->password_hash = Yii::$app->security->generatePasswordHash($password);
         $this->password_reset_on = call_user_func($this->_module->now);
+    }
+    
+    public function setRandomPassword($userType=null)
+    {
+        $m = Yii::$app->getModule('user');
+        $randomPasswordGenerator = $m->getRegistrationSetting('randomPasswordGenerator', $userType);
+        if (is_callable($randomPasswordGenerator)) {
+            $password = call_user_func($randomPasswordGenerator);
+        } else {
+            $minPassLen = $this->getConfig('registrationSettings', 'randomPasswordMinLength', 10);
+            $maxPassLen = $this->getConfig('registrationSettings', 'randomPasswordMaxLength', 14);
+            $password = Yii::$app->security->generateRandomString(rand($minPassLen, $maxPassLen));
+        }
+        $this->password = $password;
+    }
+    
+    public function setRandomUsername($userType=null)
+    {
+        $m = Yii::$app->getModule('user');
+        $username = '';
+        $randomUsernameGenerator = $m->getRegistrationSetting('randomUsernameGenerator', $userType);
+        $i = 0;
+        do {
+            if (is_callable($randomUsernameGenerator)) {
+                $username = call_user_func($randomUsernameGenerator);
+            } else {
+                $username = Haikunator::haikunate($randomUsernameGenerator);
+            }
+            $i++;
+        } while($i < 100 && self::find()->where(['username' => $username])->exists());
+        $this->username = $username;
     }
 
     /**
