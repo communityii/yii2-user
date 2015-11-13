@@ -33,6 +33,7 @@ use comyii\user\events\account\ResetEvent;
 use comyii\user\events\account\ActivateEvent;
 use comyii\user\events\account\AuthEvent;
 use comyii\user\events\account\NewemailEvent;
+use derekisbusy\haikunator\Haikunator;
 
 /**
  * Account controller for authentication of various user actions.
@@ -111,11 +112,32 @@ class AccountController extends BaseController
          * @var User          $user
          * @var AuthEvent     $event
          */
+        $socialClass = $this->fetchModel(Module::MODEL_SOCIAL_PROFILE);
+        $userClass = $this->fetchModel(Module::MODEL_USER);
         $attributes = $client->getUserAttributes();
         $clientId = $client->getId();
         $clientTitle = $client->getTitle();
-        $socialClass = $this->fetchModel(Module::MODEL_SOCIAL_PROFILE);
-        $userClass = $this->fetchModel(Module::MODEL_USER);
+        $sourceId = (string)$attributes['id'];
+        $email = $client->getEmail();
+        $username = $client->getUsername();
+        
+        // generate random username if username is empty, less than min length, or random usernames have been enabled
+        $randomUsernameGenerator = $this->getConfig('registrationSettings', 'randomUsernameGenerator', ["delimiter" => "."]);
+        if (empty($username) || $username < $this->getConfig('registrationSettings', 'minUsernameLength', 5) ||
+                $this->getConfig('registrationSettings', 'randomUsernames', false)
+            ) {
+            $i = 0;
+            do {
+                if (is_callable($randomUsernameGenerator)) {
+                    $username = call_user_func($randomUsernameGenerator);
+                } else {
+                    $username = Haikunator::haikunate($randomUsernameGenerator);
+                }
+                $i++;
+            } while($i < 10 && $userClass::find()->where(['username' => $username])->exists());
+            unset($i);
+        }
+        
         $event = new AuthEvent;
         $event->client = $client;
         $event->userClass = $userClass;
@@ -140,9 +162,7 @@ class AccountController extends BaseController
                     );
                     $event->result = AuthEvent::RESULT_LOGGED_IN;
                 } else { // signup
-                    if (isset($attributes['email']) && isset($attributes['username']) &&
-                        $userClass::find()->where(['email' => $attributes['email']])->exists()
-                    ) {
+                    if (!empty($email) && $userClass::find()->where(['email' => $email])->exists()) {
                         $event->flashType = 'error';
                         $event->message = Yii::t(
                             'user',
@@ -151,10 +171,12 @@ class AccountController extends BaseController
                         );
                         $event->result = AuthEvent::RESULT_DUPLICATE_EMAIL;
                     } else {
-                        $password = Yii::$app->security->generateRandomString(6);
+                        $minPassLen = $this->getConfig('registrationSettings', 'randomPasswordMinLength', 10);
+                        $maxPassLen = $this->getConfig('registrationSettings', 'randomPasswordMaxLength', 14);
+                        $password = Yii::$app->security->generateRandomString(rand($minPassLen, $maxPassLen));
                         $user = new $userClass([
-                            'username' => $attributes['login'],
-                            'email' => $attributes['email'],
+                            'username' => $username,
+                            'email' => $email,
                             'password' => $password,
                         ]);
                         $user->generateAuthKey();
@@ -163,7 +185,7 @@ class AccountController extends BaseController
                             $auth = new $socialClass([
                                 'user_id' => $user->id,
                                 'source' => $clientId,
-                                'source_id' => (string)$attributes['id'],
+                                'source_id' => $sourceId,
                             ]);
                             if ($auth->save()) {
                                 $transaction->commit();
@@ -390,6 +412,12 @@ class AccountController extends BaseController
         $m->trigger(Module::EVENT_REGISTER_BEGIN, $event);
         $viewFile = $event->viewFile ? $event->viewFile : Module::VIEW_REGISTER;
         if ($model->load(Yii::$app->request->post()) && !$event->error) {
+            if ($m->getRegistrationSetting('randomUsernames', $event->type)) {
+                $model->setRandomUsername($event->type);
+            }
+            if ($m->getRegistrationSetting('randomPasswords', $event->type)) {
+                $model->setRandomPassword($event->type);
+            }
             $model->setPassword($model->password);
             $model->generateAuthKey();
             $model->status = Module::STATUS_PENDING;
@@ -443,7 +471,8 @@ class AccountController extends BaseController
             'hasSocialAuth' => $hasSocialAuth,
             'authAction' => $authAction,
             'registerTitle' => Yii::t('user', 'Register'),
-            'authTitle' => Yii::t('user', 'Or Login Using')
+            'authTitle' => Yii::t('user', 'Or Login Using'),
+            'type' => $type
         ]);
     }
 
