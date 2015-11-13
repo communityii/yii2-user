@@ -13,8 +13,10 @@ namespace comyii\user\events\admin;
 
 use comyii\user\events\Event;
 use comyii\user\events\SearchEventTrait;
+use comyii\user\events\ViewEventTrait;
 
 class IndexEvent extends Event
 {
     use SearchEventTrait;
+    use ViewEventTrait;
 }

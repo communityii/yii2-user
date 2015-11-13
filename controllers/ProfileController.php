@@ -223,9 +223,7 @@ class ProfileController extends BaseController
     protected function update($data)
     {
         $event = new UpdateEvent;
-        $event->model = $data->model;
-        $event->profile = $data->profile;
-        $event->social = $data->social;
+        $event->extract($data);
         $event->model->scenario = Module::SCN_PROFILE;
         $post = Yii::$app->request->post();
         $hasProfile = $this->getConfig('profileSettings', 'enabled');

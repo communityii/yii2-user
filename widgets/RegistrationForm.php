@@ -47,6 +47,11 @@ class RegistrationForm extends LoginForm
      * @var mixed the social authorization action
      */
     public $authAction = 'account/auth';
+    
+    /**
+     * @var string the user type
+     */
+    public $userType;
 
     /**
      * @inheritdoc
@@ -57,22 +62,26 @@ class RegistrationForm extends LoginForm
          * @var Module $m
          */
         $m = Yii::$app->getModule('user');
-        $password = ['type' => Form::INPUT_PASSWORD];
-        if (in_array(Module::SCN_REGISTER, $m->passwordSettings['strengthMeter'])) {
-            $password = [
-                'type' => Form::INPUT_WIDGET,
-                'widgetClass' => PasswordInput::classname(),
-                'options' => [
+        if(!$m->getRegistrationSetting('randomUsernames', $this->userType)) {
+            $this->attributes += ['username' => ['type' => Form::INPUT_TEXT, 'options' => ['autocomplete' => 'new-username']]];
+        }
+        if(!$m->getRegistrationSetting('randomPasswords', $this->userType)) {
+            $password = ['type' => Form::INPUT_PASSWORD];
+            if (in_array(Module::SCN_REGISTER, $m->passwordSettings['strengthMeter'])) {
+                $password = [
+                    'type' => Form::INPUT_WIDGET,
+                    'widgetClass' => PasswordInput::classname(),
                     'options' => [
-                        'placeholder' => Yii::t('user', 'Password'),
-                        'autocomplete' => 'new-password'
+                        'options' => [
+                            'placeholder' => Yii::t('user', 'Password'),
+                            'autocomplete' => 'new-password'
+                        ]
                     ]
-                ]
-            ];
+                ];
+            }
+            $this->attributes += ['password' => $password];
         }
         $this->attributes += [
-            'username' => ['type' => Form::INPUT_TEXT, 'options' => ['autocomplete' => 'new-username']],
-            'password' => $password,
             'email' => ['type' => Form::INPUT_TEXT]
         ];
         $captcha = ArrayHelper::getValue($m->registrationSettings, 'captcha', false);
