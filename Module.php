@@ -429,6 +429,7 @@ class Module extends \kartik\base\Module
      * - widgetSocial: array, the settings for the yii\authclient\widgets\AuthChoice widget.
      * - widgetSocialClass: string, the classname to use. Will default to `comyii\user\widgets\SocialConnectChoice`,
      *   which extends from `yii\authclient\widgets\AuthChoice` widget.
+     * - defaultSuccessUrl: string, the default success url
      * @see `setConfig()` method for the default settings
      */
     public $socialSettings = [];
@@ -1137,12 +1138,20 @@ HTML;
         return $this->layoutSettings[$view];
     }
     
-    public function getRegistrationSetting($setting, $userType = null)
+    public function getRegistrationSetting($setting, $userType = null, $default = null)
     {
         if($userType && isset($this->registrationSettings['userTypes'][$userType][$setting])) {
             return $this->registrationSettings['userTypes'][$userType][$setting];
         }
-        return $this->registrationSettings[$setting];
+        return ArrayHelper::getValue($this->registrationSettings, $setting, $default);
+    }
+    
+    public function getSocialSetting($setting, $userType = null, $default = null)
+    {
+        if($userType && isset($this->socialSettings['userTypes'][$userType][$setting])) {
+            return $this->socialSettings['userTypes'][$userType][$setting];
+        }
+        return ArrayHelper::getValue($this->socialSettings, $setting, $default);
     }
 
     /**
@@ -1162,6 +1171,11 @@ HTML;
             ]);
         }
         return '';
+    }
+    
+    public function isUserType($userType)
+    {
+        return isset($this->userTypes[$userType]);
     }
 
     /**
