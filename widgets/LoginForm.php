@@ -41,11 +41,13 @@ class LoginForm extends BaseForm
         parent::init();
         $m = $this->_module;
         if ($this->model->scenario !== Module::SCN_EXPIRY) {
-            $this->mergeAttributes([
-                'username' => ['type' => Form::INPUT_TEXT],
-                'password' => ['type' => Form::INPUT_PASSWORD],
-                'rememberMe' => ['type' => Form::INPUT_CHECKBOX]
-            ]);
+            if ($this->model->scenario !== Module::SCN_REGISTER) {
+                $this->mergeAttributes([
+                    'username' => ['type' => Form::INPUT_TEXT],
+                    'password' => ['type' => Form::INPUT_PASSWORD],
+                    'rememberMe' => ['type' => Form::INPUT_CHECKBOX]
+                ]);
+            }
             $this->leftFooter = $m->button(Module::BTN_FORGOT_PASSWORD) . $m->button(Module::BTN_NEW_USER);
             $this->rightFooter = $m->button(Module::BTN_LOGIN);
             if ($this->hasSocialAuth && $m->socialSettings['widgetEnabled']) {
