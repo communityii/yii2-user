@@ -62,10 +62,10 @@ class RegistrationForm extends LoginForm
          * @var Module $m
          */
         $m = Yii::$app->getModule('user');
-        if(!$m->getRegistrationSetting('randomUsernames', $this->userType)) {
-            $this->attributes += ['username' => ['type' => Form::INPUT_TEXT, 'options' => ['autocomplete' => 'new-username']]];
+        if (!$m->getRegistrationSetting('randomUsernames', $this->userType)) {
+            $this->attributes['username'] = ['type' => Form::INPUT_TEXT, 'options' => ['autocomplete' => 'new-username']];
         }
-        if(!$m->getRegistrationSetting('randomPasswords', $this->userType)) {
+        if (!$m->getRegistrationSetting('randomPasswords', $this->userType)) {
             $password = ['type' => Form::INPUT_PASSWORD];
             if (in_array(Module::SCN_REGISTER, $m->passwordSettings['strengthMeter'])) {
                 $password = [
@@ -74,16 +74,15 @@ class RegistrationForm extends LoginForm
                     'options' => [
                         'options' => [
                             'placeholder' => Yii::t('user', 'Password'),
-                            'autocomplete' => 'new-password'
+                            'autocomplete' => 'off',
                         ]
                     ]
                 ];
             }
-            $this->attributes += ['password' => $password];
+            $this->attributes['password'] = $password;
         }
-        $this->attributes += [
-            'email' => ['type' => Form::INPUT_TEXT]
-        ];
+        $this->attributes['email'] = ['type' => Form::INPUT_TEXT];
+        
         $captcha = ArrayHelper::getValue($m->registrationSettings, 'captcha', false);
         if ($captcha !== false && is_array($captcha)) {
             $this->attributes['captcha'] = [
