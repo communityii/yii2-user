@@ -581,12 +581,12 @@ class User extends BaseModel implements IdentityInterface
     public function setRandomPassword($userType=null)
     {
         $m = Yii::$app->getModule('user');
-        $randomPasswordGenerator = $m->getRegistrationSetting('randomPasswordGenerator', $userType);
+        $randomPasswordGenerator = $m->getRegistrationSetting('randomPasswordGenerator', $userType, null);
         if (is_callable($randomPasswordGenerator)) {
             $password = call_user_func($randomPasswordGenerator);
         } else {
-            $minPassLen = $this->getConfig('registrationSettings', 'randomPasswordMinLength', 10);
-            $maxPassLen = $this->getConfig('registrationSettings', 'randomPasswordMaxLength', 14);
+            $minPassLen = $m->getRegistrationSetting('randomPasswordMinLength', $userType, 10);
+            $maxPassLen = $m->getRegistrationSetting('randomPasswordMaxLength', $userType, 14);
             $password = Yii::$app->security->generateRandomString(rand($minPassLen, $maxPassLen));
         }
         $this->password = $password;
