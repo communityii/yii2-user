@@ -6,19 +6,21 @@
  * @see https://github.com/communityii/yii2-user
  */
 
+use yii\web\View;
 use kartik\form\ActiveForm;
-use kartik\helpers\Html;
 use kartik\password\PasswordInput;
 use comyii\user\Module;
-use comyii\user\widgets\Logo;
 use comyii\user\widgets\UserMenu;
+use comyii\user\models\User;
+
+/**
+ * @var View   $this
+ * @var Module $m
+ * @var User   $model
+ */
 
 $m = Yii::$app->getModule('user');
 $this->title = Yii::t('user', 'Reset Password') . ' (' . $model->username . ')';
-/**
- * @var yii\web\View             $this
- * @var comyii\user\models\Login $model
- */
 ?>
     <div class="page-header">
         <div class="pull-right"><?= UserMenu::widget(['ui' => 'password', 'user' => $model->id]) ?></div>

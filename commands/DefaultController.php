@@ -3,15 +3,16 @@
 namespace comyii\user\commands;
  
 use yii\console\Controller;
-use yii\helpers\Console;
  
 class DefaultController extends Controller
 {
+    const GREET = 'Hello World! Welcome to the "communityii/yii2-user" module.';
+
     /**
      * Hello world test
      * @param string $message the message
      */
-    public function actionIndex($message = 'hello world from module')
+    public function actionIndex($message = self::GREET)
     {
         echo $message . "\n";
     }

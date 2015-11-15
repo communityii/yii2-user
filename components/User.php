@@ -23,7 +23,7 @@ use Yii;
 class User extends \yii\web\User
 {
     /**
-     * @var boolean whether to enable cookie-based login. Defaults to true.
+     * @var bool whether to enable cookie-based login. Defaults to true.
      */
     public $enableAutoLogin = true;
 

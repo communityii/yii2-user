@@ -11,16 +11,17 @@
 
 namespace comyii\user\events\account;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
+use comyii\user\events\AccountEvent;
 
-class ActivateEvent extends Event
+/**
+ * Class ActivateEvent  is used for triggering all user activation events
+ *
+ * @package comyii\user\events\account
+ */
+class ActivateEvent extends AccountEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
     /**
-     * @var boolean the result of the activation attempt (read only)
+     * @var bool the result of the activation attempt (read only)
      */
     public $result;
 }

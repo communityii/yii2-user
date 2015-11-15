@@ -9,19 +9,29 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\user;
+namespace comyii\user\components;
 
+use yii\base\Exception;
 use comyii\user\events\ExceptionEvent;
 
-class EmailException extends \yii\base\Exception
+/**
+ * EmailException is used for triggering email related exceptions.
+ */
+class EmailException extends Exception
 {
+    /**
+     * @var ExceptionEvent the exception event raised
+     */
     public $event;
-    
-	public function __construct ($message, $code, $previous) {
+
+    /**
+     * @inheritdoc
+     */
+    public function __construct($message, $code = 0, $previous = null)
+    {
         $this->message = $message;
         $this->event = new ExceptionEvent;
         $this->event->error = true;
         $this->event->exception = $this;
     }
-    
 }

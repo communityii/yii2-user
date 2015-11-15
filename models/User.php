@@ -21,30 +21,32 @@ use derekisbusy\haikunator\Haikunator;
 /**
  * This is the model class for table {{%user}}.
  *
- * @property string           $id
- * @property string           $username
- * @property string           $email
- * @property string           $email_new
- * @property string           $password_hash
- * @property string           $auth_key
- * @property string           $activation_key
- * @property string           $reset_key
- * @property string           $email_change_key
- * @property integer          $status
- * @property integer          $status_sec
- * @property integer          $created_on
- * @property integer          $updated_on
- * @property string           $last_login_ip
- * @property string           $last_login_on
- * @property string           $password_reset_on
- * @property string           $password_fail_attempts
- * @property string           $password write-only password
- * @property string           $password_new write-only password
- * @property string           $password_confirm write-only password
- * @property string           $captcha the captcha for registration
- * @property string           $type the type of user or null if not implementing user types.
+ * @property string      $id
+ * @property string      $username
+ * @property string      $email
+ * @property string      $email_new
+ * @property string      $password_hash
+ * @property string      $auth_key
+ * @property string      $activation_key
+ * @property string      $reset_key
+ * @property string      $email_change_key
+ * @property integer     $status
+ * @property integer     $status_sec
+ * @property integer     $created_on
+ * @property integer     $updated_on
+ * @property string      $last_login_ip
+ * @property string      $last_login_on
+ * @property string      $password_reset_on
+ * @property string      $password_fail_attempts
+ * @property string      $password write-only password
+ * @property string      $password_new write-only password
+ * @property string      $password_confirm write-only password
+ * @property string      $captcha the captcha for registration
+ * @property string      $type the type of user or null if not implementing user types.
  *
- * @property UserProfile      $userProfile
+ * @property UserProfile $profile
+ * @property string      statusText
+ * @property string      statusSecText
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
@@ -136,7 +138,12 @@ class User extends BaseModel implements IdentityInterface
             ['password', 'required'],
             ['password', 'isValidPassword', 'on' => [Module::SCN_CHANGEPASS, Module::SCN_NEWEMAIL]],
             [['password_new', 'password_confirm'], 'required', 'on' => [Module::SCN_RESET, Module::SCN_CHANGEPASS]],
-            ['password_confirm', 'compare', 'compareAttribute' => 'password_new', 'on' => [Module::SCN_RESET, Module::SCN_CHANGEPASS]],
+            [
+                'password_confirm',
+                'compare',
+                'compareAttribute' => 'password_new',
+                'on' => [Module::SCN_RESET, Module::SCN_CHANGEPASS]
+            ],
             [
                 'password_new',
                 'compare',
@@ -271,6 +278,8 @@ class User extends BaseModel implements IdentityInterface
     /**
      * Get user details link
      *
+     * @param bool $showId whether user id is shown (if false assumes username)
+     *
      * @return string
      */
     public function getUserLink($showId = false)
@@ -393,7 +402,7 @@ class User extends BaseModel implements IdentityInterface
      *
      * @param string $username
      *
-     * @return static|null
+     * @return static
      */
     public static function findByUsername($username)
     {
@@ -405,7 +414,7 @@ class User extends BaseModel implements IdentityInterface
      *
      * @param string $email
      *
-     * @return static|null
+     * @return static
      */
     public static function findByEmail($email)
     {
@@ -417,7 +426,7 @@ class User extends BaseModel implements IdentityInterface
      *
      * @param string $input
      *
-     * @return static|null
+     * @return static
      */
     public static function findByUserOrEmail($input)
     {
@@ -432,7 +441,7 @@ class User extends BaseModel implements IdentityInterface
      * @param string  $value key attribute value
      * @param integer $expire key expiry
      *
-     * @return static|null
+     * @return static
      */
     public static function findByKey($attribute, $value, $expire = 0)
     {
@@ -528,7 +537,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function generateAuthKey()
     {
-        $this->auth_key = self::generateKey($this->authKeyExpiry);
+        $this->auth_key = self::generateKey($this->getAuthKeyExpiry());
     }
 
     /**
@@ -536,7 +545,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function generateResetKey()
     {
-        $this->reset_key = self::generateKey($this->resetKeyExpiry);
+        $this->reset_key = self::generateKey($this->getResetKeyExpiry());
     }
 
     /**
@@ -544,7 +553,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function generateActivationKey()
     {
-        $this->activation_key = self::generateKey($this->activationKeyExpiry);
+        $this->activation_key = self::generateKey($this->getActivationKeyExpiry());
     }
 
     /**
@@ -552,7 +561,7 @@ class User extends BaseModel implements IdentityInterface
      */
     public function generateEmailChangeKey()
     {
-        $this->email_change_key = self::generateKey($this->emailChangeKeyExpiry);
+        $this->email_change_key = self::generateKey($this->getEmailChangeKeyExpiry());
     }
 
     /**
@@ -577,9 +586,17 @@ class User extends BaseModel implements IdentityInterface
         $this->password_hash = Yii::$app->security->generatePasswordHash($password);
         $this->password_reset_on = call_user_func($this->_module->now);
     }
-    
-    public function setRandomPassword($userType=null)
+
+    /**
+     * Sets a random password
+     *
+     * @param string $userType the user type
+     */
+    public function setRandomPassword($userType = null)
     {
+        /**
+         * @var Module $m
+         */
         $m = Yii::$app->getModule('user');
         $randomPasswordGenerator = $m->getRegistrationSetting('randomPasswordGenerator', $userType, null);
         if (is_callable($randomPasswordGenerator)) {
@@ -591,21 +608,31 @@ class User extends BaseModel implements IdentityInterface
         }
         $this->password = $password;
     }
-    
-    public function setRandomUsername($userType=null)
+
+    /**
+     * Sets a random username
+     *
+     * @param string $userType the user type
+     */
+    public function setRandomUsername($userType = null)
     {
+        /**
+         * @var Module $m
+         */
         $m = Yii::$app->getModule('user');
-        $username = '';
         $randomUsernameGenerator = $m->getRegistrationSetting('randomUsernameGenerator', $userType);
         $i = 0;
-        do {
+        $username = '';
+        $proceed = true;
+        while ($i < 100 && $proceed) {
             if (is_callable($randomUsernameGenerator)) {
                 $username = call_user_func($randomUsernameGenerator);
             } else {
                 $username = Haikunator::haikunate($randomUsernameGenerator);
             }
+            $proceed = self::find()->where(['username' => $username])->exists();
             $i++;
-        } while($i < 100 && self::find()->where(['username' => $username])->exists());
+        }
         $this->username = $username;
     }
 
@@ -708,7 +735,7 @@ class User extends BaseModel implements IdentityInterface
         if ($emailOld != $this->email) {
             $this->email_new = $this->email;
             $this->email = $emailOld;
-            if (!static::isKeyValid($this->email_change_key, $this->emailChangeKeyExpiry)) {
+            if (!static::isKeyValid($this->email_change_key, $this->getEmailChangeKeyExpiry())) {
                 $this->generateEmailChangeKey();
             }
             return true;

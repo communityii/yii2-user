@@ -13,9 +13,11 @@ use Yii;
 use DateTime;
 use yii\base\Model;
 use yii\base\InvalidConfigException;
+use yii\console\Application as ConsoleApplication;
 use yii\helpers\ArrayHelper;
 use yii\helpers\FormatConverter;
 use yii\helpers\Url;
+use yii\swiftmailer\Mailer;
 use kartik\helpers\Html;
 use kartik\helpers\Enum;
 use yii\authclient\Collection;
@@ -150,6 +152,8 @@ class Module extends \kartik\base\Module
     const EVENT_PROFILE_UPDATE = 'profileUpdate';
     const EVENT_PROFILE_UPDATE_BEGIN = 'profileUpdateBegin';
     const EVENT_PROFILE_UPDATE_COMPLETE = 'profileUpdateComplete';
+    const EVENT_PROFILE_DELETE_AVATAR_BEGIN = 'profileDeleteAvatarBegin';
+    const EVENT_PROFILE_DELETE_AVATAR_COMPLETE = 'profileDeleteAvatarComplete';
     const EVENT_ADMIN_INDEX = 'adminIndex';
     const EVENT_ADMIN_VIEW = 'adminView';
     const EVENT_ADMIN_UPDATE_BEGIN = 'adminUpdateBegin';
@@ -159,9 +163,9 @@ class Module extends \kartik\base\Module
     const EVENT_CREATE_USER_BEGIN = 'createBegin';
     const EVENT_CREATE_USER_COMPLETE = 'createComplete';
     const EVENT_EMAIL_FAILED = 'emailFailed';
-    
+
     // default layout
-    const LAYOUT = 'install';
+    const LAYOUT = 'default';
 
     /**
      * @var string code for accessing the user install configuration screen. You will need to
@@ -406,7 +410,7 @@ class Module extends \kartik\base\Module
      *   Defaults to `false`.
      * - randomPasswordMinLength: integer, minimum length of a random generated password. Must be 8 or more.
      *   Note that this value is used for social auth sign ups. Should be at least 8. Defaults to 10.
-     * - randomPasswordMaxLength: integer, maximum length of a random generated password. Note that this 
+     * - randomPasswordMaxLength: integer, maximum length of a random generated password. Note that this
      *   value is used for social auth sign ups. Should be greater than minimum password length above.
      *   Defaults to 14.
      * - randomUsernames: bool, hide the username input in registration form and generate random username.
@@ -548,7 +552,7 @@ class Module extends \kartik\base\Module
      */
     public function setConfig()
     {
-        
+
         if (empty($this->now) || !$this->now instanceof \Closure) {
             $this->now = function () {
                 return time();
@@ -698,7 +702,7 @@ HTML;
             'randomUsernames' => false,
             'randomUsernameGenerator' => []
         ], $this->registrationSettings);
-        
+
         $appName = \Yii::$app->name;
         $supportEmail = isset(\Yii::$app->params['supportEmail']) ? \Yii::$app->params['supportEmail'] :
             'nobody@' . $_SERVER['HTTP_HOST'];
@@ -739,8 +743,8 @@ HTML;
                 'subject' => Yii::t('user', Yii::t('user', 'Email change for {appname}', ['appname' => $appName]))
             ]
         ], $this->notificationSettings);
-        
-        if (Yii::$app instanceof \yii\console\Application) {
+
+        if (Yii::$app instanceof ConsoleApplication) {
             return;
         }
         $this->buttons = array_replace_recursive(static::getDefaultButtonConfig(), $this->buttons);
@@ -1100,23 +1104,23 @@ HTML;
         }
         return $config;
     }
-    
+
     /**
      * Get module setting
      *
      * @param string $settings the parameter to get
      * @param string $param the parameter to get
      * @param string $userType the user type. Defaults to current user type.
-     * @param string $default the default value 
+     * @param string $default the default value
      *
      * @return mixed
      */
     private function getSetting($settings, $param, $userType = null, $default = null)
     {
-        if(!$userType) {
+        if (!$userType) {
             $userType = Yii::$app->user->getType();
         }
-        if($userType && isset($this->{$settings}['userTypes'][$userType][$param])) {
+        if ($userType && isset($this->{$settings}['userTypes'][$userType][$param])) {
             return $this->{$settings}['userTypes'][$userType][$param];
         }
         return ArrayHelper::getValue($this->{$settings}, $param, $default);
@@ -1126,7 +1130,7 @@ HTML;
      * Get the layout file for the current view and user type.
      *
      * @param string $view the view to get
-     * @param string $default the default value 
+     * @param string $default the default value
      * @param string $userType the user type. Defaults to current user type.
      *
      * @return string the layout file
@@ -1135,13 +1139,13 @@ HTML;
     {
         return $this->getSetting('layoutSettings', $view, $userType, $default);
     }
-    
+
     /**
      * Get model setting
      *
      * @param string $setting the parameter to get
      * @param string $userType the user type. Defaults to current user type.
-     * @param string $default the default value 
+     * @param string $default the default value
      *
      * @return mixed
      */
@@ -1149,13 +1153,13 @@ HTML;
     {
         return $this->getSetting('modelSettings', $setting, $userType, $default);
     }
-    
+
     /**
      * Get registration setting
      *
      * @param string $setting the parameter to get
      * @param string $userType the user type. Defaults to current user type.
-     * @param string $default the default value 
+     * @param string $default the default value
      *
      * @return mixed
      */
@@ -1163,13 +1167,13 @@ HTML;
     {
         return $this->getSetting('registrationSettings', $setting, $userType, $default);
     }
-    
+
     /**
      * Get social setting
      *
      * @param string $setting the parameter to get
      * @param string $userType the user type. Defaults to current user type.
-     * @param string $default the default value 
+     * @param string $default the default value
      *
      * @return mixed
      */
@@ -1177,12 +1181,12 @@ HTML;
     {
         return $this->getSetting('socialSettings', $setting, $userType, $default);
     }
-    
+
     /**
      * Get login setting
      *
      * @param string $setting the parameter to get
-     * @param string $default the default value 
+     * @param string $default the default value
      * @param string $userType the user type. Defaults to current user type.
      *
      * @return mixed
@@ -1191,13 +1195,13 @@ HTML;
     {
         return $this->getSetting('loginSettings', $setting, $userType, $default);
     }
-    
+
     /**
      * Get password setting
      *
      * @param string $setting the parameter to get
      * @param string $userType the user type. Defaults to current user type.
-     * @param string $default the default value 
+     * @param string $default the default value
      *
      * @return mixed
      */
@@ -1205,12 +1209,12 @@ HTML;
     {
         return $this->getSetting('passwordSettings', $setting, $userType, $default);
     }
-    
+
     /**
      * Get profile setting
      *
      * @param string $setting the parameter to get
-     * @param string $default the default value 
+     * @param string $default the default value
      * @param string $userType the user type. Defaults to current user type.
      *
      * @return mixed
@@ -1219,12 +1223,12 @@ HTML;
     {
         return $this->getSetting('profileSettings', $setting, $userType, $default);
     }
-    
+
     /**
      * Get notification setting
      *
      * @param string $setting the parameter to get
-     * @param string $default the default value 
+     * @param string $default the default value
      * @param string $userType the user type. Defaults to current user type.
      *
      * @return mixed
@@ -1233,12 +1237,12 @@ HTML;
     {
         return $this->getSetting('notificationSettings', $setting, $userType, $default);
     }
-    
+
     /**
      * Get action setting
      *
      * @param string $action the parameter to get
-     * @param string $default the default value 
+     * @param string $default the default value
      * @param string $userType the user type. Defaults to current user type.
      *
      * @return mixed
@@ -1247,12 +1251,12 @@ HTML;
     {
         return $this->getSetting('actionSettings', $action, $userType, $default);
     }
-    
+
     /**
      * Get user edit setting
      *
      * @param string $setting the parameter to get
-     * @param string $default the default value 
+     * @param string $default the default value
      * @param string $userType the user type. Defaults to current user type.
      *
      * @return mixed
@@ -1261,7 +1265,7 @@ HTML;
     {
         return $this->getSetting('userEditSettings', $setting, $userType, $default);
     }
-    
+
     /**
      * Get the controller behaviors configuration
      *
@@ -1274,8 +1278,8 @@ HTML;
     public function getControllerBehaviors($id, $userType = null)
     {
         $controllerBehaviors = $this->getSetting('controllerBehaviors', $id, $userType, null);
-        
-        if($controllerBehaviors === null) {
+
+        if ($controllerBehaviors === null) {
             return $this->defaultControllerBehaviors;
         }
         if (!is_array($controllerBehaviors)) {
@@ -1283,13 +1287,13 @@ HTML;
         }
         return self::mergeDefault($controllerBehaviors, $this->defaultControllerBehaviors);
     }
-    
+
     /**
      * Get url rules
      *
      * @param string $setting the parameter to get
      * @param string $userType the user type. Defaults to current user type.
-     * @param string $default the default value 
+     * @param string $default the default value
      *
      * @return mixed
      */
@@ -1316,7 +1320,7 @@ HTML;
         }
         return '';
     }
-    
+
     public function isUserType($userType)
     {
         return isset($this->userTypes[$userType]);
@@ -1402,7 +1406,7 @@ HTML;
         $config = $this->socialSettings;
         $class = $config['widgetSocialClass'];
         $settings = $config['widgetSocial'];
-        /** @var \comyii\user\widgets\SocialConnectChoice $class */
+        /** @var SocialConnectChoice $class */
         return $class::widget($settings);
     }
 
@@ -1421,6 +1425,9 @@ HTML;
     {
         if (!empty($this->notificationSettings[$type])) {
             $settings = $this->notificationSettings[$type];
+            /**
+             * @var Mailer $mailer
+             */
             $mailer = Yii::$app->mailer;
             $mailer->viewPath = $this->notificationSettings['viewPath'];
             if (empty($to)) {

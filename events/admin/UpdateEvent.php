@@ -11,14 +11,13 @@
 
 namespace comyii\user\events\admin;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
-use comyii\user\events\ProfileEventTrait;
+use comyii\user\events\ProfileEvent;
 
-class UpdateEvent extends Event
+/**
+ * Class UpdateEvent is used for triggering events in user admin update action.
+ *
+ * @package comyii\user\events\admin
+ */
+class UpdateEvent extends ProfileEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
-    use ProfileEventTrait;
 }

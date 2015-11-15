@@ -9,21 +9,24 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\user\authclient\clients;
+namespace comyii\user\social;
 
 use yii\authclient\clients\GoogleOAuth;
 
 class GoogleAuth extends GoogleOAuth
 {
-    /** @inheritdoc */
+    use ClientTrait;
+
+    /**
+     * @inheritdoc
+     */
     public function getEmail()
     {
-        return isset($this->getUserAttributes()['emails'][0]) ? $this->getUserAttributes()['emails'][0]['value'] : null;
+        /**
+         * @var \yii\authclient\BaseClient $this
+         */
+        $attributes = $this->getUserAttributes();
+        return $attributes && isset($attributes['email'][0]['value']) ? $attributes['email'][0]['value'] : null;
     }
-    
-    /** @inheritdoc */
-    public function getUsername()
-    {
-        return;
-    }
+
 }

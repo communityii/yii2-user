@@ -7,12 +7,11 @@
  */
 
 use kartik\form\ActiveForm;
-use kartik\helpers\Html;
-use kartik\password\PasswordInput;
 use comyii\user\Module;
-use comyii\user\widgets\Logo;
-use comyii\user\widgets\UserMenu;
 
+/**
+ * @var Module $m
+ */
 $m = Yii::$app->getModule('user');
 $this->title = Yii::t('user', 'Confirm Email Change') . ' (' . $model->username . ')';
 

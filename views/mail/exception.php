@@ -6,9 +6,12 @@
  * @see https://github.com/communityii/yii2-user
  */
 
-/* @var $this yii\web\View */
-/* @var $user common\models\User */
-$m = Yii::$app->getModule('user');
+use comyii\user\events\ExceptionEvent;
+
+/**
+ * @var ExceptionEvent $event
+ * @var Exception      $exception
+ */
 ?>
 <h3><?= $event->message ?></h3>
 <?= $exception->getTraceAsString(); ?>

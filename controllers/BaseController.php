@@ -18,7 +18,9 @@ use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use comyii\user\events\Event;
+use comyii\user\events\AccountEvent;
 use comyii\user\events\ExceptionEvent;
+use comyii\user\components\EmailException;
 use comyii\user\Module;
 
 /**
@@ -160,7 +162,7 @@ class BaseController extends Controller
      *
      * @return mixed the configuration value
      */
-    protected function getConfig($setting, $param, $default = null, $userType = null)
+    protected function getConfig($setting, $param, $default = null)
     {
         if (empty($this->_module->$setting)) {
             return $default;
@@ -171,7 +173,7 @@ class BaseController extends Controller
     /**
      * Parse url from module config
      *
-     * @param mixed $value the name of the specific setting in module config or the URL
+     * @param mixed  $value the name of the specific setting in module config or the URL
      * @param string $param the name of the parameter - if this is not passed, the `value` param will be parsed
      * as a fetch action from Module config
      *
@@ -229,9 +231,9 @@ class BaseController extends Controller
     /**
      * Redirects based on availability of event redirectUrl.
      *
-     * @param Event $event
-     * @param mixed $response
-     * @param boolean $flag whether to directly return the response or treat it as a URL and redirect. Defaults to
+     * @param AccountEvent $event
+     * @param mixed        $response
+     * @param boolean      $flag whether to directly return the response or treat it as a URL and redirect. Defaults to
      * `true` whereby directly the response is returned.
      *
      * @return mixed
@@ -248,7 +250,7 @@ class BaseController extends Controller
      * Raise an exception event trigger
      *
      * @param Exception $exception
-     * @param Event $event
+     * @param Event     $event
      *
      * @return null|Transaction
      */
@@ -259,16 +261,6 @@ class BaseController extends Controller
         $ev->exception = $exception;
         $ev->controller = $this;
         $this->_module->trigger(Module::EVENT_EXCEPTION, $event);
-    }
-    
-    public function handleException($e)
-    {
-        if ($e instanceof \comyii\user\EmailException) {
-            $this->_module->trigger(Module::EVENT_EMAIL_FAILED, $e->event);
-        }
-        if (property_exists($e,'event') && property_exists($e->event,'message')) {
-            static::setFlash($e->event);
-        }
     }
 
     /**
@@ -281,7 +273,22 @@ class BaseController extends Controller
     {
         return Module::mergeDefault($this->_module->getControllerBehaviors($this->id), $behaviors);
     }
-    
+
+    /**
+     * Handle exception
+     *
+     * @param Exception $e
+     */
+    public function handleException($e)
+    {
+        if ($e instanceof EmailException) {
+            $this->_module->trigger(Module::EVENT_EMAIL_FAILED, $e->event);
+        }
+        if (property_exists($e, 'event') && property_exists($e->event, 'message')) {
+            static::setFlash($e->event);
+        }
+    }
+
     /**
      * Initiates a DB transaction based on event's `useTransaction` property
      *

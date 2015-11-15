@@ -11,12 +11,23 @@
 
 namespace comyii\user\events\admin;
 
-use comyii\user\events\Event;
-use comyii\user\events\SearchEventTrait;
-use comyii\user\events\ViewEventTrait;
+use comyii\user\events\ViewEvent;
 
-class IndexEvent extends Event
+/**
+ * Class IndexEvent is used for triggering events in user admin index action.
+ *
+ * @package comyii\user\events\admin
+ */
+class IndexEvent extends ViewEvent
 {
-    use SearchEventTrait;
-    use ViewEventTrait;
+    /**
+     * @var \yii\db\ActiveQuery the search model
+     */
+    public $searchModel;
+
+    /**
+     *
+     * @var \yii\data\BaseDataProvider the data provider
+     */
+    public $dataProvider;
 }

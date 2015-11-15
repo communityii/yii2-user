@@ -12,7 +12,6 @@ namespace comyii\user\models;
 use Yii;
 use yii\base\Model;
 use comyii\user\Module;
-use comyii\user\models\User;
 
 /**
  * Password reset request form

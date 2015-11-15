@@ -21,8 +21,9 @@ use yii\web\UploadedFile;
  * @property string  $avatar
  * @property integer $created_on
  * @property integer $updated_on
- *
- * @property User   $user
+ * @property string  genderText
+ * @property string  avatarFile
+ * @property User    $user
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
@@ -178,7 +179,7 @@ class UserProfile extends BaseModel
     /**
      * Process upload of avatar
      *
-     * @return bool the gender of the upload
+     * @return bool the status of the upload
      */
     public function uploadAvatar()
     {
@@ -204,7 +205,7 @@ class UserProfile extends BaseModel
     /**
      * Process deletion of avatar
      *
-     * @return bool the gender of deletion
+     * @return bool the status of deletion
      */
     public function deleteAvatar()
     {

@@ -8,6 +8,7 @@
 namespace comyii\user\controllers;
 
 use Yii;
+use yii\db\Exception;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\BadRequestHttpException;
@@ -17,10 +18,10 @@ use yii\web\Response;
 use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\models\UserSearch;
-use comyii\user\controllers\BaseController;
 use comyii\user\events\admin\IndexEvent;
 use comyii\user\events\admin\ViewEvent;
 use comyii\user\events\admin\CreateEvent;
+use comyii\user\events\admin\UpdateEvent;
 use comyii\user\events\admin\BatchUpdateEvent;
 
 /**
@@ -78,7 +79,7 @@ class AdminController extends BaseController
      *
      * @return array the ajax response data that will be sent as a json format
      * @throws BadRequestHttpException
-     * @throws \yii\db\Exception
+     * @throws Exception
      */
     public function actionBatchUpdate()
     {
@@ -108,13 +109,13 @@ class AdminController extends BaseController
             ['status' => $event->status],
             ['and', ['id' => $event->keys], 'status <> ' . Module::STATUS_SUPERUSER]
         );
-        $this->_module->trigger(Module::EVENT_BATCH_UPDATE_BEGIN, $event);
+        $this->_module->trigger(Module::EVENT_ADMIN_BATCH_UPDATE_BEGIN, $event);
         try {
             $event->batch();
-        } catch(yii\db\Exception $e) {
+        } catch (Exception $e) {
             $this->raise($e, $event);
         }
-        $this->_module->trigger(Module::EVENT_BATCH_UPDATE_COMPLETE, $event);
+        $this->_module->trigger(Module::EVENT_ADMIN_BATCH_UPDATE_COMPLETE, $event);
         return [
             'status' => 'success',
             'keys' => $event->keys,
@@ -136,12 +137,11 @@ class AdminController extends BaseController
     public function actionView($id)
     {
         $event = new ViewEvent;
-        $event->id = $id;
         $event->model = $this->findModel($id);
         $event->model->setScenario(Module::SCN_ADMIN);
         $this->_module->trigger(Module::EVENT_ADMIN_VIEW, $event);
         $post = Yii::$app->request->post();
-        if(!empty($post)) {
+        if (!empty($post)) {
             $this->_module->trigger(Module::EVENT_ADMIN_UPDATE_BEGIN, $event);
         }
         if ($event->model->load($post)) {
@@ -181,7 +181,7 @@ class AdminController extends BaseController
         $this->_module->trigger(Module::EVENT_ADMIN_UPDATE_BEGIN, $event);
         if ($event->model->load(Yii::$app->request->post()) && $event->model->save()) {
             $this->_module->trigger(Module::EVENT_ADMIN_UPDATE_COMPLETE, $event);
-            return $this->redirect($event->redirectUrl ? $event->redirectUrl : ['view', 'id' => $event->model->id]);
+            return $this->eventRedirect($event, ['view', 'id' => $event->model->id], false);
         } else {
             return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_ADMIN_UPDATE, [
                 'model' => $event->model,
@@ -200,6 +200,7 @@ class AdminController extends BaseController
     {
         /**
          * @var Module $m
+         * @var User   $class
          * @var User   $model
          */
         $m = $this->_module;
@@ -209,10 +210,9 @@ class AdminController extends BaseController
             throw new ForbiddenHttpException(Yii::t('user', 'This operation is not allowed'));
         }
         $event = new CreateEvent;
-        $event->model = $class = $this->fetchModel(Module::MODEL_USER);
         $this->_module->trigger(Module::EVENT_CREATE_USER_BEGIN, $event);
         $class = $this->fetchModel(Module::MODEL_USER);
-        $model = new $class(['scenario' => Module::SCN_ADMIN_CREATE]);
+        $event->model = $model = new $class(['scenario' => Module::SCN_ADMIN_CREATE]);
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             $model->setPassword($model->password);
             $model->generateAuthKey();
@@ -220,9 +220,7 @@ class AdminController extends BaseController
                 $event->flashType = 'success';
                 $event->message = Yii::t('user', 'The user was created successfully.');
                 $this->_module->trigger(Module::EVENT_CREATE_USER_COMPLETE, $event);
-                if($event->redirect !== false) {
-                    return $this->redirect($event->redirect ? $event->redirect : ['view', 'id' => $model->id]);
-                }
+                return $this->eventRedirect($event, ['view', 'id' => $event->model->id], false);
             }
         }
         return $this->display($event->viewFile ? $event->viewFile : Module::VIEW_ADMIN_CREATE, [

@@ -28,7 +28,7 @@ class AdminMenu extends Nav
     public $user;
 
     /**
-     * @var boolean whether the nav items labels should be HTML-encoded.
+     * @var bool whether the nav items labels should be HTML-encoded.
      */
     public $encodeLabels = false;
 

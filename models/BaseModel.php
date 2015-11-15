@@ -21,7 +21,6 @@ use yii\db\ActiveRecord;
  */
 class BaseModel extends ActiveRecord
 {
-
     /**
      * @var \comyii\user\Module current module
      */
@@ -41,6 +40,9 @@ class BaseModel extends ActiveRecord
      */
     public function behaviors()
     {
+        /**
+         * @var Module $m
+         */
         $m = Yii::$app->getModule('user');
         return [
             'timestamp' => [
@@ -53,5 +55,4 @@ class BaseModel extends ActiveRecord
             ],
         ];
     }
-
 }

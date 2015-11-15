@@ -11,13 +11,12 @@
 
 namespace comyii\user\events;
 
-use yii\base\Model;
-
+use yii\db\Model;
 
 /**
- * Record event trait for all events with ActiveRecords
+ * RecordEvent is used for triggering events related to each user model record
  */
-trait RecordEventTrait
+class RecordEvent extends Event
 {
     /**
      * @var Model the user model (or auth model for AuthEvent).
@@ -25,7 +24,7 @@ trait RecordEventTrait
     public $model;
     
     /**
-     * @var boolean whether or not to use database transactions.
+     * @var bool whether or not to use database transactions.
      */
     public $useTransaction = true;
 }

@@ -15,7 +15,7 @@ use Exception;
 use yii\web\Controller;
 
 /**
- * Exception event
+ * ExceptionEvent is raised whenever any user exception is triggered in this module.
  */
 class ExceptionEvent extends Event
 {

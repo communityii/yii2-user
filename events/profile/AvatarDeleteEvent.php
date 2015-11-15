@@ -11,14 +11,13 @@
 
 namespace comyii\user\events\profile;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
-use comyii\user\events\ProfileEventTrait;
+use comyii\user\events\ProfileEvent;
 
-class AvatarDeleteEvent extends Event
+/**
+ * Class AvatarDeleteEvent is used for triggering events in user profile avatar delete action.
+ *
+ * @package comyii\user\events\profile
+ */
+class AvatarDeleteEvent extends ProfileEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
-    use ProfileEventTrait;
 }

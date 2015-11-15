@@ -7,14 +7,19 @@
  */
 
 
+use yii\web\View;
+use comyii\user\models\User;
+use comyii\user\models\UserProfile;
+use comyii\user\models\SocialProfile;
 use comyii\user\widgets\UserMenu;
 use comyii\user\widgets\ProfileView;
 
 /**
- * @var yii\web\View            $this
- * @var comyii\user\models\User $model
- * @var comyii\user\models\UserProfile $profile
- * @var comyii\user\models\SocialProfile $social
+ * @var View          $this
+ * @var User          $model
+ * @var UserProfile   $profile
+ * @var SocialProfile $social
+ * @var mixed         $settings
  */
 
 $this->title = Yii::t('user', 'Profile') . ' (' . $model->username . ')';

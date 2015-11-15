@@ -11,15 +11,15 @@
 
 namespace comyii\user\events\account;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
+use comyii\user\events\AccountEvent;
 
-class AuthEvent extends Event
+/**
+ * Class AuthEvent is used for triggering all user authorization events
+ *
+ * @package comyii\user\events\account
+ */
+class AuthEvent extends AccountEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
-    
     const RESULT_LOGGED_IN = 1;
     const RESULT_DUPLICATE_EMAIL = 2;
     const RESULT_SIGNUP_ERROR = 3;
@@ -42,7 +42,7 @@ class AuthEvent extends Event
     public $socialClass;
     
     /**
-     * @var boolean the result of the authorization attempt. Should be one of the `AuthEvent::RESULT` constants.
+     * @var bool the result of the authorization attempt. Should be one of the `AuthEvent::RESULT` constants.
      */
     public $result;
 }

@@ -8,9 +8,13 @@
 
 use comyii\user\widgets\LoginForm;
 use comyii\user\widgets\Logo;
+
 /**
  * @var yii\web\View $this
- * @var comyii\user\models\Login $model
+ * @var LoginForm $model
+ * @var string $loginTitle
+ * @var string $authTitle
+ * @var bool $hasSocialAuth
  */
 ?>
 <div class="text-center">

@@ -9,8 +9,8 @@
 
 namespace comyii\user\controllers;
 
-use Exception;
 use Yii;
+use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
@@ -19,13 +19,14 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
-use comyii\user\EmailException;
-use comyii\user\authclient\AuthAction;
 use comyii\user\Module;
+use comyii\user\components\EmailException;
 use comyii\user\models\LoginForm;
 use comyii\user\models\RecoveryForm;
 use comyii\user\models\User;
 use comyii\user\models\SocialProfile;
+use comyii\user\social\AuthAction;
+use comyii\user\social\Client;
 use comyii\user\events\account\RegistrationEvent;
 use comyii\user\events\account\LoginEvent;
 use comyii\user\events\account\LogoutEvent;
@@ -74,7 +75,7 @@ class AccountController extends BaseController
             ],
         ]);
     }
-    
+
 
     /**
      * @inheritdoc
@@ -99,7 +100,7 @@ class AccountController extends BaseController
     /**
      * Social client authorization callback
      *
-     * @param \yii\authclient\BaseClient $client
+     * @param Client $client
      *
      * @return \yii\web\Response
      * @throws BadRequestHttpException
@@ -121,12 +122,14 @@ class AccountController extends BaseController
         $sourceId = (string)$attributes['id'];
         $email = $client->getEmail();
         $username = $client->getUsername();
-        
+
         // generate random username if username is empty, less than min length, or random usernames have been enabled
-        $randomUsernameGenerator = $this->getConfig('registrationSettings', 'randomUsernameGenerator', ["delimiter" => "."]);
+        $randomUsernameGenerator = $this->getConfig('registrationSettings', 'randomUsernameGenerator', [
+            "delimiter" => "."
+        ]);
         if (empty($username) || $username < $this->getConfig('registrationSettings', 'minUsernameLength', 5) ||
-                $this->getConfig('registrationSettings', 'randomUsernames', false)
-            ) {
+            $this->getConfig('registrationSettings', 'randomUsernames', false)
+        ) {
             $i = 0;
             do {
                 if (is_callable($randomUsernameGenerator)) {
@@ -135,10 +138,10 @@ class AccountController extends BaseController
                     $username = Haikunator::haikunate($randomUsernameGenerator);
                 }
                 $i++;
-            } while($i < 100 && $userClass::find()->where(['username' => $username])->exists());
+            } while ($i < 100 && $userClass::find()->where(['username' => $username])->exists());
             unset($i);
         }
-        
+
         $event = new AuthEvent;
         $event->client = $client;
         $event->userClass = $userClass;
@@ -196,8 +199,7 @@ class AccountController extends BaseController
                                 'Logged in successfully with your <b>{client}</b> account.',
                                 ['client' => $clientTitle]
                             );
-                        }
-                        else {
+                        } else {
                             $event->result = AuthEvent::RESULT_SIGNUP_ERROR;
                             $event->flashType = 'error';
                             $event->message = Yii::t(
@@ -254,12 +256,7 @@ class AccountController extends BaseController
         }
         $this->_module->trigger(Module::EVENT_AUTH_COMPLETE, $event);
         static::setFlash($event);
-//        if (!isset($event->redirectUrl)) {
-//            $event->redirectUrl = $this->fetchUrl('loginSettings', 'loginRedirectUrl');
-//        }
-        if($event->redirectUrl) {
-            return $this->redirect($event->redirectUrl);
-        }
+        return $this->eventRedirect($event, $this->fetchUrl('loginSettings', 'loginRedirectUrl'), false);
     }
 
     /**
@@ -382,6 +379,23 @@ class AccountController extends BaseController
     }
 
     /**
+     * Generate an email sending exception during user activation
+     *
+     * @param User $model
+     *
+     * @throws EmailException
+     */
+    protected function raiseEmailException($model)
+    {
+        $message = Yii::t(
+            'user',
+            'Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
+            ['email' => $model->email]
+        );
+        throw new EmailException($message);
+    }
+
+    /**
      * User registration action
      *
      * @param string $type the user type
@@ -420,36 +434,31 @@ class AccountController extends BaseController
             $model->generateAuthKey();
             $model->status = Module::STATUS_PENDING;
             $transaction = static::tranInit($event);
+
             try {
                 if ($model->save() && !$event->error) {
                     $event->flashType = 'success';
                     $activate = $event->activate !== null ? $event->activate : $config['autoActivate'];
                     $timeLeft = Module::timeLeft('activation', $model->getActivationKeyExpiry());
                     if ($activate) {
-                        if(!Yii::$app->user->login($model)) {
-                            
+                        $message = Yii::t(
+                            'user',
+                            'The user <b>{user}</b> was registered successfully.',
+                            ['user' => $model->username]
+                        );
+                        if (Yii::$app->user->login($model)) {
+                            $message .=  ' ' . Yii::t('user', 'You have been logged in.');
                         }
                         $model->status = Module::STATUS_ACTIVE;
                         $model->setLastLogin();
                         $event->isActivated = true;
-                        $event->message = Yii::t(
-                            'user',
-                            'The user <b>{user}</b> was registered successfully. You have been logged in.',
-                            ['user' => $model->username]
-                        );
-
+                        $event->message = $message;
                         if (!$m->sendEmail('welcome', $model)) {
-                            throw new EmailException(Yii::t('user',
-                                'Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
-                                ['email' => $model->email]
-                            ));
+                            $this->raiseEmailException($model);
                         }
                     } else {
                         if (!$model->sendEmail('activation', $timeLeft)) {
-                            throw new EmailException(Yii::t('user',
-                                'Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
-                                ['email' => $model->email]
-                            ));
+                            $this->raiseEmailException($model);
                         }
                         $event->message = Yii::t(
                             'user',

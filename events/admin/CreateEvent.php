@@ -11,11 +11,13 @@
 
 namespace comyii\user\events\admin;
 
+use comyii\user\events\ProfileEvent;
+
 /**
- * Class ViewEvent is used for triggering events in user admin view action.
+ * Class CreateEvent is used for triggering events in user create action.
  *
  * @package comyii\user\events\admin
  */
-class ViewEvent extends \comyii\user\events\AccountEvent
+class CreateEvent extends ProfileEvent
 {
 }

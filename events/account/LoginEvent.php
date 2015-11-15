@@ -11,15 +11,15 @@
 
 namespace comyii\user\events\account;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
+use comyii\user\events\AccountEvent;
 
-class LoginEvent extends Event
+/**
+ * Class LoginEvent is used for triggering all user login events
+ *
+ * @package comyii\user\events\account
+ */
+class LoginEvent extends AccountEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
-    
     const RESULT_SUCCESS = 1;
     const RESULT_FAIL = 2;
     const RESULT_LOCKED = 3;
@@ -27,7 +27,7 @@ class LoginEvent extends Event
     const RESULT_EXPIRED = 5;
 
     /**
-     * @var boolean has social authentication
+     * @var bool has social authentication
      */
     public $hasSocialAuth = false;
 
@@ -37,12 +37,12 @@ class LoginEvent extends Event
     public $authAction;
 
     /**
-     * @var boolean whether the password has been reset.
+     * @var bool whether the password has been reset.
      */
     public $newPassword = false;
 
     /**
-     * @var boolean is account unlock attempt.
+     * @var bool is account unlock attempt.
      */
     public $unlockExpiry = false;
 
@@ -51,6 +51,7 @@ class LoginEvent extends Event
      * @see \commyii\user\Module
      */
     public $status;
+
     /**
      * @var string the login page title
      */

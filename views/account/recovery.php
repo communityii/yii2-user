@@ -6,14 +6,17 @@
  * @see https://github.com/communityii/yii2-user
  */
 
+use yii\web\View;
 use comyii\user\widgets\RecoveryForm;
 use comyii\user\widgets\Logo;
+use comyii\user\models\LoginForm;
 
 $m = Yii::$app->getModule('user');
 $this->title = Yii::t('user', 'Password Recovery');
+
 /**
- * @var yii\web\View $this
- * @var comyii\user\models\Login $model
+ * @var View      $this
+ * @var LoginForm $model
  */
 ?>
 <div class="text-center">

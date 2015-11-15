@@ -11,14 +11,13 @@
 
 namespace comyii\user\events\profile;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
-use comyii\user\events\ProfileEventTrait;
+use comyii\user\events\ProfileEvent;
 
-class IndexEvent extends Event
+/**
+ * Class IndexEvent is used for triggering events in user profile index action.
+ *
+ * @package comyii\user\events\profile
+ */
+class IndexEvent extends ProfileEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
-    use ProfileEventTrait;
 }

@@ -11,16 +11,17 @@
 
 namespace comyii\user\events\account;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
+use comyii\user\events\AccountEvent;
 
-class ResetEvent extends Event
+/**
+ * Class PasswordEvent is used for triggering all user password events
+ *
+ * @package comyii\user\events\account
+ */
+class ResetEvent extends AccountEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
     /**
-     * @var boolean the result of the reset attempt (read only)
+     * @var bool the result of the reset attempt (read only)
      */
     public $result;
 }

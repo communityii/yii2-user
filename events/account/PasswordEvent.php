@@ -11,12 +11,13 @@
 
 namespace comyii\user\events\account;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
+use comyii\user\events\AccountEvent;
 
-class PasswordEvent extends Event
+/**
+ * Class PasswordEvent is used for triggering all user password events
+ *
+ * @package comyii\user\events\account
+ */
+class PasswordEvent extends AccountEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
 }

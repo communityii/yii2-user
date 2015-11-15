@@ -6,6 +6,7 @@
  * @see https://github.com/communityii/yii2-user
  */
 
+use yii\data\ActiveDataProvider;
 use yii\helpers\Url;
 use yii\helpers\Json;
 use yii\web\View;
@@ -14,16 +15,19 @@ use kartik\grid\GridView;
 use kartik\select2\Select2;
 use comyii\user\Module;
 use comyii\user\models\User;
+use comyii\user\models\UserSearch;
 use comyii\user\assets\AdminAsset;
 use comyii\user\widgets\AdminMenu;
 
 /**
- * @var yii\web\View $this
- * @var yii\data\ActiveDataProvider $dataProvider
- * @var comyii\user\models\UserSearch $searchModel
+ * @var View               $this
+ * @var Module             $m
+ * @var User               $model
+ * @var ActiveDataProvider $dataProvider
+ * @var UserSearch         $searchModel
  */
 
-$m = $this->context->module;
+$m = Yii::$app->getModule('user');
 $this->title = Yii::t('user', 'Manage Users');
 $this->params['breadcrumbs'][] = $this->title;
 $class = $m->modelSettings[Module::MODEL_USER];
@@ -43,25 +47,25 @@ AdminAsset::register($this);
 </div>
 <div id="batch-status-out"></div>
 <div style="width:200px;float:right;margin:-10px auto;">
-<?= Select2::widget([
-    'name' => 'batch-status',
-    'value' => '',
-    'data' => $m->getValidStatuses(),
-    'addon' => [
-        'append' => [
-            'content' => Html::button(Html::icon('saved'),[
-                'class' => 'btn btn-default',
-                'id' => 'btn-batch-update',
-                'title' => Yii::t('user', 'Go!')
-            ]),
-            'asButton' => true
+    <?= Select2::widget([
+        'name' => 'batch-status',
+        'value' => '',
+        'data' => $m->getValidStatuses(),
+        'addon' => [
+            'append' => [
+                'content' => Html::button(Html::icon('saved'), [
+                    'class' => 'btn btn-default',
+                    'id' => 'btn-batch-update',
+                    'title' => Yii::t('user', 'Go!')
+                ]),
+                'asButton' => true
+            ],
         ],
-    ],
-    'options' => [
-        'id' => 'batch-status',
-        'placeholder' => Yii::t('user', 'Batch update...')
-    ]
-]) ?>
+        'options' => [
+            'id' => 'batch-status',
+            'placeholder' => Yii::t('user', 'Batch update...')
+        ]
+    ]) ?>
 </div>
 <div class="clearfix"></div>
 <?= GridView::widget([
@@ -73,23 +77,29 @@ AdminAsset::register($this);
     'options' => ['id' => 'user-grid'],
     'columns' => [
         [
-            'attribute'=>'id', 
-            'width'=>'80px',
+            'attribute' => 'id',
+            'width' => '80px',
         ],
         [
-            'attribute'=>'username', 
-            'width'=>'120px', 
-            'format'=>'raw', 
-            'content'=>function($model) {
+            'attribute' => 'username',
+            'width' => '120px',
+            'format' => 'raw',
+            'content' => function ($model) {
+                /**
+                 * @var User $model
+                 */
                 return $model->getUserLink();
             }
         ],
         'email:email',
         [
-            'attribute' => 'status', 
-            'format' => 'raw', 
+            'attribute' => 'status',
+            'format' => 'raw',
             'hAlign' => 'center',
-            'content' => function($model) {
+            'content' => function ($model) {
+                /**
+                 * @var User $model
+                 */
                 return $model->getStatusHtml();
             },
             'filter' => $m->getPrimaryStatuses(),
@@ -97,14 +107,17 @@ AdminAsset::register($this);
             'filterType' => GridView::FILTER_SELECT2,
             'filterWidgetOptions' => [
                 'options' => ['placeholder' => Yii::t('user', 'Select...')],
-                'pluginOptions' => ['allowClear'=>true]
+                'pluginOptions' => ['allowClear' => true]
             ]
         ],
         [
             'attribute' => 'status_sec',
-            'format' => 'raw', 
+            'format' => 'raw',
             'hAlign' => 'center',
-            'content' => function($model) {
+            'content' => function ($model) {
+                /**
+                 * @var User $model
+                 */
                 return $model->getStatusSecHtml();
             },
             'filter' => $m->getSecondaryStatuses(),
@@ -112,7 +125,7 @@ AdminAsset::register($this);
             'filterType' => GridView::FILTER_SELECT2,
             'filterWidgetOptions' => [
                 'options' => ['placeholder' => Yii::t('user', 'Select...')],
-                'pluginOptions' => ['allowClear'=>true]
+                'pluginOptions' => ['allowClear' => true]
             ]
         ],
         [
@@ -120,17 +133,17 @@ AdminAsset::register($this);
             'format' => 'raw',
             'hAlign' => 'center',
             'width' => '130px',
-            'value' => function($model) {
+            'value' => function ($model) {
                 return $model->last_login_ip ? '<samp>' . $model->last_login_ip . '</samp>' : null;
             }
         ],
         [
             'attribute' => 'last_login_on',
-            'format' => ['datetime', $m->datetimeDispFormat], 
+            'format' => ['datetime', $m->datetimeDispFormat],
             'hAlign' => 'center',
             'filter' => false,
             'mergeHeader' => true,
-            'value' => function($model) {
+            'value' => function ($model) {
                 return Module::displayAttrTime($model, 'last_login_on');
             }
         ],
@@ -143,8 +156,8 @@ AdminAsset::register($this);
             'mergeHeader' => true
         ],
         [
-            'class'=>'kartik\grid\CheckboxColumn',
-            'checkboxOptions' => function($model) {
+            'class' => 'kartik\grid\CheckboxColumn',
+            'checkboxOptions' => function ($model) {
                 if ($model->status == Module::STATUS_SUPERUSER) {
                     return ['disabled' => 'disabled'];
                 }

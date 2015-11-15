@@ -11,28 +11,28 @@
 
 namespace comyii\user\events\account;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
+use comyii\user\events\AccountEvent;
 
-class RegistrationEvent extends Event
+/**
+ * Class RegistrationEvent is used for triggering all user registration events
+ *
+ * @package comyii\user\events\account
+ */
+class RegistrationEvent extends AccountEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
-    
     /**
-     * @var string the type of registration. This is used if there are multiple registration types 
+     * @var string the type of registration. This is used if there are multiple registration types
      *     (i.e. different user types)
      */
     public $type;
 
     /**
-     * @var boolean whether or not to activate the user account
+     * @var bool whether or not to activate the user account
      */
     public $activate = false;
 
     /**
-     * @var boolean the current user activation status.
+     * @var bool the current user activation status.
      */
     public $isActivated = false;
 }

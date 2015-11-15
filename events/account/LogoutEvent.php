@@ -11,11 +11,13 @@
 
 namespace comyii\user\events\account;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
+use comyii\user\events\AccountEvent;
 
-class LogoutEvent extends Event {
-    use ViewEventTrait;
-    use RecordEventTrait;
+/**
+ * Class LogoutEvent is used for triggering all user logout events
+ *
+ * @package comyii\user\events\account
+ */
+class LogoutEvent extends AccountEvent
+{
 }

@@ -12,7 +12,7 @@ namespace comyii\user\assets;
 use kartik\base\AssetBundle;
 
 /**
- * Asset bundle for user module
+ * Administration asset bundle for user module
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0

@@ -11,6 +11,7 @@ namespace comyii\user;
 
 use Yii;
 use yii\web\Application;
+use yii\console\Application as ConsoleApplication;
 use yii\base\BootstrapInterface;
 use yii\web\GroupUrlRule;
 
@@ -34,11 +35,11 @@ class ModuleInit implements BootstrapInterface
         if (!$m instanceof Module) {
             return;
         }
-        if ($app instanceof \yii\console\Application && $app->hasModule('user')) {
+        if ($app instanceof ConsoleApplication && $app->hasModule('user')) {
             $m->controllerNamespace = 'comyii\user\commands';
             return;
         }
-        if (!$app instanceof \yii\web\Application || !$app->hasModule('user')) {
+        if (!$app instanceof Application || !$app->hasModule('user')) {
             return;
         }
         $config = ['prefix' => $m->urlPrefix, 'rules' => $m->urlRules];

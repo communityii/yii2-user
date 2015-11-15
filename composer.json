@@ -1,36 +1,42 @@
 {
-    "name": "communityii/yii2-user",
-    "description": "Configurable Yii 2 user management module with social authentication and various controls.",
-    "keywords": ["yii2", "user", "module", "auth", "social", "password"],
-    "homepage": "https://github.com/communityii/yii2-user",
-    "type": "yii2-extension",
-    "license": "BSD 3-Clause",
-    "authors": [
-        {
-            "name": "Kartik Visweswaran",
-            "email": "kartikv2@gmail.com",
-            "homepage": "http://www.krajee.com/"
-        }
-    ],
-    "require": {
-        "yiisoft/yii2-authclient": "*",
-        "yiisoft/yii2-swiftmailer": "*",
-        "kartik-v/yii2-ipinfo": "*",
-        "kartik-v/yii2-widget-alert": "*",
-        "kartik-v/yii2-widget-fileinput": "*",
-        "kartik-v/yii2-widget-select2": "*",
-        "kartik-v/yii2-password": "*",
-        "kartik-v/yii2-builder": "*",
-        "kartik-v/yii2-detail-view": "*",
-        "communityii/yii2-common": "*",
-        "derekisbusy/yii2-haikunator": "*"
-    },
-    "autoload": {
-        "psr-4": {
-            "comyii\\user\\": ""
-        }
-    },
-    "extra": {
-        "bootstrap": "comyii\\user\\ModuleInit"
+  "name": "communityii/yii2-user",
+  "description": "Configurable Yii 2 user management module with social authentication and various controls.",
+  "keywords": [
+    "yii2",
+    "user",
+    "module",
+    "auth",
+    "social",
+    "password"
+  ],
+  "homepage": "https://github.com/communityii/yii2-user",
+  "type": "yii2-extension",
+  "license": "BSD 3-Clause",
+  "authors": [
+    {
+      "name": "Kartik Visweswaran",
+      "email": "kartikv2@gmail.com",
+      "homepage": "http://www.krajee.com/"
     }
+  ],
+  "require": {
+    "yiisoft/yii2-authclient": "*",
+    "yiisoft/yii2-swiftmailer": "*",
+    "kartik-v/yii2-widget-alert": "*",
+    "kartik-v/yii2-widget-fileinput": "*",
+    "kartik-v/yii2-widget-select2": "*",
+    "kartik-v/yii2-password": "*",
+    "kartik-v/yii2-builder": "*",
+    "kartik-v/yii2-detail-view": "*",
+    "communityii/yii2-common": "*",
+    "derekisbusy/yii2-haikunator": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "comyii\\user\\": ""
+    }
+  },
+  "extra": {
+    "bootstrap": "comyii\\user\\ModuleInit"
+  }
 }

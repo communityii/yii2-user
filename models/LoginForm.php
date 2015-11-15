@@ -11,14 +11,9 @@ namespace comyii\user\models;
 use Yii;
 use yii\base\Model;
 use comyii\user\Module;
-use comyii\user\models\User;
 
 /**
  * Model for the login form
- *
- * @property string $username
- * @property string $password
- * @property string $rememberMe
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
@@ -51,12 +46,15 @@ class LoginForm extends Model
      */
     public $rememberMe = true;
 
-    private $_settings = [];
-
     /**
      * @var Module the module instance
      */
     private $_module;
+
+    /**
+     * @var array the settings
+     */
+    private $_settings = [];
 
     /**
      * @inheritdoc

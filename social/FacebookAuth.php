@@ -9,13 +9,11 @@
  * @author kartik-v https://github.com/kartik-v
  */
 
-namespace comyii\user\events\admin;
+namespace comyii\user\social;
 
-/**
- * Class ViewEvent is used for triggering events in user admin view action.
- *
- * @package comyii\user\events\admin
- */
-class ViewEvent extends \comyii\user\events\AccountEvent
+use yii\authclient\clients\Facebook;
+
+class FacebookAuth extends Facebook
 {
+    use ClientTrait;
 }

@@ -10,6 +10,11 @@
  */
 namespace comyii\user\events;
 
+/**
+ * Interface BatchEventInterface enforces methods for batch update of user account & profile model records.
+ *
+ * @package comyii\user\events
+ */
 interface BatchEventInterface
 {
     public function batch();

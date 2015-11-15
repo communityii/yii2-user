@@ -11,16 +11,17 @@
 
 namespace comyii\user\events\account;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
+use comyii\user\events\AccountEvent;
 
-class NewemailEvent extends Event
+/**
+ * Class NewEmailEvent is used for triggering all events for user email change/reset
+ *
+ * @package comyii\user\events\account
+ */
+class NewEmailEvent extends AccountEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
     /**
-     * @var boolean the result of the reset attempt
+     * @var bool the result of the reset attempt
      */
     public $result;
 }

@@ -17,7 +17,7 @@ namespace comyii\user\events;
 class Event extends \yii\base\Event
 {
     /**
-     * @var boolean the current status for the controller. This is used so that event handlers can tell the controller
+     * @var bool the current status for the controller. This is used so that event handlers can tell the controller
      *     whether to not to continue.
      */
     public $error = false;

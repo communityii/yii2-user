@@ -11,17 +11,18 @@ namespace comyii\user\models;
 
 use Yii;
 use comyii\user\Module;
+use yii\db\ActiveQuery;
 
 /**
  * This is the query class for the `User` Model
  *
- * @method \comyii\user\models\User|array|null one($db = null)
- * @method \comyii\user\models\User[]|array all($db = null)
+ * @method User|array|null one($db = null)
+ * @method User[]|array all($db = null)
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
  * @since 1.0
  */
-class UserQuery extends \yii\db\ActiveQuery
+class UserQuery extends ActiveQuery
 {
     public function pending()
     {

@@ -6,19 +6,22 @@
  * @see https://github.com/communityii/yii2-user
  */
 
+use yii\web\View;
 use comyii\user\Module;
 use comyii\user\widgets\UserMenu;
+use comyii\user\models\User;
+use comyii\user\models\UserProfile;
 use kartik\helpers\Html;
 use kartik\form\ActiveForm;
 use kartik\file\FileInput;
 
 /**
- * @var yii\web\View                   $this
- * @var comyii\user\Module             $m
- * @var comyii\user\models\User        $model
- * @var comyii\user\models\UserProfile $profile
+ * @var View   $this
+ * @var Module $m
+ * @var User   $model
+ * @var UserProfile   $profile
+ * @var mixed  $settings
  */
-
 $m = Yii::$app->getModule('user');
 $this->title = Yii::t('user', 'Update Profile') . ' (' . $model->username . ')';
 $this->params['breadcrumbs'][] = ['label' => Yii::t('user', $model->username), 'url' => ['index']];

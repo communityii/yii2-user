@@ -11,12 +11,13 @@
 
 namespace comyii\user\events\account;
 
-use comyii\user\events\Event;
-use comyii\user\events\ViewEventTrait;
-use comyii\user\events\RecordEventTrait;
+use comyii\user\events\AccountEvent;
 
-class RecoveryEvent extends Event
+/**
+ * Class RecoveryEvent is used for triggering all user account recovery events
+ *
+ * @package comyii\user\events\account
+ */
+class RecoveryEvent extends AccountEvent
 {
-    use ViewEventTrait;
-    use RecordEventTrait;
 }

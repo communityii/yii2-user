@@ -24,7 +24,11 @@ use comyii\user\models\InstallForm;
 class InstallController extends BaseController
 {
     const SETUP = 'begin_setup';
-    public $layout = 'install';
+
+    /**
+     * @inheritdoc
+     */
+    public $layout = Module::LAYOUT;
 
     /**
      * @inheritdoc

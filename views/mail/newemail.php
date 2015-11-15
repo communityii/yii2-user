@@ -8,14 +8,15 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\web\View;
 use comyii\user\Module;
+use comyii\user\models\User;
 
 /**
- * @var yii\web\View            $this
- * @var comyii\user\models\User $user
- * @var comyii\user\Module      $m
+ * @var View   $this
+ * @var User   $user
+ * @var Module $m
  */
-
 $m = Yii::$app->getModule('user');
 $action = $m->actionSettings[Module::ACTION_NEWEMAIL];
 $changeLink = Url::to([$action, 'key' => $user->email_change_key], true);

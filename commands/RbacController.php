@@ -3,7 +3,6 @@
 namespace comyii\user\commands;
  
 use yii\console\Controller;
-use yii\helpers\Console;
  
 class RbacController extends Controller
 {

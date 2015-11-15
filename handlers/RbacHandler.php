@@ -2,41 +2,50 @@
 
 namespace comyii\user\handlers;
 
+use Yii;
+use yii\base\Object;
+use yii\base\ActionEvent;
+use comyii\user\components\User;
 
-class RbacHandler extends \yii\base\Object
+class RbacHandler extends Object
 {
-    
-    public static function init($event)
-    {
-        
-    }
     /**
      * Assign user type as role
-     * @param \comyii\events\RegisterEvent $event
+     *
+     * @param \comyii\user\events\account\RegistrationEvent $event
      */
     public static function assignRole($event)
     {
-        Yii::$app->authManager->assign(Yii::$app->authManager->createRole($event->type), $event->model->getId());
+        $authManager = Yii::$app->authManager;
+        /**
+         * @var \comyii\user\models\User $model
+         */
+        $model = $event->model;
+        $authManager->assign($authManager->createRole($event->type), $model->getId());
     }
-    
+
     /**
      * Before module action
-     * @param \yii\base\ActionEvent $event
+     *
+     * @param ActionEvent $event
      */
     public static function beforeAction($event)
     {
-        if (isset(Yii::$app->request->queryParams['id']) && Yii::$app->request->queryParams['id'] != Yii::$app->user->identity->id) {
-            Yii::$app->user->can('user-view-all');
+        /**
+         * @var User $user
+         */
+        $user = Yii::$app->user;
+        $queryParams = Yii::$app->request->queryParams;
+        if (isset($queryParams['id']) && $queryParams['id'] != $user->identity->id) {
+            $user->can('user-view-all');
         }
-        switch ($event->action->controller->id)
-        {
+        switch ($event->action->controller->id) {
             case 'account':
-                switch ($event->action->id)
-                {
+                switch ($event->action->id) {
                     case '':
+                        // todo
                 }
                 break;
         }
     }
-    
 }
