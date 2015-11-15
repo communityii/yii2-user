@@ -158,6 +158,7 @@ class Module extends \kartik\base\Module
     const EVENT_ADMIN_BATCH_UPDATE_COMPLETE = 'adminBatchComplete';
     const EVENT_CREATE_USER_BEGIN = 'createBegin';
     const EVENT_CREATE_USER_COMPLETE = 'createComplete';
+    const EVENT_EMAIL_FAILED = 'emailFailed';
     
     // default layout
     const LAYOUT = 'install';

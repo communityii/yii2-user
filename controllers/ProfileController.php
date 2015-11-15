@@ -8,6 +8,11 @@
 namespace comyii\user\controllers;
 
 use Yii;
+use yii\base\Model;
+use yii\filters\AccessControl;
+use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
+use yii\filters\VerbFilter;
 use comyii\user\Module;
 use comyii\user\models\User;
 use comyii\user\models\UserProfile;
@@ -16,11 +21,7 @@ use comyii\user\events\profile\IndexEvent;
 use comyii\user\events\profile\ViewEvent;
 use comyii\user\events\profile\UpdateEvent;
 use comyii\user\events\profile\AvatarDeleteEvent;
-use yii\base\Model;
-use yii\filters\AccessControl;
-use yii\web\NotFoundHttpException;
-use yii\web\ForbiddenHttpException;
-use yii\filters\VerbFilter;
+use comyii\user\EmailException;
 
 /**
  * ProfileController implements the view, update, and avatar management actions for a UserProfile model.
@@ -218,7 +219,7 @@ class ProfileController extends BaseController
      *
      * @param array $data the profile data attributes
      *
-     * @return \yii\web\Response
+     * @return \yii\web\Response|null
      */
     protected function update($data)
     {
@@ -226,46 +227,47 @@ class ProfileController extends BaseController
         $event->extract($data);
         $event->model->scenario = Module::SCN_PROFILE;
         $post = Yii::$app->request->post();
-        $hasProfile = $this->getConfig('profileSettings', 'enabled');
+        $hasProfile = $this->_module->getProfileSetting('enabled');
         $emailOld = $event->model->email;
-        
         $this->_module->trigger(Module::EVENT_PROFILE_UPDATE_BEGIN, $event);
-        if ($hasProfile || isset($post['UserProfile'])) {
-            $validate = $event->model->load($post) && $event->profile->load($post) && Model::validateMultiple([$event->model, $event->profile]);
-        } else {
-            $validate = $event->model->load($post) && $event->model->validate();
-        }
-        if ($validate) {
-            $timeLeft = Module::timeLeft('email change confirmation', $event->model->getEmailChangeKeyExpiry());
-            $emailSent = $emailNew = null;
-            if ($event->model->validateEmailChange($emailOld)) {
-                $emailNew = $event->model->email_new;
-                $emailSent = $event->model->sendEmail('newemail', $timeLeft);
-            }
-            $event->model->save();
+        $transaction = static::tranInit($event);
+        try {
             if ($hasProfile || isset($post['UserProfile'])) {
-                $event->profile->uploadAvatar();
-                $event->profile->save();
+                $validate = $event->model->load($post) && $event->profile->load($post) && Model::validateMultiple([$event->model, $event->profile]);
+            } else {
+                $validate = $event->model->load($post) && $event->model->validate();
             }
-            $event->flashType = 'success';
-            $event->message = Yii::t('user', 'The user profile was updated successfully.');
-            $this->_module->trigger(Module::EVENT_PROFILE_UPDATE_COMPLETE, $event);
-            $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
-            self::setFlash($event);
-            if ($emailSent === true) {
-                Yii::$app->session->setFlash('info', Yii::t(
-                    'user',
+            if ($validate) {
+                $timeLeft = Module::timeLeft('email change confirmation', $event->model->getEmailChangeKeyExpiry());
+                $emailSent = $emailNew = null;
+                if ($event->model->validateEmailChange($emailOld)) {
+                    $emailNew = $event->model->email_new;
+                }
+                $event->model->save();
+                if ($hasProfile || isset($post['UserProfile'])) {
+                    $event->profile->uploadAvatar();
+                    $event->profile->save();
+                }
+                $event->flashType = 'success';
+                $event->message = Yii::t('user', 'The user profile was updated successfully.');
+                $this->_module->trigger(Module::EVENT_PROFILE_UPDATE_COMPLETE, $event);
+                $action = $this->fetchAction(Module::ACTION_PROFILE_INDEX);
+                self::setFlash($event);
+                if (!$event->model->sendEmail('newemail', $timeLeft)) {
+                    throw new EmailException(Yii::t('user',
+                        'Your email change to <b>{email}</b> could not be processed. Please contact the system administrator or try again later.',
+                        ['email' => $emailNew]
+                    ));
+                }
+                Yii::$app->session->setFlash('info', Yii::t('user',
                     'Instructions to confirm the new email has been sent to your new email address <b>{email}</b>. {timeLeft}',
                     ['email' => $emailNew, 'timeLeft' => $timeLeft]
                 ));
                 return $this->redirect($event->redirect ? $event->redirect : [$action]);
-            } elseif ($emailSent === false) {
-                Yii::$app->session->setFlash('warning', Yii::t(
-                    'user',
-                    'Your email change to <b>{email}</b> could not be processed. Please contact the system administrator or try again later.',
-                    ['email' => $emailNew]
-                ));
             }
+        } catch (Exception $e) {
+            $this->handleException($e);
+            static::tranRollback($transaction);
         }
         return null;
     }
