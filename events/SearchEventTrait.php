@@ -11,6 +11,9 @@
 
 namespace comyii\user\events;
 
+/**
+ * Search event trait for all events with search models
+ */
 trait SearchEventTrait {
     /**
      * @var \yii\db\ActiveQuery the search model

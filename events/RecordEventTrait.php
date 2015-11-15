@@ -13,8 +13,9 @@ namespace comyii\user\events;
 
 use yii\base\Model;
 
+
 /**
- * Base event for all events in communityii/yii2-user module
+ * Record event trait for all events with ActiveRecords
  */
 trait RecordEventTrait
 {
