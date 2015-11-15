@@ -160,7 +160,7 @@ class BaseController extends Controller
      *
      * @return mixed the configuration value
      */
-    protected function getConfig($setting, $param, $default = null)
+    protected function getConfig($setting, $param, $default = null, $userType = null)
     {
         if (empty($this->_module->$setting)) {
             return $default;
@@ -259,6 +259,16 @@ class BaseController extends Controller
         $ev->exception = $exception;
         $ev->controller = $this;
         $this->_module->trigger(Module::EVENT_EXCEPTION, $event);
+    }
+    
+    public function handleException($e)
+    {
+        if ($e instanceof \comyii\user\EmailException) {
+            $this->_module->trigger(Module::EVENT_EMAIL_FAILED, $e->event);
+        }
+        if (property_exists($e,'event') && property_exists($e->event,'message')) {
+            static::setFlash($e->event);
+        }
     }
 
     /**
