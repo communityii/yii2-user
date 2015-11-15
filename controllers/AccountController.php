@@ -10,7 +10,7 @@
 namespace comyii\user\controllers;
 
 use Yii;
-use yii\base\Exception;
+use Exception;
 use yii\base\InvalidConfigException;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
@@ -98,6 +98,59 @@ class AccountController extends BaseController
     }
 
     /**
+     * Parses username for random username generation and returns the parsed username. This routine will generate
+     * a random username if the passed username is empty, less than minimum length, or random usernames have been
+     * enabled within the module settings.
+     *
+     * @param string $username the username string
+     * @param User   $userClass the user model class name
+     *
+     * @return string the parsed username
+     */
+    protected function parseUsername($username, $userClass)
+    {
+        $generator = $this->getConfig('registrationSettings', 'randomUsernameGenerator', ["delimiter" => "."]);
+        $userNameLength = (int)$this->getConfig('registrationSettings', 'minUsernameLength', 5);
+        $isRandomUsernameEnabled = $this->getConfig('registrationSettings', 'randomUsernames', false);
+        if (empty($username) || strlen($username) < $userNameLength || $isRandomUsernameEnabled) {
+            for ($i = 0; $i < 100; $i++) { // try for a maximum of 100 iterations
+                $username = is_callable($generator) ? call_user_func($generator) : Haikunator::haikunate($generator);
+                if (!$userClass::find()->where(['username' => $username])->exists()) {
+                    return $username;
+                }
+            }
+        }
+        return $username;
+    }
+
+    /**
+     * Login with an authorized social client profile
+     *
+     * @param User      $user
+     * @param AuthEvent $event
+     * @param string    $clientTitle
+     */
+    protected function doAuthLogin($user, &$event, $clientTitle)
+    {
+        if ($user && Yii::$app->user->login($user)) {
+            $event->flashType = 'success';
+            $user->setLastLogin();
+            $event->message = Yii::t(
+                'user',
+                'Logged in successfully with your <b>{client}</b> account.',
+                ['client' => $clientTitle]
+            );
+        } else {
+            $event->flashType = 'warning';
+            $event->message = Yii::t(
+                'user',
+                'Could not login successfully with your <b>{client}</b> account. Try again later.',
+                ['client' => $clientTitle]
+            );
+        }
+    }
+
+    /**
      * Social client authorization callback
      *
      * @param Client $client
@@ -121,27 +174,7 @@ class AccountController extends BaseController
         $clientTitle = $client->getTitle();
         $sourceId = (string)$attributes['id'];
         $email = $client->getEmail();
-        $username = $client->getUsername();
-
-        // generate random username if username is empty, less than min length, or random usernames have been enabled
-        $randomUsernameGenerator = $this->getConfig('registrationSettings', 'randomUsernameGenerator', [
-            "delimiter" => "."
-        ]);
-        if (empty($username) || $username < $this->getConfig('registrationSettings', 'minUsernameLength', 5) ||
-            $this->getConfig('registrationSettings', 'randomUsernames', false)
-        ) {
-            $i = 0;
-            do {
-                if (is_callable($randomUsernameGenerator)) {
-                    $username = call_user_func($randomUsernameGenerator);
-                } else {
-                    $username = Haikunator::haikunate($randomUsernameGenerator);
-                }
-                $i++;
-            } while ($i < 100 && $userClass::find()->where(['username' => $username])->exists());
-            unset($i);
-        }
-
+        $username = $this->parseUsername($client->getUsername(), $userClass);
         $event = new AuthEvent;
         $event->client = $client;
         $event->userClass = $userClass;
@@ -157,13 +190,8 @@ class AccountController extends BaseController
             if (Yii::$app->user->isGuest) {
                 if ($auth) { // login
                     $user = $auth->user;
-                    Yii::$app->user->login($user);
-                    $event->flashType = 'success';
-                    $event->message = Yii::t(
-                        'user',
-                        'Logged in successfully with your <b>{client}</b> account.',
-                        ['client' => $clientTitle]
-                    );
+                    $this->doAuthLogin($user, $event, $clientTitle);
+                    static::tranCommit($transaction);
                     $event->result = AuthEvent::RESULT_LOGGED_IN;
                 } else { // signup
                     if (!empty($email) && $userClass::find()->where(['email' => $email])->exists()) {
@@ -184,28 +212,28 @@ class AccountController extends BaseController
                             'password' => $password,
                         ]);
                         $user->generateAuthKey();
-                        $auth = new $socialClass([
-                            'user_id' => $user->id,
-                            'source' => $clientId,
-                            'source_id' => $sourceId,
-                        ]);
-                        if ($user->save() && $auth->save()) {
-                            $transaction->commit();
-                            Yii::$app->user->login($user);
-                            $event->result = AuthEvent::RESULT_SIGNUP_SUCCESS;
-                            $event->flashType = 'success';
-                            $event->message = Yii::t(
-                                'user',
-                                'Logged in successfully with your <b>{client}</b> account.',
-                                ['client' => $clientTitle]
-                            );
-                        } else {
+                        $user->status = Module::STATUS_ACTIVE;
+                        $success = false;
+                        if ($user->save()) {
+                            $auth = new $socialClass([
+                                'user_id' => $user->id,
+                                'source' => $clientId,
+                                'source_id' => $sourceId,
+                            ]);
+                            if ($auth->save()) {
+                                $this->doAuthLogin($user, $event, $clientTitle);
+                                static::tranCommit($transaction);
+                                $event->result = AuthEvent::RESULT_SIGNUP_SUCCESS;
+                                $success = true;
+                            }
+                        }
+                        if ($success === false) {
                             $event->result = AuthEvent::RESULT_SIGNUP_ERROR;
                             $event->flashType = 'error';
                             $event->message = Yii::t(
                                 'user',
                                 'Error while authenticating <b>{client}</b> account.<pre>{errors}</pre>',
-                                ['client' => $clientTitle, 'errors' => print_r($user->getErrors(), true)]
+                                ['client' => $clientTitle, 'errors' => Module::showErrors($user)]
                             );
                             throw new Exception('Error authenticating social client');
                         }
@@ -222,7 +250,7 @@ class AccountController extends BaseController
                     ]);
                     $event->model = $auth;
                     if ($auth->save()) {
-                        $transaction->commit();
+                        static::tranCommit($transaction);
                         $event->result = AuthEvent::RESULT_LOGGED_IN;
                         $event->flashType = 'success';
                         $event->message = Yii::t(
@@ -235,19 +263,19 @@ class AccountController extends BaseController
                         $event->flashType = 'error';
                         $event->message = Yii::t(
                             'user',
-                            'Error while authenticating <b>{client}</b> account for <b>{user}</b>.<pre>{errors}</pre>',
-                            ['client' => $clientTitle, 'errors' => print_r($auth->getErrors(), true)]
+                            'Error while authenticating <b>{client}</b> account for <b>{user}</b>.{errors}',
+                            ['client' => $clientTitle, 'errors' => Module::showErrors($auth)]
                         );
                         throw new Exception('Error authenticating social client');
                     }
                 } else {
-                    $event->result = AuthEvent::RESULT_LOGGED_IN;
-                    $event->flashType = 'success';
+                    $event->flashType = 'info';
                     $event->message = Yii::t(
                         'user',
-                        'You have already connected your <b>{client}</b> account previously. Logged in successfully.',
+                        'You are already connected with this <b>{client}</b> account.',
                         ['client' => $clientTitle]
                     );
+                    $event->result = AuthEvent::RESULT_LOGGED_IN;
                 }
             }
         } catch (Exception $e) {
@@ -256,7 +284,6 @@ class AccountController extends BaseController
         }
         $this->_module->trigger(Module::EVENT_AUTH_COMPLETE, $event);
         static::setFlash($event);
-        return $this->eventRedirect($event, $this->fetchUrl('loginSettings', 'loginRedirectUrl'), false);
     }
 
     /**
@@ -447,7 +474,7 @@ class AccountController extends BaseController
                             ['user' => $model->username]
                         );
                         if (Yii::$app->user->login($model)) {
-                            $message .=  ' ' . Yii::t('user', 'You have been logged in.');
+                            $message .= ' ' . Yii::t('user', 'You have been logged in.');
                         }
                         $model->status = Module::STATUS_ACTIVE;
                         $model->setLastLogin();
@@ -634,10 +661,7 @@ class AccountController extends BaseController
             $this->raise($e, $event);
         }
         static::setFlash($event);
-        if ($event->redirectUrl) {
-            return $this->eventRedirect($event, $this->fetchUrl(Module::ACTION_LOGIN), false);
-        }
-        return $this->goHome();
+        return $this->eventRedirect($event, $this->fetchUrl(Module::ACTION_LOGIN), false);
     }
 
     /**

@@ -11,22 +11,23 @@
 
 namespace comyii\user\social;
 
-use yii\authclient\clients\GoogleOAuth;
+use yii\authclient\clients\Twitter;
 
 /**
- * Google OAuth authorization client for `communityii/yii2-user` module
+ * Twitter authorization client for `communityii/yii2-user` module
  */
-class GoogleAuth extends GoogleOAuth
+class TwitterAuth extends Twitter
 {
     use ClientTrait;
 
     /**
      * @inheritdoc
      */
-    public function getEmail()
+    public function getUsername()
     {
         $attributes = $this->getUserAttributes();
-        return $attributes && isset($attributes['email'][0]['value']) ? $attributes['email'][0]['value'] : null;
+        return $attributes && !empty($attributes['screen_name']) ?
+            static::parseUsername($attributes['screen_name']) :
+            $this->getDefaultUsername();
     }
-
 }

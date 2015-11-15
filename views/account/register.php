@@ -29,6 +29,6 @@ use comyii\user\models\LoginForm;
         'hasSocialAuth' => $hasSocialAuth,
         'authAction' => $authAction,
         'authTitle' => $authTitle,
-        'type' => $type
+        'userType' => $type
     ]); ?>
 </div>
