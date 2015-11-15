@@ -356,7 +356,7 @@ class Module extends \kartik\base\Module
     public $loginSettings = [];
 
     /**
-     * @var array the settings for the password in the module. The following options can be set"
+     * @var array the settings for the password in the module. The following options can be set:
      * - validateStrengthCurr: array|boolean, the list of scenarios where password strength will be validated for
      *     current password. If set to `false` or an empty array, no strength will be validated. The strength will be
      *     validated using `\kartik\password\StrengthValidator`. Defaults to `[self::SCN_INSTALL, self::SCN_RESET]`.
@@ -430,6 +430,7 @@ class Module extends \kartik\base\Module
      * - widgetSocialClass: string, the classname to use. Will default to `comyii\user\widgets\SocialConnectChoice`,
      *   which extends from `yii\authclient\widgets\AuthChoice` widget.
      * - defaultSuccessUrl: string, the default success url
+     * - defaultCancelUrl: string, the default cancel url
      * @see `setConfig()` method for the default settings
      */
     public $socialSettings = [];
@@ -1098,60 +1099,202 @@ HTML;
         }
         return $config;
     }
+    
+    /**
+     * Get module setting
+     *
+     * @param string $settings the parameter to get
+     * @param string $param the parameter to get
+     * @param string $userType the user type. Defaults to current user type.
+     * @param string $default the default value 
+     *
+     * @return mixed
+     */
+    private function getSetting($settings, $param, $userType = null, $default = null)
+    {
+        if(!$userType) {
+            $userType = Yii::$app->user->getType();
+        }
+        if($userType && isset($this->{$settings}['userTypes'][$userType][$param])) {
+            return $this->{$settings}['userTypes'][$userType][$param];
+        }
+        return ArrayHelper::getValue($this->{$settings}, $param, $default);
+    }
 
     /**
-     * Gets the controller behaviors configuration
+     * Get the layout file for the current view and user type.
+     *
+     * @param string $view the view to get
+     * @param string $default the default value 
+     * @param string $userType the user type. Defaults to current user type.
+     *
+     * @return string the layout file
+     */
+    public function getLayout($view, $default = null, $userType = null)
+    {
+        return $this->getSetting('layoutSettings', $view, $userType, $default);
+    }
+    
+    /**
+     * Get model setting
+     *
+     * @param string $setting the parameter to get
+     * @param string $userType the user type. Defaults to current user type.
+     * @param string $default the default value 
+     *
+     * @return mixed
+     */
+    public function getModelSetting($setting, $userType = null, $default = null)
+    {
+        return $this->getSetting('modelSettings', $setting, $userType, $default);
+    }
+    
+    /**
+     * Get registration setting
+     *
+     * @param string $setting the parameter to get
+     * @param string $userType the user type. Defaults to current user type.
+     * @param string $default the default value 
+     *
+     * @return mixed
+     */
+    public function getRegistrationSetting($setting, $userType = null, $default = null)
+    {
+        return $this->getSetting('registrationSettings', $setting, $userType, $default);
+    }
+    
+    /**
+     * Get social setting
+     *
+     * @param string $setting the parameter to get
+     * @param string $userType the user type. Defaults to current user type.
+     * @param string $default the default value 
+     *
+     * @return mixed
+     */
+    public function getSocialSetting($setting, $userType = null, $default = null)
+    {
+        return $this->getSetting('socialSettings', $setting, $userType, $default);
+    }
+    
+    /**
+     * Get login setting
+     *
+     * @param string $setting the parameter to get
+     * @param string $default the default value 
+     * @param string $userType the user type. Defaults to current user type.
+     *
+     * @return mixed
+     */
+    public function getLoginSetting($setting, $default = null, $userType = null)
+    {
+        return $this->getSetting('loginSettings', $setting, $userType, $default);
+    }
+    
+    /**
+     * Get password setting
+     *
+     * @param string $setting the parameter to get
+     * @param string $userType the user type. Defaults to current user type.
+     * @param string $default the default value 
+     *
+     * @return mixed
+     */
+    public function getPasswordSetting($setting, $userType = null, $default = null)
+    {
+        return $this->getSetting('passwordSettings', $setting, $userType, $default);
+    }
+    
+    /**
+     * Get profile setting
+     *
+     * @param string $setting the parameter to get
+     * @param string $default the default value 
+     * @param string $userType the user type. Defaults to current user type.
+     *
+     * @return mixed
+     */
+    public function getProfileSetting($setting, $default = null, $userType = null)
+    {
+        return $this->getSetting('profileSettings', $setting, $userType, $default);
+    }
+    
+    /**
+     * Get notification setting
+     *
+     * @param string $setting the parameter to get
+     * @param string $default the default value 
+     * @param string $userType the user type. Defaults to current user type.
+     *
+     * @return mixed
+     */
+    public function getNotificationSetting($setting, $default = null, $userType = null)
+    {
+        return $this->getSetting('notificationSettings', $setting, $userType, $default);
+    }
+    
+    /**
+     * Get action setting
+     *
+     * @param string $action the parameter to get
+     * @param string $default the default value 
+     * @param string $userType the user type. Defaults to current user type.
+     *
+     * @return mixed
+     */
+    public function getActionSetting($action, $default = null, $userType = null)
+    {
+        return $this->getSetting('actionSettings', $action, $userType, $default);
+    }
+    
+    /**
+     * Get user edit setting
+     *
+     * @param string $setting the parameter to get
+     * @param string $default the default value 
+     * @param string $userType the user type. Defaults to current user type.
+     *
+     * @return mixed
+     */
+    public function getUserEditSetting($setting, $default = null, $userType = null)
+    {
+        return $this->getSetting('userEditSettings', $setting, $userType, $default);
+    }
+    
+    /**
+     * Get the controller behaviors configuration
      *
      * @param string $id the controller identifier
+     * @param string $userType the user type. Defaults to current user type.
      *
      * @return array
      * @throws InvalidConfigException
      */
-    public function getControllerBehaviors($id)
+    public function getControllerBehaviors($id, $userType = null)
     {
-        if (isset($this->controllerBehaviors[$id])) {
-            $behaviors = $this->controllerBehaviors[$id];
-            if (!is_array($behaviors)) {
-                throw new InvalidConfigException("Controller behaviors must be an array");
-            }
-            return self::mergeDefault($behaviors, $this->defaultControllerBehaviors);
+        $controllerBehaviors = $this->getSetting('controllerBehaviors', $id, $userType, null);
+        
+        if($controllerBehaviors === null) {
+            return $this->defaultControllerBehaviors;
         }
-        return $this->defaultControllerBehaviors;
+        if (!is_array($controllerBehaviors)) {
+            throw new InvalidConfigException("Controller behaviors must be an array");
+        }
+        return self::mergeDefault($controllerBehaviors, $this->defaultControllerBehaviors);
     }
-
+    
     /**
-     * Gets the layout file for the current view and user type.
+     * Get url rules
      *
-     * @param string $view
+     * @param string $setting the parameter to get
+     * @param string $userType the user type. Defaults to current user type.
+     * @param string $default the default value 
      *
-     * @return string the layout file
+     * @return mixed
      */
-    public function getLayout($view)
+    public function getUrlRules($setting, $userType = null, $default = null)
     {
-        $userType = isset($this->layoutSettings[Yii::$app->user->type]) ? $this->layoutSettings[Yii::$app->user->type] : null;
-        if ($userType && is_array($userType) && isset($userType[$view])) {
-            return $userType[$view];
-        }
-        if (!isset($this->layoutSettings[$view])) {
-            return null;
-        }
-        return $this->layoutSettings[$view];
-    }
-    
-    public function getRegistrationSetting($setting, $userType = null, $default = null)
-    {
-        if($userType && isset($this->registrationSettings['userTypes'][$userType][$setting])) {
-            return $this->registrationSettings['userTypes'][$userType][$setting];
-        }
-        return ArrayHelper::getValue($this->registrationSettings, $setting, $default);
-    }
-    
-    public function getSocialSetting($setting, $userType = null, $default = null)
-    {
-        if($userType && isset($this->socialSettings['userTypes'][$userType][$setting])) {
-            return $this->socialSettings['userTypes'][$userType][$setting];
-        }
-        return ArrayHelper::getValue($this->socialSettings, $setting, $default);
+        return $this->getSetting('urlRules', $setting, $userType, $default);
     }
 
     /**
