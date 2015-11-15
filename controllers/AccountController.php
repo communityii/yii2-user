@@ -19,7 +19,8 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
-use yii\authclient\AuthAction;
+use comyii\user\EmailException;
+use comyii\user\authclient\AuthAction;
 use comyii\user\Module;
 use comyii\user\models\LoginForm;
 use comyii\user\models\RecoveryForm;
@@ -134,7 +135,7 @@ class AccountController extends BaseController
                     $username = Haikunator::haikunate($randomUsernameGenerator);
                 }
                 $i++;
-            } while($i < 10 && $userClass::find()->where(['username' => $username])->exists());
+            } while($i < 100 && $userClass::find()->where(['username' => $username])->exists());
             unset($i);
         }
         
@@ -180,20 +181,23 @@ class AccountController extends BaseController
                             'password' => $password,
                         ]);
                         $user->generateAuthKey();
-                        $success = false;
-                        if ($user->save()) {
-                            $auth = new $socialClass([
-                                'user_id' => $user->id,
-                                'source' => $clientId,
-                                'source_id' => $sourceId,
-                            ]);
-                            if ($auth->save()) {
-                                $transaction->commit();
-                                $success = true;
-                                Yii::$app->user->login($user);
-                            }
+                        $auth = new $socialClass([
+                            'user_id' => $user->id,
+                            'source' => $clientId,
+                            'source_id' => $sourceId,
+                        ]);
+                        if ($user->save() && $auth->save()) {
+                            $transaction->commit();
+                            Yii::$app->user->login($user);
+                            $event->result = AuthEvent::RESULT_SIGNUP_SUCCESS;
+                            $event->flashType = 'success';
+                            $event->message = Yii::t(
+                                'user',
+                                'Logged in successfully with your <b>{client}</b> account.',
+                                ['client' => $clientTitle]
+                            );
                         }
-                        if (!$success) {
+                        else {
                             $event->result = AuthEvent::RESULT_SIGNUP_ERROR;
                             $event->flashType = 'error';
                             $event->message = Yii::t(
@@ -202,14 +206,6 @@ class AccountController extends BaseController
                                 ['client' => $clientTitle, 'errors' => print_r($user->getErrors(), true)]
                             );
                             throw new Exception('Error authenticating social client');
-                        } else {
-                            $event->result = AuthEvent::RESULT_SIGNUP_SUCCESS;
-                            $event->flashType = 'success';
-                            $event->message = Yii::t(
-                                'user',
-                                'Logged in successfully with your <b>{client}</b> account.',
-                                ['client' => $clientTitle]
-                            );
                         }
                     }
                 }
@@ -258,10 +254,12 @@ class AccountController extends BaseController
         }
         $this->_module->trigger(Module::EVENT_AUTH_COMPLETE, $event);
         static::setFlash($event);
-        if (!isset($event->redirectUrl)) {
-            $event->redirectUrl = $this->fetchUrl('loginSettings', 'loginRedirectUrl');
+//        if (!isset($event->redirectUrl)) {
+//            $event->redirectUrl = $this->fetchUrl('loginSettings', 'loginRedirectUrl');
+//        }
+        if($event->redirectUrl) {
+            return $this->redirect($event->redirectUrl);
         }
-        return $this->redirect($event->redirectUrl);
     }
 
     /**
@@ -412,58 +410,62 @@ class AccountController extends BaseController
         $m->trigger(Module::EVENT_REGISTER_BEGIN, $event);
         $viewFile = $event->viewFile ? $event->viewFile : Module::VIEW_REGISTER;
         if ($model->load(Yii::$app->request->post()) && !$event->error) {
-            if ($m->getRegistrationSetting('randomUsernames', $event->type)) {
+            if ($m->getRegistrationSetting('randomUsernames', $event->type, false)) {
                 $model->setRandomUsername($event->type);
             }
-            if ($m->getRegistrationSetting('randomPasswords', $event->type)) {
+            if ($m->getRegistrationSetting('randomPasswords', $event->type, false)) {
                 $model->setRandomPassword($event->type);
             }
             $model->setPassword($model->password);
             $model->generateAuthKey();
             $model->status = Module::STATUS_PENDING;
             $transaction = static::tranInit($event);
-            $valid = false;
             try {
                 if ($model->save() && !$event->error) {
-                    static::tranCommit($transaction);
-                    $valid = true;
-                }
-            } catch (Exception $e) {
-                static::tranRollback($transaction);
-            }
-            if ($valid) {
-                $event->flashType = 'success';
-                $activate = $event->activate !== null ? $event->activate : $config['autoActivate'];
-                if ($activate && Yii::$app->user->login($model)) {
-                    $model->status = Module::STATUS_ACTIVE;
-                    $model->setLastLogin();
-                    $event->isActivated = true;
-                    $event->message = Yii::t(
-                        'user',
-                        'The user <b>{user}</b> was registered successfully. You have been logged in.',
-                        ['user' => $model->username]
-                    );
-                } else {
+                    $event->flashType = 'success';
+                    $activate = $event->activate !== null ? $event->activate : $config['autoActivate'];
                     $timeLeft = Module::timeLeft('activation', $model->getActivationKeyExpiry());
-                    if ($model->sendEmail('activation', $timeLeft)) {
+                    if ($activate) {
+                        if(!Yii::$app->user->login($model)) {
+                            
+                        }
+                        $model->status = Module::STATUS_ACTIVE;
+                        $model->setLastLogin();
+                        $event->isActivated = true;
+                        $event->message = Yii::t(
+                            'user',
+                            'The user <b>{user}</b> was registered successfully. You have been logged in.',
+                            ['user' => $model->username]
+                        );
+
+                        if (!$m->sendEmail('welcome', $model)) {
+                            throw new EmailException(Yii::t('user',
+                                'Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
+                                ['email' => $model->email]
+                            ));
+                        }
+                    } else {
+                        if (!$model->sendEmail('activation', $timeLeft)) {
+                            throw new EmailException(Yii::t('user',
+                                'Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
+                                ['email' => $model->email]
+                            ));
+                        }
                         $event->message = Yii::t(
                             'user',
                             'Instructions for activating your account has been sent to your email <b>{email}</b>. {timeLeft}',
                             ['email' => $model->email, 'timeLeft' => $timeLeft]
                         );
-                    } else {
-                        $event->flashType = 'warning';
-                        $event->message = Yii::t(
-                            'user',
-                            'Could not send activation instructions to your email <b>{email}</b>. Retry again later.',
-                            ['email' => $model->email]
-                        );
                     }
+                    $event->handled = false; // reuse event object
+                    $m->trigger(Module::EVENT_REGISTER_COMPLETE, $event);
+                    static::setFlash($event);
+                    static::tranCommit($transaction);
+                    return $this->eventRedirect($event, $this->goHome());
                 }
-                $event->handled = false; // reuse event object
-                $m->trigger(Module::EVENT_REGISTER_COMPLETE, $event);
-                static::setFlash($event);
-                return $this->eventRedirect($event, $this->goHome());
+            } catch (Exception $e) {
+                $this->handleException($e);
+                static::tranRollback($transaction);
             }
         }
         return $this->display($viewFile, [
