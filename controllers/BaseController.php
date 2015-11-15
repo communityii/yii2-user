@@ -240,7 +240,7 @@ class BaseController extends Controller
      */
     protected function eventRedirect($event, $response, $flag = true)
     {
-        if ($event->redirectUrl) {
+        if (!empty($event->redirectUrl)) {
             return $this->redirect($event->redirectUrl);
         }
         return $flag ? $response : $this->redirect($response);

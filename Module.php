@@ -434,7 +434,7 @@ class Module extends \kartik\base\Module
      * - widgetSocial: array, the settings for the yii\authclient\widgets\AuthChoice widget.
      * - widgetSocialClass: string, the classname to use. Will default to `comyii\user\widgets\SocialConnectChoice`,
      *   which extends from `yii\authclient\widgets\AuthChoice` widget.
-     * - defaultSuccessUrl: string, the default success url
+     * - defaultSuccessUrl: string, the default success url. Defaults to the application home url `Url::home()`.
      * - defaultCancelUrl: string, the default cancel url
      * @see `setConfig()` method for the default settings
      */
@@ -611,7 +611,8 @@ class Module extends \kartik\base\Module
             'widgetSocial' => [
                 'baseAuthUrl' => [$this->actionSettings[Module::ACTION_SOCIAL_AUTH]]
             ],
-            'widgetSocialClass' => SocialConnectChoice::classname()
+            'widgetSocialClass' => SocialConnectChoice::classname(),
+            'defaultSuccessUrl' => Url::home()
         ], $this->socialSettings);
         $this->superuserEditSettings = array_replace_recursive([
             'createUser' => true,
@@ -1120,8 +1121,8 @@ HTML;
         if (!$userType) {
             $userType = Yii::$app->user->getType();
         }
-        if ($userType && isset($this->{$settings}['userTypes'][$userType][$param])) {
-            return $this->{$settings}['userTypes'][$userType][$param];
+        if ($userType && isset($this->{$settings}[$userType][$param])) {
+            return $this->{$settings}[$userType][$param];
         }
         return ArrayHelper::getValue($this->{$settings}, $param, $default);
     }

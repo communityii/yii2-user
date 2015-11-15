@@ -16,6 +16,9 @@ use comyii\user\Module;
 use yii\helpers\ArrayHelper;
 use yii\base\InvalidParamException;
 
+/**
+ * Social authentication action for `communityii/yii2-user module`
+ */
 class AuthAction extends \yii\authclient\AuthAction
 {
     /**
@@ -45,12 +48,11 @@ class AuthAction extends \yii\authclient\AuthAction
     {
         $userType = ArrayHelper::getValue($_GET, 'userType', null);
         if (!$userType) {
-            parent::run();
-            return;
+            return parent::run();
         }
         if ($this->_module->isUserType($userType)) {
             $this->userType = $userType;
-            parent::run();
+            return parent::run();
         } else {
             throw new InvalidParamException("Invalid user type '{$userType}.'");
         }

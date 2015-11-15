@@ -13,6 +13,9 @@ namespace comyii\user\social;
 
 use yii\authclient\clients\Facebook;
 
+/**
+ * Facebook authorization client for `communityii/yii2-user` module
+ */
 class FacebookAuth extends Facebook
 {
     use ClientTrait;
