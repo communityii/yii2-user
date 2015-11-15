@@ -22,9 +22,6 @@ class GoogleAuth extends GoogleOAuth
      */
     public function getEmail()
     {
-        /**
-         * @var \yii\authclient\BaseClient $this
-         */
         $attributes = $this->getUserAttributes();
         return $attributes && isset($attributes['email'][0]['value']) ? $attributes['email'][0]['value'] : null;
     }
