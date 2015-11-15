@@ -16,14 +16,14 @@ use yii\authclient\clients\GoogleOAuth;
 class GoogleAuth extends GoogleOAuth
 {
     use ClientTrait;
-
+    
     /**
      * @inheritdoc
      */
     public function getEmail()
     {
         $attributes = $this->getUserAttributes();
-        return $attributes && isset($attributes['email'][0]['value']) ? $attributes['email'][0]['value'] : null;
+        return $attributes && isset($attributes['emails'][0]['value']) ? $attributes['emails'][0]['value'] : null;
     }
 
 }
