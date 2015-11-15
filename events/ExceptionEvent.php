@@ -14,6 +14,9 @@ namespace comyii\user\events;
 use Exception;
 use yii\web\Controller;
 
+/**
+ * Exception event
+ */
 class ExceptionEvent extends Event
 {
     /**

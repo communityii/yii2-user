@@ -11,13 +11,12 @@
 
 namespace comyii\user\events;
 
-use yii\base\Model;
-
 /**
- * Base event for all events in communityii/yii2-user module
+ * View event trait for all events within views
  */
 trait ViewEventTrait
-{   
+{
+    use FlashEventTrait;
     /**
      * @var string|array the URL to be redirected to after completion of the controller action that triggered the event.
      */
@@ -28,15 +27,4 @@ trait ViewEventTrait
      *     that the view file can be changed by event handlers.
      */
     public $viewFile;
-
-    /**
-     * @var string|null the flash message for the controller. This is used so that event handlers can update the
-     *     success messages for things like user registration.
-     */
-    public $message;
-
-    /**
-     * @var string the flash message type parsed by `Yii::$app->session->setFlash`.
-     */
-    public $flashType;
 }
