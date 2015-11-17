@@ -33,6 +33,12 @@ class User extends \yii\web\User
     public $loginUrl = ['/user/account/login'];
 
     /**
+     * @var string|null the user type if set by controller when no identity is logged in.
+     * For example on registration page the user type is set via the $_GET variable.
+     */
+    private $_userType;
+    
+    /**
      * Initializes the User component
      */
     public function init()
@@ -64,13 +70,15 @@ class User extends \yii\web\User
     }
 
     /**
-     * Gets the user type if available
-     *
-     * @return string
+     * Gets the user type if available.
+     * 
+     * @param bool $strict whether or not the user type must be set in identity.
+     * Defaults to `true`.
+     * @return string|null returns the user type key or null if not set
      */
-    public function getType()
+    public function getType($strict = true)
     {
-        return $this->identity && isset($this->identity->type) ? $this->identity->type : '';
+        return $this->identity && isset($this->identity->type) ? $this->identity->type : $strict ? null : $this->_userType;
     }
 
     /**
