@@ -11,14 +11,14 @@
 
 namespace comyii\user\components;
 
-use yii\base\Component;
+use comyii\user\components\ArrayComponent;
 
 /**
  * Class Actions the action settings for the module.
  * 
  * @package comyii\user\components
  */
-class Actions extends Component implements ArrayAccess
+class Actions extends ArrayComponent
 {
     // the list of account actions
     const ACTION_LOGIN = 1;             // login as new user
@@ -43,27 +43,33 @@ class Actions extends Component implements ArrayAccess
     const ACTION_ADMIN_VIEW = 101;      // user view
     const ACTION_ADMIN_UPDATE = 102;    // user update
     const ACTION_ADMIN_CREATE = 103;    // user creation
-    
+
     /**
-     * @var array the action settings
+     * @var string the name of the property to store the array items 
      */
-    public $actions = [];
-    
-    public function __construct($config = array()) {
-        if (isset($config['actions'])) {
-            $config['actions'] = array_replace_recursive($this->getDefaultActions(), $config['actions']);
-        } else {
-            $config['actions'] = $this->getDefaultActions();
-        }
-        parent::__construct($config);
-    }
-    
+    protected $_containerName = 'actions';
+
+    /**
+     * @var string the current item property 
+     */
+    protected $_currentName = 'action';
+
+    /**
+     * @var array the list of actions 
+     */
+    public $actions;
+
+    /**
+     * @var string|null the current action or null 
+     */
+    public $action;
+
     /**
      * Get the default actions
      * 
      * @return array
      */
-    public function getDefaultActions()
+    public function getDefaults()
     {
         return [
             // the list of account actions
@@ -89,26 +95,5 @@ class Actions extends Component implements ArrayAccess
             self::ACTION_ADMIN_UPDATE => 'admin/update',
             self::ACTION_ADMIN_CREATE => 'admin/create',
         ];
-    }
-    
-    
-    public function offsetSet($offset, $value) {
-        if (is_null($offset)) {
-            $this->actions[] = $value;
-        } else {
-            $this->actions[$offset] = $value;
-        }
-    }
-
-    public function offsetExists($offset) {
-        return isset($this->actions[$offset]);
-    }
-
-    public function offsetUnset($offset) {
-        unset($this->actions[$offset]);
-    }
-
-    public function offsetGet($offset) {
-        return isset($this->actions[$offset]) ? $this->actions[$offset] : null;
     }
 }

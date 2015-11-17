@@ -12,6 +12,7 @@
 namespace comyii\user\components;
 
 use comyii\user\Module;
+use yii\helpers\ArrayHelper;
 
 /**
  * Trait UserTypeTrait method used for merging userType configs in components.
@@ -23,10 +24,10 @@ trait UserTypeTrait
 
     public function mergeUserTypeConfig($config = array(), $component = '')
     {
-        $userTypes = Module::getInstance()->userTypes;
+        $userTypes = &Module::getInstance()->userTypes;
         if (isset($userTypes->{$component})) {
             if (!empty($config)) {
-                $userTypes->{$component} = array_replace_recursive($config, $userTypes->{$component});
+                $userTypes->{$component} = ArrayHelper::merge($config, $userTypes->{$component});
             } else {
                 $config = $userTypes->{$component};
             }

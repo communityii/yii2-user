@@ -11,15 +11,32 @@
 
 namespace comyii\user\components;
 
-use yii\base\Component;
+use comyii\user\components\ArrayComponent;
 
 /**
  * Class Views the view settings for the module.
  * 
  * @package comyii\user\components
  */
-class Views extends Component
+class Views extends ArrayComponent
 {
+    use UserTypeTrait;
+
+    /**
+     * @var string the name of the property to store the array items 
+     */
+    protected $_containerName = 'views';
+
+    /**
+     * @var string pointer to current view in list or null
+     */
+    protected $_currentName = 'view';
+
+    /**
+     * @var array the list of views 
+     */
+    public $views;
+
     // the list of views used
     const VIEW_LOGIN = 200;             // login form
     const VIEW_REGISTER = 201;          // new user registration form
