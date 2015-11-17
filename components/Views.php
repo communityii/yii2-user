@@ -20,6 +20,21 @@ use yii\base\Component;
  */
 class Views extends Component
 {
+    // the list of views used
+    const VIEW_LOGIN = 200;             // login form
+    const VIEW_REGISTER = 201;          // new user registration form
+    const VIEW_NEWEMAIL = 202;          // new email change confirmation
+    const VIEW_PASSWORD = 203;          // password change form
+    const VIEW_RECOVERY = 204;          // password recovery form
+    const VIEW_RESET = 205;             // password reset form
+    const VIEW_ADMIN_INDEX = 206;       // manage users list (for admin & superuser only)
+    const VIEW_ADMIN_CREATE = 207;      // create user form (for admin & superuser only)
+    const VIEW_ADMIN_UPDATE = 208;      // update user form (for admin & superuser only)
+    const VIEW_ADMIN_VIEW = 209;        // update user form (for admin & superuser only)
+    const VIEW_PROFILE_INDEX = 210;     // user profile view (for current user only)
+    const VIEW_PROFILE_UPDATE = 211;    // user profile update (for current user only)
+    const VIEW_PROFILE_VIEW = 212;      // user profile view (for any user viewable by admin & superuser)
+
     public $_views = [
         // views in AccountController
         self::VIEW_LOGIN => 'login',
