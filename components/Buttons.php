@@ -11,14 +11,20 @@
 
 namespace comyii\user\components;
 
-use yii\base\Component;
+use comyii\user\components\Actions;
+use comyii\user\components\ArrayComponent;
+use comyii\user\Module;
+use Yii;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
+use yii\helpers\Url;
 
 /**
  * Class Buttons the button settings for the module.
  * 
  * @package comyii\user\components
  */
-class Buttons extends Component
+class Buttons extends ArrayComponent
 {
     const BTN_HOME = 400;               // back to home page
     const BTN_BACK = 401;               // back to previous page
@@ -32,9 +38,24 @@ class Buttons extends Component
     const BTN_REGISTER = 409;           // registration submit button
 
     /**
+     * @var string the name of the property to store the array items 
+     */
+    protected $_containerName = 'buttons';
+
+    /**
+     * @var string the current item property 
+     */
+    protected $_currentName = 'button';
+
+    /**
      * @var array the button configurations
      */
     public $buttons;
+    
+    /**
+     * @var array the current button
+     */
+    public $button;
 
     /**
      * Construct the buttons component
@@ -84,7 +105,7 @@ class Buttons extends Component
             self::BTN_FORGOT_PASSWORD => [
                 'label' => Yii::t('user', 'Forgot Password?'),
                 'icon' => 'info-sign',
-                'action' => self::ACTION_RECOVERY,
+                'action' => Actions::ACTION_RECOVERY,
                 'options' => [
                     'class' => 'btn btn-link y2u-link',
                     'title' => Yii::t('user', 'Recover your lost password')
@@ -93,7 +114,7 @@ class Buttons extends Component
             self::BTN_ALREADY_REGISTERED => [
                 'label' => Yii::t('user', 'Already registered?'),
                 'icon' => 'hand-up',
-                'action' => self::ACTION_LOGIN,
+                'action' => Actions::ACTION_LOGIN,
                 'options' => [
                     'class' => 'btn btn-link y2u-link',
                     'title' => Yii::t('user', 'Click here to login')
@@ -107,14 +128,14 @@ class Buttons extends Component
             ],
             self::BTN_LOGOUT => [
                 'label' => Yii::t('user', 'Logout'),
-                'action' => self::ACTION_LOGOUT,
+                'action' => Actions::ACTION_LOGOUT,
                 'icon' => 'log-out',
                 'options' => ['class' => 'btn btn-link y2u-link'],
             ],
             self::BTN_NEW_USER => [
                 'label' => Yii::t('user', 'New user?'),
                 'icon' => 'edit',
-                'action' => self::ACTION_REGISTER,
+                'action' => Actions::ACTION_REGISTER,
                 'options' => [
                     'class' => 'btn btn-link y2u-link',
                     'title' => Yii::t('user', 'Register for a new user account')
@@ -141,11 +162,11 @@ class Buttons extends Component
      */
     public function button($key, $params = [], $config = [])
     {
+        $m = Module::getInstance();
         $btn = ArrayHelper::getValue($this->buttons, $key, []);
         if (empty($btn)) {
             return '';
         }
-        $iconPrefix = $this->iconPrefix;
         $labelNew = ArrayHelper::remove($config, 'label', '');
         $iconNew = ArrayHelper::remove($config, 'icon', '');
         $label = $icon = $action = $type = '';
@@ -156,7 +177,7 @@ class Buttons extends Component
             $icon = $iconNew;
         }
         if (!empty($icon)) {
-            Html::addCssClass($iconOptions, explode(' ', $iconPrefix . $icon));
+            Html::addCssClass($iconOptions, explode(' ', $m->icons->prefix . $icon));
             $icon = Html::tag('i', '', $iconOptions);
         }
         if (!empty($labelNew)) {
@@ -168,7 +189,7 @@ class Buttons extends Component
             $action = null;
         }
         if (!empty($action)) {
-            $action = ArrayHelper::getValue($this->actionSettings, $action, $action);
+            $action = ArrayHelper::getValue($this->actions, $action, $action);
             $action = Url::to([$action] + $params);
             return Html::a($label, $action, $options);
         }
