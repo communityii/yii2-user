@@ -45,9 +45,9 @@ class Layouts extends ArrayComponent
     public function getDefaults()
     {
         return [
-            Views::VIEW_LOGIN => &$this->default,
-            Views::VIEW_REGISTER => &$this->default,
-            Views::VIEW_RECOVERY => &$this->default
+            Views::VIEW_LOGIN => $this->default,
+            Views::VIEW_REGISTER => $this->default,
+            Views::VIEW_RECOVERY => $this->default
         ];
     }
 }
