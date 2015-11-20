@@ -31,12 +31,17 @@ class User extends \comyii\user\models\User
 **Step 2:** Then update your module configuration for the user types:
 
 ```php
+
     'modules' => [
         'user' => [
             'class' => 'comyii\user\Module',
-            'userTypes'=>[
-                common\models\User::TYPE_CUSTOMER => 'customer',
-                common\models\User::TYPE_VENDOR => 'vendor'
+            'types'=>[
+                common\models\User::TYPE_CUSTOMER => [
+                    'tag' => 'customer',
+                ],
+                common\models\User::TYPE_VENDOR => [
+                    'tag' => 'vendor',
+                ],
             ],
         ],
     ],
@@ -50,20 +55,24 @@ class User extends \comyii\user\models\User
     'modules' => [
         'user' => [
             'class' => 'comyii\user\Module',
-            'userTypes'=>[
-                common\models\User::TYPE_CUSTOMER => 'customer',
-                common\models\User::TYPE_VENDOR => 'vendor'
-            ],
-            'layoutSettings'=>[
+            'types'=>[
                 common\models\User::TYPE_CUSTOMER => [
-                    comyii\user\Module::VIEW_PROFILE_INDEX => '@frontend/views/layouts/customer',
-                    comyii\user\Module::VIEW_PROFILE_UPDATE => '@frontend/views/layouts/customer',
-                    comyii\user\Module::VIEW_PASSWORD => '@frontend/views/layouts/customer',
+                    'tag' => 'customer',
+                    'layouts' => [
+                        'layouts' => [
+                            comyii\user\Module::VIEW_PROFILE_INDEX => '@frontend/views/layouts/customer',
+                            comyii\user\Module::VIEW_LOGIN => '@frontend/views/layouts/customer',
+                        ]
+                    ],
                 ],
                 common\models\User::TYPE_VENDOR => [
-                    comyii\user\Module::VIEW_PROFILE_INDEX => '@frontend/views/layouts/vendor',
-                    comyii\user\Module::VIEW_PROFILE_UPDATE => '@frontend/views/layouts/vendor',
-                    comyii\user\Module::VIEW_PASSWORD => '@frontend/views/layouts/vendor',
+                    'tag' => 'vendor',
+                    'layouts' => [
+                        'layouts' => [
+                            comyii\user\Module::VIEW_PROFILE_INDEX => '@frontend/views/layouts/vendor',
+                            comyii\user\Module::VIEW_LOGIN => '@frontend/views/layouts/vendor',
+                        ]
+                    ],
                 ],
             ],
         ],
@@ -78,14 +87,25 @@ class User extends \comyii\user\models\User
     'modules' => [
         'user' => [
             'class' => 'comyii\user\Module',
-            'userTypes'=>[
-                common\models\User::TYPE_CUSTOMER => 'customer',
-                common\models\User::TYPE_VENDOR => 'vendor'
-            ],
-            'viewSettings' => [
+            'types'=>[
+                common\models\User::TYPE_CUSTOMER => [
+                    'tag' => 'customer',
+                    'layouts' => [
+                        'layouts' => [
+                            comyii\user\Module::VIEW_PROFILE_INDEX => '@frontend/views/layouts/customer',
+                            comyii\user\Module::VIEW_LOGIN => '@frontend/views/layouts/customer',
+                        ]
+                    ],
+                ],
                 common\models\User::TYPE_VENDOR => [
-                    comyii\user\Module::VIEW_PROFILE_INDEX => '@frontend/views/vendor/profile'
-                ]
+                    'tag' => 'vendor',
+                    'views' => [
+                        'views' => [
+                            comyii\user\Module::VIEW_PROFILE_INDEX => '@frontend/views/layouts/vendor',
+                            comyii\user\Module::VIEW_LOGIN => '@frontend/views/layouts/vendor',
+                        ]
+                    ],
+                ],
             ],
         ],
     ],
