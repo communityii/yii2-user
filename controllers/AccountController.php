@@ -603,7 +603,7 @@ class AccountController extends BaseController
                 $this->_module->trigger(Module::EVENT_PASSWORD_COMPLETE, $event);
                 static::tranCommit($transaction);
                 static::setFlash($event);
-                return $this->eventRedirect($event, $this->fetchUrl(Module::ACTION_PROFILE_INDEX, false));
+                return $this->eventRedirect($event, $this->fetchUrl(Module::ACTION_PROFILE_INDEX), false);
             } catch (Exception $e) {
                 static::tranRollback($transaction);
             }
