@@ -275,6 +275,7 @@ class ProfileController extends BaseController
                         ['email' => $emailNew]
                     ));
                 }
+                static::tranCommit($transaction);
                 Yii::$app->session->setFlash('info', Yii::t(
                     'user',
                     'Instructions to confirm the new email has been sent to your new email address <b>{email}</b>. {timeLeft}',
