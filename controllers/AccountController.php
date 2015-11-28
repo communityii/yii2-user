@@ -437,6 +437,10 @@ class AccountController extends BaseController
          * @var Module $m
          */
         $m = $this->_module;
+        $config = $m->registrationSettings;
+        if (!$config['enabled']) {
+            return $this->goBack();
+        }
         $hasSocialAuth = $m->hasSocialAuth();
         $authAction = $this->fetchUrl(Module::ACTION_SOCIAL_AUTH);
         $class = $this->fetchModel(Module::MODEL_USER);
