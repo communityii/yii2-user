@@ -64,7 +64,10 @@ class Buttons extends ArrayComponent
      */
     public function __construct($config = array())
     {
-        $this->buttons = array_replace_recursive($this->getDefaultButtonConfig(), $config);
+        $this->buttons = $this->getDefaultButtonConfig();
+        if (isset($config['buttons'])) {
+            $this->buttons = array_replace_recursive($this->buttons, $config['buttons']);
+        }
     }
 
     /**
@@ -189,7 +192,7 @@ class Buttons extends ArrayComponent
             $action = null;
         }
         if (!empty($action)) {
-            $action = ArrayHelper::getValue($this->actions, $action, $action);
+            $action = ArrayHelper::getValue($m->actions, $action, $action);
             $action = Url::to([$action] + $params);
             return Html::a($label, $action, $options);
         }
